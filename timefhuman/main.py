@@ -8,7 +8,7 @@ Convert human-readable date-like string to Python datetime object.
 """
 
 
-from constants import MONTHS
+from .constants import MONTHS
 import datetime
 import string
 
