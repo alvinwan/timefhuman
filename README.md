@@ -4,7 +4,7 @@ Convert human-readable date-like string to Python datetime object. Use any
 human-readable format.
 
 ```
->>> timefhuman('7/17 3 PM', now=now)
+>>> timefhuman('7/17 3 PM')
 datetime.datetime(2018, 7, 17, 15, 0)
 ```
 
@@ -25,6 +25,12 @@ relationships. **(coming soon)**
 ...
 ```
 
+# Installation
+
+```
+pip install timefhuman
+```
+
 # Usage
 
 ```
@@ -40,12 +46,4 @@ datetime.datetime(2018, 7, 17, 15, 0)
 datetime.datetime(2018, 7, 17, 3, 0)
 >>> timefhuman('7/17/18 3:00 p.m.')
 datetime.datetime(2018, 7, 17, 15, 0)
-```
-
-# Installation
-
-Install from pip.
-
-```
-pip install timefhuman
 ```
