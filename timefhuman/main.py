@@ -9,16 +9,22 @@ Convert human-readable date-like string to Python datetime object.
 
 
 from .constants import MONTHS
+from .constants import DAYS_OF_WEEK
 import datetime
 import string
 
 
+__all__ = ('timefhuman',)
+
+
 def timefhuman(string, now=None):
-    """A simple parsing function for dates.
+    """A simple parsing function for date-related strings.
 
     >>> now = datetime.datetime(year=2018, month=7, day=7)
-    >>> timefhuman('7-17 3 PM', now=now)
+    >>> timefhuman('7/17 3 PM', now=now)
     datetime.datetime(2018, 7, 17, 15, 0)
+    >>> timefhuman('Monday at 3', now=now)
+    datetime.datetime(2018, 7, 9, 15, 0)
     >>> timefhuman('July 17, 2018 at 3p.m.')
     datetime.datetime(2018, 7, 17, 15, 0)
     >>> timefhuman('July 17, 2018 3 p.m.')
@@ -26,7 +32,9 @@ def timefhuman(string, now=None):
     >>> timefhuman('3PM on July 17', now=now)
     datetime.datetime(2018, 7, 17, 15, 0)
     >>> timefhuman('July 17 at 3')
-    datetime.datetime(2018, 7, 17, 3, 0)
+    datetime.datetime(2018, 7, 17, 15, 0)
+    >>> timefhuman('July 2019')
+    datetime.datetime(2019, 7, 1, 0, 0)
     >>> timefhuman('7/17/18 3:00 p.m.')
     datetime.datetime(2018, 7, 17, 15, 0)
     """
@@ -34,22 +42,100 @@ def timefhuman(string, now=None):
         now = datetime.datetime.now()
 
     tokens = list(tokenize(string))
+    tokens = convert_day_of_week(tokens, now)
+
     tokens, hour, minute = maybe_extract_hour_minute(tokens)
     tokens, month, day, year = maybe_extract_using_date(tokens, now)
 
     if not tokens:
         return assemble_date(year, month, day, hour, minute)
 
-    tokens, month, day, year = maybe_extract_using_month(tokens, now)
+    if None in (month, day, year):
+        tokens, month, day, year = maybe_extract_using_month(tokens, now)
+
     if not tokens or hour is not None:
         return assemble_date(year, month, day, hour, minute)
 
     hour, minute = extract_hour_minute_from_remaining(tokens, now)
     return assemble_date(year, month, day, hour, minute)
 
+    # TODO: What if user specifies vernacular AND actual date time. Let
+    # specified date time take precedence.
+
+
+def convert_day_of_week(tokens, now=datetime.datetime.now()):
+    """Convert day-of-week vernacular into date-like string.
+
+    WARNING: assumes that 'upcoming', and (no specification) implies
+    the same day. e.g., 'upcoming Monday', and 'Monday' are both
+    the same day. However, it assumes that 'next Monday' is the one *after.
+    Also assumes that 'last', 'past', and 'previous' are the same.
+
+    >>> now = datetime.datetime(year=2018, month=8, day=4)
+    >>> convert_day_of_week(['Monday', 'at', '3'])
+    ['08/06/18', 'at', '3']
+    >>> convert_day_of_week(['next', 'Monday', 'at', '3'])
+    ['08/13/18', 'at', '3']
+    >>> convert_day_of_week(['past', 'Monday', 'at', '3'])
+    ['07/30/18', 'at', '3']
+    """
+    tokens = tokens.copy()
+    for i in range(7):
+        day = now + datetime.timedelta(i)
+        day_of_week = DAYS_OF_WEEK[day.weekday()]
+
+        for string in (day_of_week, day_of_week[:3], day_of_week[:2]):
+            if string in tokens:
+                index = tokens.index(string)
+                new_index, tokens, weeks = extract_weeks_offset(tokens, end=index)
+                day = now + datetime.timedelta(weeks*7 + i)
+                tokens[new_index] = day.strftime("%m/%d/%y")
+                break
+    return tokens
+
+
+def extract_weeks_offset(tokens, end=None, key_tokens=(
+        'next', 'previous', 'last', 'upcoming', 'past', 'prev')):
+    """Extract the number of week offsets needed.
+
+    >>> extract_weeks_offset(['next', 'next', 'week'])
+    (0, ['week'], 2)
+    >>> extract_weeks_offset(['upcoming', 'Monday'])
+    (0, ['Monday'], 0)
+    >>> extract_weeks_offset(['last', 'Monday'])
+    (0, ['Monday'], -1)
+    >>> extract_weeks_offset(['past', 'Tuesday'])
+    (0, ['Tuesday'], -1)
+    >>> extract_weeks_offset(['past', 'Wed', 'next', 'week'], end=1)
+    (0, ['Wed', 'next', 'week'], -1)
+    """
+    offset = 0
+    end = len(tokens) - 1 if end is None else end
+    start = end - 1
+    if start < 0 or start >= len(tokens):
+        return 0, tokens, 0
+
+    while len(tokens) > start >= 0 and \
+            tokens[start] in key_tokens:
+        candidate = tokens[start]
+        if candidate == 'upcoming':
+            return start, tokens[:end-1] + tokens[end:], 0
+        if candidate == 'next':
+            offset += 1
+        elif candidate in ('previous', 'prev', 'last', 'past'):
+            offset -= 1
+        start -= 1
+    return start + 1, tokens[:start + 1] + tokens[end:], offset
+
 
 def assemble_date(year, month, day, hour, minute):
-    """Assemble datetime object optionally using time."""
+    """Assemble datetime object optionally using time.
+
+    >>> assemble_date(2018, 8, 8, 0, 0)
+    datetime.datetime(2018, 8, 8, 0, 0)
+    >>> assemble_date(2018, 8, 8, None, None)
+    datetime.datetime(2018, 8, 8, 0, 0)
+    """
     assert None not in (year, month, day), "Could not find year, month, day"
     if hour is None:
         return datetime.datetime(year=year, month=month, day=day)
@@ -102,7 +188,7 @@ def get_character_type(character):
     return None
 
 
-def maybe_extract_using_month(tokens, now=None):
+def maybe_extract_using_month(tokens, now=datetime.datetime.now()):
     """
 
     >>> now = datetime.datetime(year=2018, month=7, day=7)
@@ -116,17 +202,18 @@ def maybe_extract_using_month(tokens, now=None):
     ([], 8, 17, 2018)
     >>> maybe_extract_using_month(['Aug', 'at'], now=now)
     (['at'], 8, 1, 2018)
+    >>> maybe_extract_using_month(['gibberish'], now=now)
+    (['gibberish'], None, None, None)
     """
-    if now is None:
-        now = datetime.datetime.now()
-
+    temp_tokens = [token.lower() for token in tokens]
     for mo, month in enumerate(MONTHS, start=1):
 
         index = None
-        if month in tokens:
-            index = tokens.index(month)
-        if month[:3] in tokens:
-            index = tokens.index(month[:3])
+        month = month.lower()
+        if month in temp_tokens:
+            index = temp_tokens.index(month)
+        if month[:3] in temp_tokens:
+            index = temp_tokens.index(month[:3])
 
         if index is None:
             continue
@@ -147,6 +234,7 @@ def maybe_extract_using_month(tokens, now=None):
         next_next_candidate = int(next_next_candidate)
         remaining_tokens = tokens[:index] + tokens[index+3:]
         return remaining_tokens, mo, next_candidate, next_next_candidate
+    return tokens, None, None, None
 
 
 def maybe_extract_using_date(tokens, now=datetime.datetime.now()):
@@ -168,9 +256,6 @@ def maybe_extract_using_date(tokens, now=datetime.datetime.now()):
     >>> maybe_extract_using_date(['3', 'on', '7.17.18'])
     (['3', 'on'], 7, 17, 2018)
     """
-    if now is None:
-        now = datetime.datetime.now()
-
     for token in tokens:
         for punctuation in ('/', '.', '-'):
             if punctuation in token:
@@ -190,15 +275,15 @@ def extract_hour_minute_from_time(string, time_of_day='am'):
     """
 
     >>> extract_hour_minute_from_time('3:00')
-    (3, 0)
+    (15, 0)
     >>> extract_hour_minute_from_time('3:00', 'pm')
     (15, 0)
     >>> extract_hour_minute_from_time('3')
-    (3, 0)
+    (15, 0)
     """
     parts = string.split(':')
     hour = int(parts[0])
-    if time_of_day == 'pm':
+    if time_of_day == 'pm' or hour < 6:
         hour += 12
     minute = int(parts[1]) if len(parts) >= 2 else 0
     return hour, minute
@@ -220,6 +305,8 @@ def maybe_extract_hour_minute(tokens):
     (['on', 'July', '17'], 15, 0)
     >>> maybe_extract_hour_minute(['July', 'at', '3'])
     (['July', 'at', '3'], None, None)
+    >>> maybe_extract_hour_minute(['7/17/18', '15:00'])
+    (['7/17/18'], 15, 0)
     """
     temp_tokens = [token.replace('.', '').lower() for token in tokens]
     remaining_tokens = tokens
@@ -239,16 +326,23 @@ def maybe_extract_hour_minute(tokens):
 
     for token in tokens:
         if ':' in token:
-            hour, minute = token.split(':')
+            hour, minute = extract_hour_minute_from_time(token)
             remaining_tokens = [token for token in tokens if ':' not in token]
-            return remaining_tokens, int(hour), minute
+            return remaining_tokens, hour, minute
 
     return tokens, None, None
 
 
-def extract_hour_minute_from_remaining(tokens, now=None):
-    """Sketch collector for leftovers integers."""
+def extract_hour_minute_from_remaining(tokens, now=datetime.datetime.now()):
+    """Sketch collector for leftovers integers.
+
+    WARNING: Converts hours before 6 to p.m., automatically. This might cause
+    problems later on?
+
+    >>> extract_hour_minute_from_remaining(['gibberish'])
+    (0, 0)
+    """
     for token in tokens:
         if token.isnumeric():
-            return int(token), 0
+            return extract_hour_minute_from_time(token)
     return 0, 0

@@ -1,0 +1,15 @@
+language: python
+
+sudo: false
+
+python:
+  - "3.6.0"
+
+install:
+  - python setup.py install
+
+script:
+  - py.test --cov
+
+after_success:
+  - CI=true TRAVIS=true coveralls
