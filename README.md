@@ -15,12 +15,15 @@ Use any human-readable format with a time range, choices of times, or choices of
 ```
 >>> from timefhuman import timefhuman
 >>> timefhuman('7/17 3-4 PM')
-
+(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
 >>> timefhuman('7/17 3 p.m. - 4 p.m.')
 
+>>> timefhuman('Monday 3 pm or Tu noon')  # when run on August 4, 2018
+[datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
 >>> timefhuman('7/17 3, 4, or 5 PM')
 
 >>> timefhuman('7/17 3-4, 4-5, or 5-6 PM')
+
 ```
 
 Parse lists of dates and times with more complex relationships. **(coming soon)**
@@ -94,16 +97,16 @@ datetime.datetime(2018, 7, 7, 12, 0)
 datetime.datetime(2018, 7, 3, 16, 0)
 ```
 
-To remedy this, we can replace "noon" with "12 p.m.", "next Monday" with "7/17/18", "Tu" with "Tuesday" etc. and pass the cleaned string to `dateparser`. However, consider the number of ways we can say "next Monday". Put aside synonyms for "next" for now; there are numerous grammatical structures, too many to list explicitly:
+To remedy this, we can replace "noon" with "12 p.m.", "next Monday" with "7/17/18", "Tu" with "Tuesday" etc. and pass the cleaned string to `dateparser`. However, consider the number of ways we can say "next Monday at 12 p.m.". Ignoring synonyms, we have a number of different grammars to express this:
 
-- next Monday
-- Monday of next week
-- first Monday of August
+- 12 p.m. on Monday
+- first Monday of August 12 p.m.
+- next week Monday noon
 
-This issue compounds when you consider a list of possible dates
+This issue compounds when you consider listing noontimes for several different days.
 
-- anytime next week at noon
-- afternoon the next few days
-- any Friday this month
+- first half of next week at noon
+- 12 p.m. on Monday Tuesday or Wednesday
+- early next week midday
 
-Listing all the possible permutations is not sustainable. Instead, `timefhuman` leverages lexical structure and assigns each part of the phrase a different modification: "anytime" modifies the type from 'date' to 'range', "next week" shifts the range by 7 days, "p.m." means the string right before is a time or a time range etc. This then allows `timefhuman` to handle any permutation of these modifiers. Said another way: `timefhuman` aims to parse *unstructured* dates.
+The permutations--even the possible *combinations*--are endless. Instead of enumerating each permutation, `timefhuman` extracts tokens: "anytime" modifies the type from 'date' to 'range', "next week" shifts the range by 7 days, "p.m." means the string right before is a time or a time range etc. Each set of tokens is then combined to produce datetimes, datetime ranges, or datetime lists. This then allows `timefhuman` to handle any permutation of these modifiers. Said another way: `timefhuman` aims to parse *unstructured* dates.

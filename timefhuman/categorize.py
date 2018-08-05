@@ -53,6 +53,7 @@ def convert_day_of_week(tokens, now=datetime.datetime.now()):
     return tokens
 
 
+# TODO: convert to new token-based system
 def extract_weeks_offset(tokens, end=None, key_tokens=(
         'next', 'previous', 'last', 'upcoming', 'past', 'prev')):
     """Extract the number of week offsets needed.
