@@ -9,7 +9,7 @@ install:
   - python setup.py install
 
 script:
-  - py.test --cov
+  - py.test --cov=timefhuman
 
 after_success:
   - CI=true TRAVIS=true coveralls
