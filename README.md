@@ -28,7 +28,7 @@ Parse lists of dates and times with more complex relationships. **(coming soon)*
 ```
 >>> timefhuman('7/17, 7/18, 7/19 at 2')
 
->>> timefhuman('7/17, 7/18, 7/19 at 2')
+>>> timefhuman('7/17 to 7/19 at 2')
 ```
 
 Use the vernacular to describe ranges or days. **(coming soon)**
