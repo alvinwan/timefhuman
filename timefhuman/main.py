@@ -21,10 +21,10 @@ def timefhuman(string, now=None):
     """A simple parsing function for date-related strings.
 
     >>> now = datetime.datetime(year=2018, month=7, day=7)
+    >>> timefhuman('Monday noon', now=now)
+    datetime.datetime(2018, 7, 9, 12, 0)
     >>> timefhuman('7/17 3 PM', now=now)
     datetime.datetime(2018, 7, 17, 15, 0)
-    >>> timefhuman('Monday at 3', now=now)
-    datetime.datetime(2018, 7, 9, 15, 0)
     >>> timefhuman('July 17, 2018 at 3p.m.')
     datetime.datetime(2018, 7, 17, 15, 0)
     >>> timefhuman('July 17, 2018 3 p.m.')
@@ -43,6 +43,7 @@ def timefhuman(string, now=None):
 
     tokens = list(tokenize(string))
     tokens = convert_day_of_week(tokens, now)
+    tokens = convert_time_of_day(tokens)
 
     tokens, hour, minute = maybe_extract_hour_minute(tokens)
     tokens, month, day, year = maybe_extract_using_date(tokens, now)
@@ -92,6 +93,34 @@ def convert_day_of_week(tokens, now=datetime.datetime.now()):
                 day = now + datetime.timedelta(weeks*7 + i)
                 tokens[new_index] = day.strftime("%m/%d/%y")
                 break
+    return tokens
+
+
+def convert_time_of_day(tokens):
+    """Convert time-of-day vernacular into time-like string.
+
+    >>> convert_time_of_day(['Monday', 'noon', 'huehue'])
+    ['Monday', '12', 'pm', 'huehue']
+    >>> convert_time_of_day(['Monday', 'afternoon'])
+    ['Monday', '3', 'pm']
+    >>> convert_time_of_day(['Tu', 'evening'])
+    ['Tu', '6', 'pm']
+    >>> convert_time_of_day(['Wed', 'morning'])
+    ['Wed', '9', 'am']
+    >>> convert_time_of_day(['Thu', 'midnight'])
+    ['Thu', '12', 'am']
+    """
+    temp_tokens = [token.lower() for token in tokens]
+    for keyword, time_tokens in (
+            ('morning', ['9', 'am']),
+            ('noon', ['12', 'pm']),
+            ('afternoon', ['3', 'pm']),
+            ('evening', ['6', 'pm']),
+            ('night', ['9', 'pm']),
+            ('midnight', ['12', 'am'])):
+        if keyword in temp_tokens:
+            index = temp_tokens.index(keyword)
+            return tokens[:index] + time_tokens + tokens[index+1:]
     return tokens
 
 
@@ -284,7 +313,7 @@ def extract_hour_minute_from_time(string, time_of_day='am'):
     """
     parts = string.split(':')
     hour = int(parts[0])
-    if time_of_day == 'pm' or hour < 6:
+    if time_of_day == 'pm' and hour != 12 or hour < 6:
         hour += 12
     minute = int(parts[1]) if len(parts) >= 2 else 0
     return hour, minute
@@ -336,9 +365,6 @@ def maybe_extract_hour_minute(tokens):
 
 def extract_hour_minute_from_remaining(tokens, now=datetime.datetime.now()):
     """Sketch collector for leftovers integers.
-
-    WARNING: Converts hours before 6 to p.m., automatically. This might cause
-    problems later on?
 
     >>> extract_hour_minute_from_remaining(['gibberish'])
     (0, 0)
