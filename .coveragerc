@@ -1,5 +1,5 @@
 [run]
-include = */TexSoup/*
+include = */timefhuman/*
 omit = tests/*
 
 [report]
