@@ -63,6 +63,7 @@ def timefhuman(string, now=None):
     # specified date time take precedence.
 
 
+# TODO: "monday next week"
 def convert_day_of_week(tokens, now=datetime.datetime.now()):
     """Convert day-of-week vernacular into date-like string.
 
