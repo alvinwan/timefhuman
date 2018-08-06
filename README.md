@@ -17,7 +17,7 @@ Use any human-readable format with a time range, choices of times, or choices of
 >>> timefhuman('7/17 3-4 PM')
 (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
 >>> timefhuman('7/17 3 p.m. - 4 p.m.')
-
+(datetime.datetime(2018, 7, 17, 15, 30), datetime.datetime(2018, 7, 17, 16, 0))
 >>> timefhuman('Monday 3 pm or Tu noon')  # when run on August 4, 2018
 [datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
 >>> timefhuman('7/17 3, 4, or 5 PM')

@@ -1,123 +1,84 @@
+from .data import TimeToken
+from .data import TimeRangeToken
+from .data import DayToken
+from .data import DayRangeToken
+
 import datetime
 
 
-class Token:
-    pass
+def build_tree(tokens, now=datetime.datetime.now()):
+    """Assemble datetime object optionally using time.
 
+    >>> build_tree([DayToken(7, 5, 2018), TimeToken(12, 'pm')])
+    [7/5/2018 12 pm]
+    >>> build_tree([TimeToken(9), 'on', DayToken(7, 5, 2018)])
+    [7/5/2018 9 am]
+    >>> build_tree([DayToken(7, 5, 2018), TimeToken(9), '-', TimeToken(11)])
+    [7/5/2018 9-11 am]
+    >>> build_tree([DayToken(7, 5, 2018), 'to', DayToken(7, 7, 2018), TimeToken(11)])
+    [7/5/2018 11 am - 7/7/2018 11 am]
+    """
+    tokens = combine_ranges(tokens)
 
-class DayToken(Token):
-
-    def __init__(self, month, day, year):
-        self.month = month
-        self.day = day
-        self.year = year
-
-    def combine(self, time):
-        """
-        >>> day = DayToken(8, 5, 2018)
-        >>> time = TimeToken(3, 'pm')
-        >>> time_range = TimeRangeToken(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
-        >>> day.combine(time)
-        datetime.datetime(2018, 8, 5, 15, 0)
-        >>> day.combine(time_range)
-        (datetime.datetime(2018, 8, 5, 15, 0), datetime.datetime(2018, 8, 5, 17, 0))
-        """
-        assert isinstance(time, (TimeRangeToken, TimeToken))
-        if isinstance(time, TimeToken):
-            return datetime.datetime(self.year, self.month, self.day, time.hour, time.minute)
-        return (datetime.datetime(self.year, self.month, self.day, time.start_time.hour, time.start_time.minute),
-            datetime.datetime(self.year, self.month, self.day, time.end_time.hour, time.end_time.minute))
-
-    def __repr__(self):
-        return '{}/{}/{}'.format(
-            self.month, self.day, self.year)
-
-
-class TimeToken(Token):
-
-    def __init__(self, hour, time_of_day='am', minute=0):
-        """
-        >>> TimeToken(3, 'pm')
-        3 pm
-        >>> TimeToken(3, None)
-        3:00
-        >>> TimeToken(3)
-        3 am
-        >>> TimeToken(12, 'pm')
-        12 pm
-        >>> TimeToken(12, 'am')
-        12 am
-        """
-        self.relative_hour = hour
-        self.minute = minute
-        self.time_of_day = time_of_day
-
-        if time_of_day == 'pm' and hour != 12:
-            self.hour = self.relative_hour + 12
-        elif time_of_day == 'am' and hour == 12:
-            self.hour = 0
+    datetimes = []
+    day = time = None
+    for token in tokens:
+        if isinstance(token, (DayToken, DayRangeToken)):
+            type = 'day'
+        elif isinstance(token, (TimeToken, TimeRangeToken)):
+            type = 'time'
         else:
-            self.hour = self.relative_hour
+            type = 'UNK'
 
-    def __repr__(self):
-        if self.time_of_day is None:
-            return '{}:{:02d}'.format(self.hour, self.minute)
-        if self.minute == 0:
-            return '{} {}'.format(self.relative_hour, self.time_of_day)
-        return '{}:{:02d} {}'.format(
-            self.relative_hour, self.minute, self.time_of_day)
+        if type == 'time':
+            if time is not None:
+                datetimes.append(time)
+                time = None
+            else:
+                time = token
+        elif type == 'day':
+            if day is not None:
+                datetimes.append(day)
+                day = None
+            else:
+                day = token
 
+        if day is not None and time is not None:
+            datetimes.append(day.combine(time))
+            day = None
+            time = None
 
-class DayRangeToken(Token):
+    if day is not None:
+        datetimes.append(day)
+    elif time is not None:
+        datetimes.append(time)
+    return datetimes
 
-    def __init__(self, start_date, end_date):
-        self.start_date = start_date
-        self.end_date = end_date
+def combine_ranges(tokens):
+    """
+    >>> combine_ranges([DayToken(7, 5, 2018), TimeToken(9), '-', TimeToken(11)])
+    [7/5/2018, 9-11 am]
+    >>> combine_ranges([DayToken(7, 5, 2018), 'to', DayToken(7, 7, 2018), TimeToken(9), '-', TimeToken(11)])
+    [7/5/2018 - 7/7/2018, 9-11 am]
+    """
+    while '-' in tokens or 'to' in tokens:
+        if '-' in tokens:
+            index = tokens.index('-')
+        elif 'to' in tokens:
+            index = tokens.index('to')
+        else:
+            return tokens
 
-    def apply_month(self, month):
-        self.start_date.month = month
-        self.end_date.month = month
+        if index == len(tokens) - 1 or index == 0:  # doesn't have both start, end
+            return tokens
 
-    def apply_year(self, year):
-        self.start_date.year = year
-        self.end_date.year = year
+        end = tokens[index+1]
+        start = tokens[index-1]
 
-    def __repr__(self):
-        return '{} - {}'.format(repr(self.start_date), repr(self.end_date))
-
-
-class TimeRangeToken(Token):
-
-    def __init__(self, start_time, end_time):
-        self.start_time = start_time
-        self.end_time = end_time
-
-    def __repr__(self):
-        return '{} - {}'.format(repr(self.start_time), repr(self.end_time))
-
-
-class AmbiguousToken(Token):
-
-    def __init__(self, *tokens):
-        self.tokens = tokens
-
-    def has_time_range_token(self):
-        return any([isinstance(token, TimeRangeToken) for token in self.tokens])
-
-    def get_time_range_token(self):
-        for token in self.tokens:
-            if isinstance(token, TimeRangeToken):
-                return token
-        return None
-
-    def has_day_range_token(self):
-        return any([isinstance(token, DayRangeToken) for token in self.tokens])
-
-    def get_day_range_token(self):
-        for token in self.tokens:
-            if isinstance(token, DayRangeToken):
-                return token
-        return None
-
-    def __repr__(self):
-        return ' OR '.join(map(repr, self.tokens))
+        if isinstance(start, TimeToken) and isinstance(end, TimeToken):
+            tokens = tokens[:index-1] + [TimeRangeToken(start, end)] + tokens[index+2:]
+        elif isinstance(start, DayToken) and isinstance(end, DayToken):
+            tokens = tokens[:index-1] + [DayRangeToken(start, end)] + tokens[index+2:]
+        else:
+            tokens = tokens[:index] + tokens[index+1:]  # ignore meaningless dashes, to
+    return tokens

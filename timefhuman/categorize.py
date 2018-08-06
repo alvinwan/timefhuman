@@ -1,16 +1,21 @@
 from .constants import MONTHS
 from .constants import DAYS_OF_WEEK
-from .tree import DayToken
-from .tree import TimeToken
-from .tree import DayRangeToken
-from .tree import TimeRangeToken
-from .tree import AmbiguousToken
-from .tree import Token
+from .data import  DayToken
+from .data import  TimeToken
+from .data import  DayRangeToken
+from .data import  TimeRangeToken
+from .data import  AmbiguousToken
+from .data import  Token
 
 import datetime
 
 
 def categorize(tokens, now):
+    """
+    >>> now = datetime.datetime(2018, 8, 6, 6, 0)
+    >>> categorize(['upcoming', 'Monday', 'noon'], now)
+    [8/6/2018, 12 pm]
+    """
     tokens = list(tokens)
     tokens = convert_day_of_week(tokens, now)
     tokens = convert_time_of_day(tokens)
@@ -239,13 +244,13 @@ def extract_hour_minute_from_time(string, time_of_day=None):
     >>> extract_hour_minute_from_time('3')
     3:00
     >>> extract_hour_minute_from_time('3:30-4', 'pm')
-    3:30 pm - 4 pm
+    3:30-4 pm
     >>> time_range = TimeRangeToken(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
     >>> day_range = DayRangeToken(DayToken(None, 3, None), DayToken(None, 5, None))
     >>> day = DayToken(3, 5, 2018)
     >>> ambiguous_token = AmbiguousToken(time_range, day, day_range)
     >>> extract_hour_minute_from_time(ambiguous_token)
-    3 pm - 5 pm
+    3-5 pm
     >>> extract_hour_minute_from_time(AmbiguousToken(day))
     """
     if isinstance(string, AmbiguousToken):
@@ -262,7 +267,7 @@ def extract_hour_minute_from_time(string, time_of_day=None):
     parts = string.split(':')
     hour = int(parts[0])
     minute = int(parts[1]) if len(parts) >= 2 else 0
-    return TimeToken(hour=hour, minute=minute, time_of_day=time_of_day)
+    return TimeToken(relative_hour=hour, minute=minute, time_of_day=time_of_day)
 
 
 def maybe_extract_hour_minute(tokens):
@@ -284,7 +289,7 @@ def maybe_extract_hour_minute(tokens):
     >>> maybe_extract_hour_minute(['July', 'at', '3'])
     ['July', 'at', '3']
     >>> maybe_extract_hour_minute(['7/17/18', '15:00'])
-    ['7/17/18', 15:00]
+    ['7/17/18', 3 pm]
     >>> maybe_extract_hour_minute(['7/17/18', TimeToken(3, 'pm')])
     ['7/17/18', 3 pm]
     """
