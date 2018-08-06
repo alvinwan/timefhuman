@@ -1,11 +1,11 @@
 from .constants import MONTHS
 from .constants import DAYS_OF_WEEK
-from .data import  DayToken
-from .data import  TimeToken
-from .data import  DayRangeToken
-from .data import  TimeRangeToken
-from .data import  AmbiguousToken
-from .data import  Token
+from .data import DayToken
+from .data import TimeToken
+from .data import DayRangeToken
+from .data import TimeRangeToken
+from .data import AmbiguousToken
+from .data import Token
 
 import datetime
 
@@ -17,14 +17,21 @@ def categorize(tokens, now):
     [8/6/2018, 12 pm]
     >>> categorize(['7/17', '3:30', 'p.m.', '-', '4', 'p.m.'], now)
     [7/17/2018, 3:30 pm, '-', 4 pm]
+    >>> categorize(['7/17', 'or', '7/18', '3', 'p.m.'], now)
+    [7/17/2018, 'or', 7/18/2018, 3 pm]
+    >>> categorize(['today', 'or', 'tomorrow', 'noon'], now)
+    [8/6/2018, 'or', 8/7/2018, 12 pm]
+    >>> categorize(['7/17', '4', 'or', '5', 'PM'], now)
+    [7/17/2018, 4:00, 'or', 5 pm]
     """
     tokens = list(tokens)
     tokens = convert_day_of_week(tokens, now)
+    tokens = convert_relative_days(tokens, now)
     tokens = convert_time_of_day(tokens)
-    tokens = maybe_extract_hour_minute(tokens)
-    tokens = maybe_extract_using_date(tokens, now)
-    tokens = maybe_extract_using_month(tokens, now)
-    tokens = extract_hour_minute_from_remaining(tokens, now)
+    tokens = maybe_substitute_hour_minute(tokens)
+    tokens = maybe_substitute_using_date(tokens, now)
+    tokens = maybe_substitute_using_month(tokens, now)
+    tokens = substitute_hour_minute_in_remaining(tokens, now)
     return tokens
 
 
@@ -58,6 +65,24 @@ def convert_day_of_week(tokens, now=datetime.datetime.now()):
                 tokens[new_index] = DayToken(day.month, day.day, day.year)
                 break
     return tokens
+
+
+def convert_relative_days(tokens, now=datetime.datetime.now()):
+    """Convert relative days (e.g., "today", "tomorrow") into date-like string.
+
+    >>> now = datetime.datetime(2018, 8, 6)
+    >>> convert_relative_days(['today', 'or', 'tomorrow', TimeToken(12, 'pm')], now)
+    [8/6/2018, 'or', 8/7/2018, 12 pm]
+    """
+    for keywords, replacement in (
+            (("today",), DayToken.from_datetime(now)),
+            (("tomorrow", "tmw"), DayToken.from_datetime(now + datetime.timedelta(1))),
+            (("yesterday",), DayToken.from_datetime(now - datetime.timedelta(1)))):
+        for keyword in keywords:
+            tokens = [replacement if token == keyword else token \
+                        for token in tokens]
+    return tokens
+
 
 
 # TODO: convert to new token-based system
@@ -123,27 +148,27 @@ def convert_time_of_day(tokens):
     return tokens
 
 
-def maybe_extract_using_month(tokens, now=datetime.datetime.now()):
+def maybe_substitute_using_month(tokens, now=datetime.datetime.now()):
     """
 
     >>> now = datetime.datetime(year=2018, month=7, day=7)
-    >>> maybe_extract_using_month(['July', '17', '2018', 'at'])
+    >>> maybe_substitute_using_month(['July', '17', '2018', 'at'])
     [7/17/2018, 'at']
-    >>> maybe_extract_using_month(['Jul', '17', 'at'], now=now)
+    >>> maybe_substitute_using_month(['Jul', '17', 'at'], now=now)
     [7/17/2018, 'at']
-    >>> maybe_extract_using_month(['July', 'at'], now=now)
+    >>> maybe_substitute_using_month(['July', 'at'], now=now)
     [7/7/2018, 'at']
-    >>> maybe_extract_using_month(['August', '17'], now=now)
+    >>> maybe_substitute_using_month(['August', '17'], now=now)
     [8/17/2018]
-    >>> maybe_extract_using_month(['Aug', 'at'], now=now)
+    >>> maybe_substitute_using_month(['Aug', 'at'], now=now)
     [8/1/2018, 'at']
-    >>> maybe_extract_using_month(['gibberish'], now=now)
+    >>> maybe_substitute_using_month(['gibberish'], now=now)
     ['gibberish']
     >>> time_range = TimeRangeToken(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
     >>> day_range = DayRangeToken(DayToken(None, 3, None), DayToken(None, 5, None))
     >>> day = DayToken(3, 5, 2018)
     >>> ambiguous_token = AmbiguousToken(time_range, day, day_range)
-    >>> maybe_extract_using_month(['May', ambiguous_token])
+    >>> maybe_substitute_using_month(['May', ambiguous_token])
     [5/3/2018 - 5/5/2018]
     """
     temp_tokens = [token.lower() if isinstance(token, str) else token for token in tokens]
@@ -187,7 +212,7 @@ def maybe_extract_using_month(tokens, now=datetime.datetime.now()):
     return tokens
 
 
-def maybe_extract_using_date(tokens, now=datetime.datetime.now()):
+def maybe_substitute_using_date(tokens, now=datetime.datetime.now()):
     """Attempt to extract dates.
 
     Look for dates in the form of the following:
@@ -199,15 +224,15 @@ def maybe_extract_using_date(tokens, now=datetime.datetime.now()):
     (month).(day).(year)
     (month)-(day)-(year)
 
-    >>> maybe_extract_using_date(['7/17/18'])
+    >>> maybe_substitute_using_date(['7/17/18'])
     [7/17/2018]
-    >>> maybe_extract_using_date(['7-17-18'])
+    >>> maybe_substitute_using_date(['7-17-18'])
     [7/17/2018]
-    >>> maybe_extract_using_date(['3', 'on', '7.17.18'])
+    >>> maybe_substitute_using_date(['3', 'on', '7.17.18'])
     ['3', 'on', 7/17/2018]
-    >>> maybe_extract_using_date(['7-25', '3-4', 'pm'])
+    >>> maybe_substitute_using_date(['7-25', '3-4', 'pm'])
     [7/25/2018, 3/4/2018 OR 3:00 - 4:00, 'pm']
-    >>> maybe_extract_using_date(['7/4', '-', '7/6'])
+    >>> maybe_substitute_using_date(['7/4', '-', '7/6'])
     [7/4/2018, '-', 7/6/2018]
     """
     for i, token in enumerate(tokens):
@@ -216,44 +241,45 @@ def maybe_extract_using_date(tokens, now=datetime.datetime.now()):
         for punctuation in ('/', '.', '-'):
             if punctuation == token:  # dash joins other tokens, skip parsing
                 continue
-            if punctuation in token:
-                parts = tuple(map(int, token.split(punctuation)))
-                if len(parts) == 2:
-                    day = DayToken(month=parts[0], day=parts[1], year=now.year)
-                    if punctuation == '-' and parts[1] <= 24:
-                        day = AmbiguousToken(
-                            day,
-                            extract_hour_minute_from_time(token)
-                        )
-                    tokens = tokens[:i] + [day] + tokens[i+1:]
-                    continue
+            if punctuation not in token:
+                continue
+            parts = tuple(map(int, token.split(punctuation)))
+            if len(parts) == 2:
+                day = DayToken(month=parts[0], day=parts[1], year=now.year)
+                if punctuation == '-' and parts[1] <= 24:
+                    day = AmbiguousToken(
+                        day, extract_hour_minute(token))
+                tokens = tokens[:i] + [day] + tokens[i+1:]
+                continue
 
-                month, day, year = parts
-                if year < 1000:
-                    year = year + 2000 if year < 50 else year + 1000
-                day = DayToken(month=month, day=day, year=year)
-                return tokens[:i] + [day] + tokens[i+1:]
+            month, day, year = parts
+            if year < 1000:
+                year = year + 2000 if year < 50 else year + 1000
+            day = DayToken(month=month, day=day, year=year)
+            return tokens[:i] + [day] + tokens[i+1:]
     return tokens
 
 
-def extract_hour_minute_from_time(string, time_of_day=None):
+def extract_hour_minute(string, time_of_day=None):
     """
 
-    >>> extract_hour_minute_from_time('3:00')
+    >>> extract_hour_minute('3:00')
     3:00
-    >>> extract_hour_minute_from_time('3:00', 'pm')
+    >>> extract_hour_minute('3:00', 'pm')
     3 pm
-    >>> extract_hour_minute_from_time('3')
+    >>> time = extract_hour_minute('3')
+    >>> time
     3:00
-    >>> extract_hour_minute_from_time('3:30-4', 'pm')
+    >>> time.time_of_day
+    >>> extract_hour_minute('3:30-4', 'pm')
     3:30-4 pm
     >>> time_range = TimeRangeToken(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
     >>> day_range = DayRangeToken(DayToken(None, 3, None), DayToken(None, 5, None))
     >>> day = DayToken(3, 5, 2018)
     >>> ambiguous_token = AmbiguousToken(time_range, day, day_range)
-    >>> extract_hour_minute_from_time(ambiguous_token)
+    >>> extract_hour_minute(ambiguous_token)
     3-5 pm
-    >>> extract_hour_minute_from_time(AmbiguousToken(day))
+    >>> extract_hour_minute(AmbiguousToken(day))
     """
     if isinstance(string, AmbiguousToken):
         if string.has_time_range_token():
@@ -262,8 +288,8 @@ def extract_hour_minute_from_time(string, time_of_day=None):
 
     if '-' in string:
         times = string.split('-')
-        start = extract_hour_minute_from_time(times[0], time_of_day)  # TODO: yuck! return a range
-        end = extract_hour_minute_from_time(times[1], time_of_day)
+        start = extract_hour_minute(times[0], time_of_day)
+        end = extract_hour_minute(times[1], time_of_day)
         return TimeRangeToken(start, end)
 
     parts = string.split(':')
@@ -272,64 +298,69 @@ def extract_hour_minute_from_time(string, time_of_day=None):
     return TimeToken(relative_hour=hour, minute=minute, time_of_day=time_of_day)
 
 
-def maybe_extract_hour_minute(tokens):
+def maybe_substitute_hour_minute(tokens):
     """Attempt to extract hour and minute.
 
     If am and pm are found, grab the hour and minute before it. If colon, use
     that as time.
 
-    >>> maybe_extract_hour_minute(['7/17/18', '3', 'PM'])
+    >>> maybe_substitute_hour_minute(['7/17/18', '3', 'PM'])
     ['7/17/18', 3 pm]
-    >>> maybe_extract_hour_minute(['7/17/18', '3:00', 'p.m.'])
+    >>> maybe_substitute_hour_minute(['7/17/18', '3:00', 'p.m.'])
     ['7/17/18', 3 pm]
-    >>> maybe_extract_hour_minute(['July', '17', '2018', 'at', '3', 'p.m.'])
+    >>> maybe_substitute_hour_minute(['July', '17', '2018', 'at', '3', 'p.m.'])
     ['July', '17', '2018', 'at', 3 pm]
-    >>> maybe_extract_hour_minute(['July', '17', '2018', '3', 'p.m.'])
+    >>> maybe_substitute_hour_minute(['July', '17', '2018', '3', 'p.m.'])
     ['July', '17', '2018', 3 pm]
-    >>> maybe_extract_hour_minute(['3', 'PM', 'on', 'July', '17'])
+    >>> maybe_substitute_hour_minute(['3', 'PM', 'on', 'July', '17'])
     [3 pm, 'on', 'July', '17']
-    >>> maybe_extract_hour_minute(['July', 'at', '3'])
+    >>> maybe_substitute_hour_minute(['July', 'at', '3'])
     ['July', 'at', '3']
-    >>> maybe_extract_hour_minute(['7/17/18', '15:00'])
+    >>> maybe_substitute_hour_minute(['7/17/18', '15:00'])
     ['7/17/18', 3 pm]
-    >>> maybe_extract_hour_minute(['7/17/18', TimeToken(3, 'pm')])
+    >>> maybe_substitute_hour_minute(['7/17/18', TimeToken(3, 'pm')])
     ['7/17/18', 3 pm]
-    >>> maybe_extract_hour_minute(['3', 'p.m.', '-', '4', 'p.m.'])
+    >>> maybe_substitute_hour_minute(['3', 'p.m.', '-', '4', 'p.m.'])
     [3 pm, '-', 4 pm]
     """
-    temp_tokens = [token.replace('.', '').lower() if isinstance(token, str) else token for token in tokens]
-    remaining_tokens = tokens
+    remove_dots = lambda token: token.replace('.', '')
+    temp_tokens = clean_tokens(tokens, remove_dots)
 
-    time = None
-    time_of_day = None
     for time_of_day in ('am', 'pm'):
         while time_of_day in temp_tokens:
             index = temp_tokens.index(time_of_day)
-            time = temp_tokens[index-1]
-            time_token = extract_hour_minute_from_time(time, time_of_day)
+            time_token = extract_hour_minute(temp_tokens[index-1], time_of_day)
             tokens = tokens[:index-1] + [time_token] + tokens[index+1:]
-            temp_tokens = [token.replace('.', '').lower() if isinstance(token, str) else token for token in tokens]
+            temp_tokens = clean_tokens(tokens, remove_dots)
 
-    for token in tokens:
-        if isinstance(token, Token):
-            continue
-        if ':' in token:
-            time_token = extract_hour_minute_from_time(token, None)
-            tokens = [token if ':' not in token else time_token for token in tokens]
+    tokens = [extract_hour_minute(token, None)
+        if isinstance(token, str) and ':' in token else token
+        for token in tokens]
 
     return tokens
 
 
-def extract_hour_minute_from_remaining(tokens, now=datetime.datetime.now()):
+def clean_tokens(tokens, callback=lambda token: token):
+    """
+    >>> clean_tokens(['Hello', '3', 'P.M.'])
+    ['hello', '3', 'p.m.']
+    >>> clean_tokens(['Hello', '3', 'P.M.'], lambda token: token.replace('.', ''))
+    ['hello', '3', 'pm']
+    """
+    return [callback(token.lower()) if isinstance(token, str)
+            else token for token in tokens]
+
+
+def substitute_hour_minute_in_remaining(tokens, now=datetime.datetime.now()):
     """Sketch collector for leftovers integers.
 
-    >>> extract_hour_minute_from_remaining(['gibberish'])
+    >>> substitute_hour_minute_in_remaining(['gibberish'])
     ['gibberish']
     """
     for i, token in enumerate(tokens):
         if isinstance(token, Token):
             continue
         if token.isnumeric():
-            time_token = extract_hour_minute_from_time(token)
+            time_token = extract_hour_minute(token)
             return tokens[:i] + [time_token] + tokens[i+1:]
     return tokens

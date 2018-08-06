@@ -16,6 +16,18 @@ class DayTimeToken(Token):
         return datetime.datetime(
             self.day.year, self.day.month, self.day.day, self.time.hour, self.time.minute)
 
+    @staticmethod
+    def from_day_time(day, time):
+        return DayTimeToken(
+            day.year, day.month, day.day, time.relative_hour, time.minute,
+            time.time_of_day)
+
+    @staticmethod
+    def from_datetime(datetime):
+        return DayTimeToken(
+            datetime.year, datetime.month, datetime.day, datetime.hour,
+            datetime.minute)
+
     def __repr__(self):
         return '{} {}'.format(repr(self.day), repr(self.time))
 
@@ -67,13 +79,17 @@ class DayToken(Token):
         """
         assert isinstance(time, (TimeRangeToken, TimeToken))
         if isinstance(time, TimeToken):
-            return DayTimeToken(self.year, self.month, self.day, time.relative_hour, time.minute, time.time_of_day)
+            return DayTimeToken.from_day_time(self, time)
         return DayTimeRange(
-            DayTimeToken(self.year, self.month, self.day, time.start.relative_hour, time.start.minute, time.start.time_of_day),
-            DayTimeToken(self.year, self.month, self.day, time.end.relative_hour, time.end.minute, time.end.time_of_day))
+            DayTimeToken.from_day_time(self, time.start),
+            DayTimeToken.from_day_time(self, time.end))
 
     def datetime(self, now):
         return datetime.datetime(self.year, self.month, self.day)
+
+    @staticmethod
+    def from_datetime(datetime):
+        return DayToken(datetime.month, datetime.day, datetime.year)
 
     def __eq__(self, other):
         """
@@ -139,6 +155,20 @@ class TimeToken(Token):
         return '{}:{:02d} {}'.format(
             self.relative_hour, self.minute, self.time_of_day)
 
+    def update_time_of_day(self, time_of_day):
+        if time_of_day != self.time_of_day:
+            if time_of_day == 'pm':
+                self.hour += 12
+            else:
+                self.hour -= 12
+            self.time_of_day = time_of_day
+
+    def apply_time(self, other):
+        if self.time_of_day is None and other.time_of_day is not None:
+            self.update_time_of_day(other.time_of_day)
+        elif self.time_of_day is not None and other.time_of_day is None:
+            other.update_time_of_day(self.time_of_day)
+
     def __repr__(self):
         return self.string()
 
@@ -164,8 +194,8 @@ class DayRangeToken(Token):
         assert isinstance(time, (TimeRangeToken, TimeToken))
         if isinstance(time, TimeToken):
             return DayTimeRange(
-                DayTimeToken(self.start.year, self.start.month, self.start.day, time.hour, time.minute),
-                DayTimeToken(self.end.year, self.end.month, self.end.day, time.hour, time.minute))
+                DayTimeToken.from_day_time(self.start, time),
+                DayTimeToken.from_day_time(self.end, time))
         raise NotImplementedError()  # return list of two ranges
 
     def __repr__(self):
