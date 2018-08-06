@@ -28,3 +28,13 @@ def test_choices():
     #     (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
     #     (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))
     # ]
+
+
+def test_edge_cases_range():
+    now = datetime.datetime(year=2018, month=8, day=4)
+    assert timefhuman('3-4 pm', now) == (
+        datetime.datetime(2018, 8, 4, 15, 0),
+        datetime.datetime(2018, 8, 4, 16, 0),)
+    # assert timefhuman('7/17-7/18', now) == (
+    #     datetime.datetime(2018, 8, 17, 0, 0),
+    #     datetime.datetime(2018, 8, 18, 0, 0),)

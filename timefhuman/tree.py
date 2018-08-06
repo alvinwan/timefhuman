@@ -38,6 +38,8 @@ def combine_ranges(tokens):
     >>> combine_ranges([DayToken(7, 5, 2018), 'to', DayToken(7, 7, 2018),
     ...     TimeToken(9), '-', TimeToken(11)])
     [7/5/2018 - 7/7/2018, 9-11 am]
+    >>> combine_ranges([TimeToken(7, 'pm'), 'to', DayToken(7, 7, 2018)])  # ignore meaningless 'to'  # TODO: assert?
+    [7 pm, 7/7/2018]
     """
     while '-' in tokens or 'to' in tokens:
         if '-' in tokens:
@@ -72,6 +74,8 @@ def combine_on_at(tokens):
     [9 am]
     >>> combine_on_at([TimeToken(9), 'on'])
     [9 am]
+    >>> combine_on_at([TimeToken(9), 'at', TimeToken(9)])  # malformed, ignored at  # TODO: alert?
+    [9 am, 9 am]
     """
     for keyword in ('on', 'at'):
         while keyword in tokens:
@@ -97,6 +101,8 @@ def combine_days_and_times(tokens):
     [7/5/2018, 'or', 7/7/2018 11 am]
     >>> combine_days_and_times(['or', DayToken(7, 7, 2018), TimeToken(11)])
     ['or', 7/7/2018 11 am]
+    >>> combine_days_and_times([TimeToken(11), DayToken(7, 7, 2018)])
+    [7/7/2018 11 am]
     """
     cursor = 0
     while cursor < len(tokens):
@@ -109,7 +115,7 @@ def combine_days_and_times(tokens):
                 isinstance(tokens[cursor], (DayToken, DayRangeToken)) and \
                 isinstance(tokens[cursor-1], (TimeToken, TimeRangeToken)):
             token = tokens[cursor].combine(tokens[cursor-1])
-            tokens = tokens[:cursor-2] + [token] + tokens[cursor:]
+            tokens = tokens[:cursor-1] + [token] + tokens[cursor+1:]
         cursor += 1
     return tokens
 
@@ -121,14 +127,17 @@ def combine_ors(tokens):
     [7/5/2018, 7/7/2018]
     >>> combine_ors([TimeToken(3, None), 'or', TimeToken(4, 'pm')])
     [3 pm, 4 pm]
+    >>> combine_ors(['or', TimeToken(4, 'pm')])
+    ['or', 4 pm]
     """
     while 'or' in tokens:
         index = tokens.index('or')
 
         if index == len(tokens) - 1 or index == 0:
-            return tokens  # TODO: incorrect; these returns should skip over this index
+            return tokens  # TODO: incorrect; these returns should skip over this index; multiple ors
 
-        # TODO: need generic way to impute both ways - simply first two cases
+        # TODO: need generic way to impute both ways - simplify first two cases
+        # TODO: too explicit, need a generic way to combine, esp. for longer lists
         if isinstance(tokens[index-1], DayToken) and \
                 isinstance(tokens[index+1], DayTimeToken):
             tokens[index-1] = DayTimeToken.from_day_time(
@@ -145,11 +154,5 @@ def combine_ors(tokens):
             tokens[index+1] = DayTimeToken.from_day_time(
                 tokens[index-1].day, tokens[index+1])
             tokens[index+1].time.apply_time(tokens[index-1].time)
-        elif isinstance(tokens[index-1], AmbiguousToken) and \
-                isinstance(tokens[index+1], TimeRangeToken):
-            tokens[index-1] = [t for t in tokens[index-1].tokens if isinstance(t, TimeRangeToken)][0]
-        elif isinstance(tokens[index-1], AmbiguousToken) and \
-                isinstance(tokens[index+1], DayToken):
-            tokens[index-1] = [t for t in tokens[index-1].tokens if isinstance(t, DayToken)][0]
         tokens = tokens[:index] + tokens[index+1:]
     return tokens

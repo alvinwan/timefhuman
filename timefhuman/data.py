@@ -22,12 +22,6 @@ class DayTimeToken(Token):
             day.year, day.month, day.day, time.relative_hour, time.minute,
             time.time_of_day)
 
-    @staticmethod
-    def from_datetime(datetime):
-        return DayTimeToken(
-            datetime.year, datetime.month, datetime.day, datetime.hour,
-            datetime.minute)
-
     def __repr__(self):
         return '{} {}'.format(repr(self.day), repr(self.time))
 
@@ -156,6 +150,19 @@ class TimeToken(Token):
             self.relative_hour, self.minute, self.time_of_day)
 
     def update_time_of_day(self, time_of_day):
+        """
+        >>> time = TimeToken(3)
+        >>> time.update_time_of_day('pm')
+        >>> time
+        3 pm
+        >>> time.hour
+        15
+        >>> time.update_time_of_day('am')
+        >>> time
+        3 am
+        >>> time.hour
+        3
+        """
         if time_of_day != self.time_of_day:
             if time_of_day == 'pm':
                 self.hour += 12
@@ -229,7 +236,6 @@ class AmbiguousToken(Token):
         for token in self.tokens:
             if isinstance(token, TimeRangeToken):
                 return token
-        return None
 
     def has_day_range_token(self):
         return any([isinstance(token, DayRangeToken) for token in self.tokens])
@@ -238,7 +244,6 @@ class AmbiguousToken(Token):
         for token in self.tokens:
             if isinstance(token, DayRangeToken):
                 return token
-        return None
 
     def __repr__(self):
         return ' OR '.join(map(repr, self.tokens))
