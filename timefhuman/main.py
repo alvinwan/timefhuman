@@ -40,6 +40,7 @@ def timefhuman(string, now=None):
     (datetime.datetime(2018, 7, 17, 15, 30), datetime.datetime(2018, 7, 17, 16, 0))
     >>> timefhuman('7/17 3:30 p.m. - 4 p.m.', now=now)
     (datetime.datetime(2018, 7, 17, 15, 30), datetime.datetime(2018, 7, 17, 16, 0))
+    
     # date range
     # multiple datetimes, with ranges
     """

@@ -15,6 +15,8 @@ def categorize(tokens, now):
     >>> now = datetime.datetime(2018, 8, 6, 6, 0)
     >>> categorize(['upcoming', 'Monday', 'noon'], now)
     [8/6/2018, 12 pm]
+    >>> categorize(['7/17', '3:30', 'p.m.', '-', '4', 'p.m.'], now)
+    [7/17/2018, 3:30 pm, '-', 4 pm]
     """
     tokens = list(tokens)
     tokens = convert_day_of_week(tokens, now)
@@ -117,7 +119,7 @@ def convert_time_of_day(tokens):
             ('midnight', [TimeToken(12, 'am')])):
         if keyword in temp_tokens:
             index = temp_tokens.index(keyword)
-            return tokens[:index] + time_tokens + tokens[index+1:]
+            tokens = tokens[:index] + time_tokens + tokens[index+1:]
     return tokens
 
 
@@ -292,6 +294,8 @@ def maybe_extract_hour_minute(tokens):
     ['7/17/18', 3 pm]
     >>> maybe_extract_hour_minute(['7/17/18', TimeToken(3, 'pm')])
     ['7/17/18', 3 pm]
+    >>> maybe_extract_hour_minute(['3', 'p.m.', '-', '4', 'p.m.'])
+    [3 pm, '-', 4 pm]
     """
     temp_tokens = [token.replace('.', '').lower() if isinstance(token, str) else token for token in tokens]
     remaining_tokens = tokens
@@ -299,11 +303,12 @@ def maybe_extract_hour_minute(tokens):
     time = None
     time_of_day = None
     for time_of_day in ('am', 'pm'):
-        if time_of_day in temp_tokens:
+        while time_of_day in temp_tokens:
             index = temp_tokens.index(time_of_day)
             time = temp_tokens[index-1]
             time_token = extract_hour_minute_from_time(time, time_of_day)
-            return tokens[:index-1] + [time_token] + tokens[index+1:]
+            tokens = tokens[:index-1] + [time_token] + tokens[index+1:]
+            temp_tokens = [token.replace('.', '').lower() if isinstance(token, str) else token for token in tokens]
 
     for token in tokens:
         if isinstance(token, Token):
@@ -311,7 +316,6 @@ def maybe_extract_hour_minute(tokens):
         if ':' in token:
             time_token = extract_hour_minute_from_time(token, None)
             tokens = [token if ':' not in token else time_token for token in tokens]
-            return tokens
 
     return tokens
 
