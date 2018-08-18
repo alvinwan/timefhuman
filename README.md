@@ -3,7 +3,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/alvinwan/timefhuman/badge.svg?branch=travis)](https://coveralls.io/github/alvinwan/timefhuman?branch=travis)
 [![Build Status](https://travis-ci.org/alvinwan/timefhuman.svg?branch=master)](https://travis-ci.org/alvinwan/timefhuman)
 
-Convert human-readable, date-like strings written in natural language to Python objects. Describe days of the week or times of day in the vernacular.
+Convert human-readable, date-like strings written in natural language to Python objects. Describe specific datetimes or ranges of datetimes.
+
+To start, describe days of the week or times of day in the vernacular.
 
 ```
 >>> from timefhuman import timefhuman

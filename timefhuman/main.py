@@ -28,8 +28,11 @@ import string
 __all__ = ('timefhuman',)
 
 
-def timefhuman(string, now=None):
+def timefhuman(string, now=None, raw=None):
     """A simple parsing function for date-related strings.
+
+    :param string: date-like string to parse
+    :param now: datetime for now, will default to datetime.datetime.now()
 
     >>> now = datetime.datetime(year=2018, month=8, day=4)
     >>> timefhuman('upcoming Monday noon', now=now)  # natural language
@@ -46,14 +49,17 @@ def timefhuman(string, now=None):
     [datetime.datetime(2018, 8, 4, 12, 0), datetime.datetime(2018, 8, 5, 12, 0)]
     >>> timefhuman('2 PM on 7/17 or 7/19')  # time applies to both dates
     [datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]
+    >>> timefhuman('2 PM on 7/17 or 7/19', raw=True)
+    [7/17/2018 2 pm, 7/19/2018 2 pm]
     """
     if now is None:
         now = datetime.datetime.now()
 
-    tokens = tokenize(string)
-    tokens = categorize(tokens, now)
-    tokens = build_tree(tokens, now)
-    datetimes = assemble_date(tokens, now)
+    tokens = timefhuman_tokens(string, now)
+
+    if raw:
+        return tokens
+    datetimes = [tok.datetime(now) for tok in tokens if isinstance(tok, Token)]
 
     if len(datetimes) == 1:  # TODO: bad idea?
         return datetimes[0]
@@ -63,6 +69,9 @@ def timefhuman(string, now=None):
     # specified date time take precedence.
 
 
-def assemble_date(tokens, now=datetime.datetime.now()):
-    """Assemble datetime object optionally using time."""
-    return [token.datetime(now) for token in tokens if isinstance(token, Token)]
+def timefhuman_tokens(string, now):
+    """Convert string into timefhuman parsed, imputed, combined tokens"""
+    tokens = tokenize(string)
+    tokens = categorize(tokens, now)
+    tokens = build_tree(tokens, now)
+    return tokens

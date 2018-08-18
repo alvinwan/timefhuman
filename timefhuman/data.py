@@ -61,6 +61,9 @@ class DayToken(Token):
         self.day = day
         self.year = year
 
+        assert month is None or 1 <= month <= 12
+        assert day is None or 1 <= day <= 31
+
     def combine(self, time):
         """
         >>> day = DayToken(8, 5, 2018)
@@ -87,9 +90,9 @@ class DayToken(Token):
 
     def __eq__(self, other):
         """
-        >>> DayToken(2018, 5, 7) == DayToken(2018, 5, 7)
+        >>> DayToken(5, 7, 2018) == DayToken(5, 7, 2018)
         True
-        >>> DayToken(2018, 7, 4) == DayToken(2018, 7, 6)
+        >>> DayToken(7, 4, 2018) == DayToken(7, 6, 2018)
         False
         """
         if not isinstance(other, DayToken):
@@ -132,6 +135,9 @@ class TimeToken(Token):
             self.hour = 0
         else:
             self.hour = self.relative_hour
+
+        assert 0 <= self.hour < 24
+        assert 0 <= self.minute < 60
 
     def datetime(self, now):
         return datetime.datetime(now.year, now.month, now.day, self.hour, self.minute)
@@ -244,6 +250,17 @@ class AmbiguousToken(Token):
         for token in self.tokens:
             if isinstance(token, DayRangeToken):
                 return token
+
+    def has_day_token(self):
+        return any([isinstance(token, DayToken) for token in self.tokens])
+
+    def get_day_token(self):
+        for token in self.tokens:
+            if isinstance(token, DayToken):
+                return token
+
+    def datetime(self, now):
+        return self.tokens[0].datetime(now=now)
 
     def __repr__(self):
         return ' OR '.join(map(repr, self.tokens))

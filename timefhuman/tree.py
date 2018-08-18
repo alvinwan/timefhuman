@@ -104,6 +104,8 @@ def combine_days_and_times(tokens):
     >>> combine_days_and_times([TimeToken(11), DayToken(7, 7, 2018)])
     [7/7/2018 11 am]
     """
+
+    # TODO: simplify method
     cursor = 0
     while cursor < len(tokens):
         if cursor+1 < len(tokens) and \
@@ -116,6 +118,12 @@ def combine_days_and_times(tokens):
                 isinstance(tokens[cursor-1], (TimeToken, TimeRangeToken)):
             token = tokens[cursor].combine(tokens[cursor-1])
             tokens = tokens[:cursor-1] + [token] + tokens[cursor+1:]
+        elif cursor+1 < len(tokens) and \
+                isinstance(tokens[cursor], AmbiguousToken) and tokens[cursor].has_day_token() and \
+                isinstance(tokens[cursor+1], (TimeToken, TimeRangeToken)):
+            tokens[cursor] = tokens[cursor].get_day_token()
+            token = tokens[cursor].combine(tokens[cursor+1])
+            tokens = tokens[:cursor] + [token] + tokens[cursor+2:]
         cursor += 1
     return tokens
 
@@ -154,5 +162,8 @@ def combine_ors(tokens):
             tokens[index+1] = DayTimeToken.from_day_time(
                 tokens[index-1].day, tokens[index+1])
             tokens[index+1].time.apply_time(tokens[index-1].time)
+        elif isinstance(tokens[index-1], AmbiguousToken) and \
+                isinstance(tokens[index+1], TimeRangeToken):
+            tokens[index-1] = tokens[index-1].get_time_range_token()
         tokens = tokens[:index] + tokens[index+1:]
     return tokens

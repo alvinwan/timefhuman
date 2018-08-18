@@ -45,11 +45,11 @@ def convert_day_of_week(tokens, now=datetime.datetime.now()):
     Also assumes that 'last', 'past', and 'previous' are the same.
 
     >>> now = datetime.datetime(year=2018, month=8, day=4)
-    >>> convert_day_of_week(['Monday', 'at', '3'])
+    >>> convert_day_of_week(['Monday', 'at', '3'], now)
     [8/6/2018, 'at', '3']
-    >>> convert_day_of_week(['next', 'Monday', 'at', '3'])
+    >>> convert_day_of_week(['next', 'Monday', 'at', '3'], now)
     [8/13/2018, 'at', '3']
-    >>> convert_day_of_week(['past', 'Monday', 'at', '3'])
+    >>> convert_day_of_week(['past', 'Monday', 'at', '3'], now)
     [7/30/2018, 'at', '3']
     """
     tokens = tokens.copy()
@@ -234,15 +234,26 @@ def maybe_substitute_using_date(tokens, now=datetime.datetime.now()):
     [7/25/2018, 3/4/2018 OR 3:00 - 4:00, 'pm']
     >>> maybe_substitute_using_date(['7/4', '-', '7/6'])
     [7/4/2018, '-', 7/6/2018]
+    >>> maybe_substitute_using_date(['7/17-7/18'])
+    [7/17/2018, '-', 7/18/2018]
     """
-    for i, token in enumerate(tokens):
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
         if isinstance(token, Token):
+            i += 1
             continue
         for punctuation in ('/', '.', '-'):
             if punctuation == token:  # dash joins other tokens, skip parsing
                 continue
             if punctuation not in token:
                 continue
+
+            if '-' in token and '-' != punctuation:
+                parts = token.split('-')
+                tokens = tokens[:i] + [parts[0], '-', parts[1]] + tokens[i+1:]
+                i -= 1
+                break
             parts = tuple(map(int, token.split(punctuation)))
             if len(parts) == 2:
                 day = DayToken(month=parts[0], day=parts[1], year=now.year)
@@ -256,7 +267,8 @@ def maybe_substitute_using_date(tokens, now=datetime.datetime.now()):
             if year < 1000:
                 year = year + 2000 if year < 50 else year + 1000
             day = DayToken(month=month, day=day, year=year)
-            return tokens[:i] + [day] + tokens[i+1:]
+            tokens = tokens[:i] + [day] + tokens[i+1:]
+        i += 1
     return tokens
 
 
