@@ -46,5 +46,5 @@ def test_edge_cases_range(now):
         datetime.datetime(2018, 8, 4, 15, 0),
         datetime.datetime(2018, 8, 4, 16, 0),)
     assert timefhuman('7/17-7/18', now) == (
-        datetime.datetime(2018, 8, 17, 0, 0),
-        datetime.datetime(2018, 8, 18, 0, 0),)
+        datetime.datetime(2018, 7, 17, 0, 0),
+        datetime.datetime(2018, 7, 18, 0, 0),)
