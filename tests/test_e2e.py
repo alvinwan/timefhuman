@@ -35,6 +35,11 @@ def test_choices(now):
         datetime.datetime(2018, 7, 17, 16, 0),
         datetime.datetime(2018, 7, 17, 17, 0),
     ]
+    assert timefhuman('7/17 4-5 PM or 5-6 PM') == [
+        (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
+        (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))
+    ]
+    print(timefhuman('7/17 4-5 or 5-6 PM', raw=True))
     assert timefhuman('7/17 4-5 or 5-6 PM') == [
         (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
         (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))

@@ -24,8 +24,9 @@ Use any human-readable format with a time range, choices of times, or choices of
 [datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
 >>> timefhuman('7/17 4 or 5 PM')
 [datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)]
->>> timefhuman('7/17 4-5 or 5-6 PM')  # coming soon
-
+>>> timefhuman('7/17 4-5 or 5-6 PM')
+[(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
+ (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))]
 ```
 
 Parse lists of dates and times with more complex relationships.
