@@ -1,6 +1,6 @@
 # timefhuman
 
-[![Coverage Status](https://coveralls.io/repos/github/alvinwan/timefhuman/badge.svg?branch=travis)](https://coveralls.io/github/alvinwan/timefhuman?branch=travis)
+[![Coverage Status](https://coveralls.io/repos/github/alvinwan/timefhuman/badge.svg?branch=master)](https://coveralls.io/github/alvinwan/timefhuman?branch=master)
 [![Build Status](https://travis-ci.org/alvinwan/timefhuman.svg?branch=master)](https://travis-ci.org/alvinwan/timefhuman)
 
 Convert human-readable, date-like strings written in natural language to Python objects. Describe specific datetimes or ranges of datetimes.
