@@ -222,11 +222,11 @@ def combine_ors(tokens):
             tokens[index-day_daytime_step] = day.combine(daytime.time)
         elif time_daytime_step:
             time, daytime = candidates[::time_daytime_step]
-            time.apply_time(daytime.time)
+            time.apply(daytime.time)
             tokens[index-time_daytime_step] = daytime.day.combine(time)
         elif time_time_step:
             time1, time2 = candidates[::time_time_step]
-            time1.apply_time(time2)
+            time1.apply(time2)
         elif amb_timerange_step and candidates[::amb_timerange_step][0].has_time_range_token():
             ambiguous, timerange = candidates[::amb_timerange_step]
             tokens[index-amb_timerange_step] = ambiguous.get_time_range_token()
@@ -241,7 +241,7 @@ def combine_ors(tokens):
         timerange_timerange_step = ifmatchinstance(candidates, (TimeRange, TimeRange))
         if timerange_timerange_step:
             timerange1, timerange2 = candidates[::timerange_timerange_step]
-            timerange1.start.apply_time(timerange2.start)
-            timerange1.end.apply_time(timerange2.end)
+            timerange1.start.apply(timerange2.start)
+            timerange1.end.apply(timerange2.end)
         index += 1
     return tokens

@@ -2,7 +2,22 @@ import datetime
 
 
 class Token:
-    pass
+
+    def share(self, property, other, setter=setattr):
+        """
+        >>> t1 = Token()
+        >>> t2 = Token()
+        >>> t1.is_special = True
+        >>> t1.share('is_special', t2)
+        >>> t2.is_special
+        True
+        """
+        mine = getattr(self, property, None)
+        others = getattr(other, property, None)
+        if mine is None and others is not None:
+            setter(self, property, others)
+        elif others is None and mine is not None:
+            setter(other, property, mine)
 
 
 class ListToken:
@@ -83,7 +98,7 @@ class DayTimeList(ListToken):
 
 class DayToken(Token):
 
-    def __init__(self, month, day, year):
+    def __init__(self, month, day, year):   # TODO: default Nones?
         self.month = month
         self.day = day
         self.year = year
@@ -108,6 +123,22 @@ class DayToken(Token):
             DayTimeToken.from_day_time(self, time.start),
             DayTimeToken.from_day_time(self, time.end))
 
+    def apply(self, other):
+        """
+        >>> d1 = DayToken(3, 2, None)
+        >>> d2 = DayToken(4, 1, 2018)
+        >>> d1.apply(d2)
+        >>> d2.year
+        2018
+        >>> d3 = DayToken(None, 3, None)
+        >>> d2.apply(d3)
+        >>> d3
+        4/3/2018
+        """
+        assert isinstance(other, DayToken)
+        for attr in ('year', 'month'):
+            self.share(attr, other)
+
     def datetime(self, now):
         return datetime.datetime(self.year, self.month, self.day)
 
@@ -127,7 +158,7 @@ class DayToken(Token):
         return self.month == other.month and self.day == other.day and \
             self.year == other.year
 
-    def __repr__(self):
+    def __repr__(self):  # TODO: handles Nones
         return '{}/{}/{}'.format(
             self.month, self.day, self.year)
 
@@ -246,15 +277,16 @@ class TimeToken(Token):
         return '{}:{:02d} {}'.format(
             self.relative_hour, self.minute, self.time_of_day)
 
-    def update_time_of_day(self, time_of_day):
+    @staticmethod
+    def update_time_of_day(self, _, time_of_day):
         """
         >>> time = TimeToken(3)
-        >>> time.update_time_of_day('pm')
+        >>> TimeToken.update_time_of_day(time, None, 'pm')
         >>> time
         3 pm
         >>> time.hour
         15
-        >>> time.update_time_of_day('am')
+        >>> TimeToken.update_time_of_day(time, None, 'am')
         >>> time
         3 am
         >>> time.hour
@@ -267,11 +299,9 @@ class TimeToken(Token):
                 self.hour -= 12
             self.time_of_day = time_of_day
 
-    def apply_time(self, other):
-        if self.time_of_day is None and other.time_of_day is not None:
-            self.update_time_of_day(other.time_of_day)
-        elif self.time_of_day is not None and other.time_of_day is None:
-            other.update_time_of_day(self.time_of_day)
+    def apply(self, other):
+        assert isinstance(other, TimeToken)
+        self.share('time_of_day', other, setter=TimeToken.update_time_of_day)
 
     def __repr__(self):
         return self.string()
@@ -321,7 +351,7 @@ class TimeList(ListToken):
         assert isinstance(other, TimeList)
         if len(other.tokens) > 0:
             for token in self.tokens:
-                token.apply_time(other.tokens[0])
+                token.apply(other.tokens[0])
             tokens = self.tokens + other.tokens
             return TimeList(*tokens)
         return self
