@@ -5,6 +5,19 @@ class Token:
     pass
 
 
+class ListToken:
+
+    def __init__(self, *tokens):
+        self.tokens = tokens
+
+    def datetime(self, now):
+        return [token.datetime(now) for token in self.tokens]
+
+    def __repr__(self):
+        tokens = list(map(repr, self.tokens))
+        return '[{}]'.format(', '.join(tokens))
+
+
 class DayTimeToken(Token):
 
     def __init__(self, year, month, day, relative_hour, minute=0, time_of_day='am'):
@@ -49,9 +62,23 @@ class DayTimeRange(Token):
 
     def __repr__(self):
         if self.start.day == self.end.day:
-            time_range = TimeRangeToken(self.start.time, self.end.time)
+            time_range = TimeRange(self.start.time, self.end.time)
             return '{} {}'.format(repr(self.start.day), repr(time_range))
         return '{} - {}'.format(repr(self.start), repr(self.end))
+
+
+class DayTimeList(ListToken):
+    """
+    >>> now = datetime.datetime(2018, 7, 5)
+    >>> dt1 = DayTimeToken(2018, 8, 1, 10)
+    >>> dt2 = DayTimeToken(2018, 8, 1, 11)
+    >>> dts = DayTimeList(dt1, dt2)
+    >>> dts
+    [8/1/2018 10 am, 8/1/2018 11 am]
+    >>> dts.datetime(now)
+    [datetime.datetime(2018, 8, 1, 10, 0), datetime.datetime(2018, 8, 1, 11, 0)]
+    """
+    pass
 
 
 class DayToken(Token):
@@ -68,13 +95,13 @@ class DayToken(Token):
         """
         >>> day = DayToken(8, 5, 2018)
         >>> time = TimeToken(3, 'pm')
-        >>> time_range = TimeRangeToken(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
+        >>> time_range = TimeRange(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
         >>> day.combine(time)
         8/5/2018 3 pm
         >>> day.combine(time_range)
         8/5/2018 3-5 pm
         """
-        assert isinstance(time, (TimeRangeToken, TimeToken))
+        assert isinstance(time, (TimeRange, TimeToken))
         if isinstance(time, TimeToken):
             return DayTimeToken.from_day_time(self, time)
         return DayTimeRange(
@@ -103,6 +130,70 @@ class DayToken(Token):
     def __repr__(self):
         return '{}/{}/{}'.format(
             self.month, self.day, self.year)
+
+
+class DayRange(Token):
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    def apply_month(self, month):
+        self.start.month = month
+        self.end.month = month
+
+    def apply_year(self, year):
+        self.start.year = year
+        self.end.year = year
+
+    def datetime(self, now):
+        return (self.start.datetime(now), self.end.datetime(now))
+
+    def combine(self, time):
+        assert isinstance(time, (TimeRange, TimeToken))
+        if isinstance(time, TimeToken):
+            return DayTimeRange(
+                DayTimeToken.from_day_time(self.start, time),
+                DayTimeToken.from_day_time(self.end, time))
+        raise NotImplementedError()  # return list of two ranges
+
+    def __repr__(self):
+        return '{} - {}'.format(repr(self.start), repr(self.end))
+
+
+class DayList(ListToken):
+    """
+    >>> now = datetime.datetime(2018, 7, 5)
+    >>> dt1 = DayToken(8, 1, 2018)
+    >>> dt2 = DayToken(8, 2, 2018)
+    >>> dts = DayList(dt1, dt2)
+    >>> dts
+    [8/1/2018, 8/2/2018]
+    >>> dts.datetime(now)
+    [datetime.datetime(2018, 8, 1, 0, 0), datetime.datetime(2018, 8, 2, 0, 0)]
+    >>> dts.combine(TimeToken(15))
+    [8/1/2018 3 pm, 8/2/2018 3 pm]
+    >>> dts2 = DayList(dt1)
+    >>> dts3 = DayList()
+    >>> dts.extend(dts3) == dts
+    True
+    >>> dts.extend(dts2)
+    [8/1/2018, 8/2/2018, 8/1/2018]
+    >>> dts.combine(AmbiguousToken()) == dts
+    True
+    """
+
+    def combine(self, other):
+        if isinstance(other, (TimeRange, TimeToken)):
+            return DayTimeList(*[token.combine(other) for token in self.tokens])
+        return self
+
+    def extend(self, other):
+        assert isinstance(other, DayList)
+        if other.tokens:
+            tokens = self.tokens + other.tokens
+            return DayList(*tokens)
+        return self
 
 
 class TimeToken(Token):
@@ -186,36 +277,7 @@ class TimeToken(Token):
         return self.string()
 
 
-class DayRangeToken(Token):
-
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-
-    def apply_month(self, month):
-        self.start.month = month
-        self.end.month = month
-
-    def apply_year(self, year):
-        self.start.year = year
-        self.end.year = year
-
-    def datetime(self, now):
-        return (self.start.datetime(now), self.end.datetime(now))
-
-    def combine(self, time):
-        assert isinstance(time, (TimeRangeToken, TimeToken))
-        if isinstance(time, TimeToken):
-            return DayTimeRange(
-                DayTimeToken.from_day_time(self.start, time),
-                DayTimeToken.from_day_time(self.end, time))
-        raise NotImplementedError()  # return list of two ranges
-
-    def __repr__(self):
-        return '{} - {}'.format(repr(self.start), repr(self.end))
-
-
-class TimeRangeToken(Token):
+class TimeRange(Token):
 
     def __init__(self, start, end):
         self.start = start
@@ -230,25 +292,66 @@ class TimeRangeToken(Token):
         return '{} - {}'.format(repr(self.start), repr(self.end))
 
 
+class TimeList(ListToken):
+    """
+    >>> t1 = TimeToken(15)
+    >>> t2 = TimeToken(17)
+    >>> t3 = TimeToken(3, None)
+    >>> ts = TimeList(t1, t2)
+    >>> dt = DayToken(8, 1, 2018)
+    >>> ts.combine(dt)
+    [8/1/2018 3 pm, 8/1/2018 5 pm]
+    >>> ts2 = TimeList(t3)
+    >>> ts3 = TimeList()
+    >>> ts.extend(ts3) == ts
+    True
+    >>> t3.time_of_day
+    >>> ts.extend(ts2)
+    [3 pm, 5 pm, 3 pm]
+    >>> ts.combine(AmbiguousToken()) == ts
+    True
+    """
+
+    def combine(self, other):
+        if isinstance(other, (DayRange, DayToken)):
+            return DayTimeList(*[other.combine(token) for token in self.tokens])
+        return self
+
+    def extend(self, other):
+        assert isinstance(other, TimeList)
+        if len(other.tokens) > 0:
+            for token in self.tokens:
+                token.apply_time(other.tokens[0])
+            tokens = self.tokens + other.tokens
+            return TimeList(*tokens)
+        return self
+
+
 class AmbiguousToken(Token):
+    """
+    >>> now = datetime.datetime(2018, 1, 1)
+    >>> amb = AmbiguousToken(TimeToken(15))
+    >>> amb.datetime(now)
+    datetime.datetime(2018, 1, 1, 15, 0)
+    """
 
     def __init__(self, *tokens):
         self.tokens = tokens
 
     def has_time_range_token(self):
-        return any([isinstance(token, TimeRangeToken) for token in self.tokens])
+        return any([isinstance(token, TimeRange) for token in self.tokens])
 
     def get_time_range_token(self):
         for token in self.tokens:
-            if isinstance(token, TimeRangeToken):
+            if isinstance(token, TimeRange):
                 return token
 
     def has_day_range_token(self):
-        return any([isinstance(token, DayRangeToken) for token in self.tokens])
+        return any([isinstance(token, DayRange) for token in self.tokens])
 
     def get_day_range_token(self):
         for token in self.tokens:
-            if isinstance(token, DayRangeToken):
+            if isinstance(token, DayRange):
                 return token
 
     def has_day_token(self):

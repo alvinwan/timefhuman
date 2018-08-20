@@ -1,7 +1,7 @@
 from .data import TimeToken
-from .data import TimeRangeToken
+from .data import TimeRange
 from .data import DayToken
-from .data import DayRangeToken
+from .data import DayRange
 from .data import DayTimeToken
 from .data import DayTimeRange
 from .data import AmbiguousToken
@@ -65,6 +65,8 @@ def ifmatchinstance(tokens, classes):
     >>> tokens = (TimeToken(15), DayToken(5, 7, 2018))
     >>> ifmatchinstance(tokens, (DayToken, TimeToken))
     -1
+    >>> ifmatchinstance(tokens, ())
+    0
     """
     if len(tokens) != len(classes):
         return 0
@@ -86,10 +88,12 @@ def matchinstance(tokens, classes):
     >>> matchinstance(tokens, (both, both))
     (3 pm, 4 pm)
     >>> tokens = (TimeToken(15), DayToken(5, 7, 2018))
-    >>> day_tokens = (DayToken, DayRangeToken)
-    >>> time_tokens = (TimeToken, TimeRangeToken)
+    >>> day_tokens = (DayToken, DayRange)
+    >>> time_tokens = (TimeToken, TimeRange)
     >>> matchinstance(tokens, (day_tokens, time_tokens))
     (5/7/2018, 3 pm)
+    >>> matchinstance(tokens, ())
+    ()
     """
     if len(tokens) != len(classes):
         return ()
@@ -124,9 +128,9 @@ def combine_ranges(tokens):
         start = tokens[index-1]
 
         if areinstance((start, end), TimeToken):
-            tokens = tokens[:index-1] + [TimeRangeToken(start, end)] + tokens[index+2:]
+            tokens = tokens[:index-1] + [TimeRange(start, end)] + tokens[index+2:]
         elif areinstance((start, end), DayToken):
-            tokens = tokens[:index-1] + [DayRangeToken(start, end)] + tokens[index+2:]
+            tokens = tokens[:index-1] + [DayRange(start, end)] + tokens[index+2:]
         else:
             tokens = tokens[:index] + tokens[index+1:]  # ignore meaningless dashes, to
     return tokens
@@ -171,8 +175,8 @@ def combine_days_and_times(tokens):
     [7/7/2018 11 am]
     """
     cursor = 0
-    day_tokens = (DayToken, DayRangeToken)
-    time_tokens = (TimeToken, TimeRangeToken)
+    day_tokens = (DayToken, DayRange)
+    time_tokens = (TimeToken, TimeRange)
     while cursor + 1 < len(tokens):
         amb_time_match = matchinstance(tokens[cursor:cursor+2], (AmbiguousToken, time_tokens))
         day_time_match = matchinstance(tokens[cursor:cursor+2], (day_tokens, time_tokens))
@@ -211,15 +215,15 @@ def combine_ors(tokens):
         day_daytime_step = ifmatchinstance(candidates, (DayToken, DayTimeToken))
         time_daytime_step = ifmatchinstance(candidates, (TimeToken, DayTimeToken))
         time_time_step = ifmatchinstance(candidates, (TimeToken, TimeToken))
-        amb_timerange_step = ifmatchinstance(candidates, (AmbiguousToken, TimeRangeToken))
-        timerange_daytimerange_step = ifmatchinstance(candidates, (TimeRangeToken, DayTimeRange))
+        amb_timerange_step = ifmatchinstance(candidates, (AmbiguousToken, TimeRange))
+        timerange_daytimerange_step = ifmatchinstance(candidates, (TimeRange, DayTimeRange))
         if day_daytime_step:
             day, daytime = candidates[::day_daytime_step]
-            tokens[index-day_daytime_step] = DayTimeToken.from_day_time(day, daytime.time)
+            tokens[index-day_daytime_step] = day.combine(daytime.time)
         elif time_daytime_step:
             time, daytime = candidates[::time_daytime_step]
             time.apply_time(daytime.time)
-            tokens[index-time_daytime_step] = DayTimeToken.from_day_time(daytime.day, time)
+            tokens[index-time_daytime_step] = daytime.day.combine(time)
         elif time_time_step:
             time1, time2 = candidates[::time_time_step]
             time1.apply_time(time2)
@@ -228,13 +232,13 @@ def combine_ors(tokens):
             tokens[index-amb_timerange_step] = ambiguous.get_time_range_token()
         elif timerange_daytimerange_step:
             timerange, daytimerange = candidates[::timerange_daytimerange_step]
-            start = DayTimeToken.from_day_time(daytimerange.start.day, timerange.start)
-            end = DayTimeToken.from_day_time(daytimerange.end.day, timerange.end)
+            start = daytimerange.start.day.combine(timerange.start)
+            end = daytimerange.end.day.combine(timerange.end)
             daytimerange2 = DayTimeRange(start, end)
             tokens[index-timerange_daytimerange_step] = daytimerange2
 
         candidates = (tokens[index-1], tokens[index+1])
-        timerange_timerange_step = ifmatchinstance(candidates, (TimeRangeToken, TimeRangeToken))
+        timerange_timerange_step = ifmatchinstance(candidates, (TimeRange, TimeRange))
         if timerange_timerange_step:
             timerange1, timerange2 = candidates[::timerange_timerange_step]
             timerange1.start.apply_time(timerange2.start)

@@ -2,8 +2,8 @@ from .constants import MONTHS
 from .constants import DAYS_OF_WEEK
 from .data import DayToken
 from .data import TimeToken
-from .data import DayRangeToken
-from .data import TimeRangeToken
+from .data import DayRange
+from .data import TimeRange
 from .data import AmbiguousToken
 from .data import Token
 
@@ -164,8 +164,8 @@ def maybe_substitute_using_month(tokens, now=datetime.datetime.now()):
     [8/1/2018, 'at']
     >>> maybe_substitute_using_month(['gibberish'], now=now)
     ['gibberish']
-    >>> time_range = TimeRangeToken(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
-    >>> day_range = DayRangeToken(DayToken(None, 3, None), DayToken(None, 5, None))
+    >>> time_range = TimeRange(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
+    >>> day_range = DayRange(DayToken(None, 3, None), DayToken(None, 5, None))
     >>> day = DayToken(3, 5, 2018)
     >>> ambiguous_token = AmbiguousToken(time_range, day, day_range)
     >>> maybe_substitute_using_month(['May', ambiguous_token])
@@ -285,8 +285,8 @@ def extract_hour_minute(string, time_of_day=None):
     >>> time.time_of_day
     >>> extract_hour_minute('3:30-4', 'pm')
     3:30-4 pm
-    >>> time_range = TimeRangeToken(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
-    >>> day_range = DayRangeToken(DayToken(None, 3, None), DayToken(None, 5, None))
+    >>> time_range = TimeRange(TimeToken(3, 'pm'), TimeToken(5, 'pm'))
+    >>> day_range = DayRange(DayToken(None, 3, None), DayToken(None, 5, None))
     >>> day = DayToken(3, 5, 2018)
     >>> ambiguous_token = AmbiguousToken(time_range, day, day_range)
     >>> extract_hour_minute(ambiguous_token)
@@ -302,7 +302,7 @@ def extract_hour_minute(string, time_of_day=None):
         times = string.split('-')
         start = extract_hour_minute(times[0], time_of_day)
         end = extract_hour_minute(times[1], time_of_day)
-        return TimeRangeToken(start, end)
+        return TimeRange(start, end)
 
     parts = string.split(':')
     hour = int(parts[0])

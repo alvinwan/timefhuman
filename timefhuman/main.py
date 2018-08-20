@@ -19,8 +19,8 @@ from .tree import build_tree
 from .data import Token
 from .data import TimeToken
 from .data import DayToken
-from .data import TimeRangeToken
-from .data import DayRangeToken
+from .data import TimeRange
+from .data import DayRange
 import datetime
 import string
 
