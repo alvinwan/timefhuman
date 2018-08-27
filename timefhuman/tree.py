@@ -4,6 +4,9 @@ from .data import DayToken
 from .data import DayRange
 from .data import DayTimeToken
 from .data import DayTimeRange
+from .data import DayList
+from .data import TimeList
+from .data import DayTimeList
 from .data import AmbiguousToken
 
 import datetime
@@ -15,20 +18,21 @@ def build_tree(tokens, now=datetime.datetime.now()):
     >>> build_tree([DayToken(7, 5, 2018), TimeToken(12, 'pm')])
     [7/5/2018 12 pm]
     >>> build_tree([TimeToken(9), 'on', DayToken(7, 5, 2018)])
-    [7/5/2018 9 am]
+    [7/5/2018 9:00]
     >>> build_tree([DayToken(7, 5, 2018), TimeToken(9), '-', TimeToken(11)])
-    [7/5/2018 9-11 am]
+    [7/5/2018 9:00 - 11:00]
     >>> build_tree([DayToken(7, 5, 2018), 'to', DayToken(7, 7, 2018), TimeToken(11)])
-    [7/5/2018 11 am - 7/7/2018 11 am]
+    [7/5/2018 11:00 - 7/7/2018 11:00]
     >>> build_tree([DayToken(7, 5, 2018), 'or', DayToken(7, 7, 2018), TimeToken(11)])
-    [7/5/2018 11 am, 'or', 7/7/2018 11 am]
+    [[7/5/2018 11:00, 7/7/2018 11:00]]
     >>> build_tree([DayToken(7, 5, 2018), TimeToken(3, None), 'or', TimeToken(4, 'pm')])
-    [7/5/2018 3 pm, 'or', 7/5/2018 4 pm]
+    [[7/5/2018 3 pm, 7/5/2018 4 pm]]
     """
     tokens = combine_on_at(tokens)
-    tokens = combine_ors(tokens)
+    tokens = apply_ors(tokens)
     tokens = combine_days_and_times(tokens)
-    tokens = combine_ors(tokens)  # TODO: is this the cleanest way to do this?
+    tokens = apply_ors(tokens)  # TODO: is this the cleanest way to do this?
+    tokens = combine_ors(tokens)
     tokens = combine_ranges(tokens)
     return tokens
 
@@ -106,14 +110,14 @@ def matchinstance(tokens, classes):
 def combine_ranges(tokens):
     """
     >>> combine_ranges([DayToken(7, 5, 2018), TimeToken(9), '-', TimeToken(11)])
-    [7/5/2018, 9-11 am]
+    [7/5/2018, 9:00 - 11:00]
     >>> combine_ranges([DayToken(7, 5, 2018), 'to', DayToken(7, 7, 2018),
     ...     TimeToken(9), '-', TimeToken(11)])
-    [7/5/2018 - 7/7/2018, 9-11 am]
+    [7/5/2018 - 7/7/2018, 9:00 - 11:00]
     >>> combine_ranges([TimeToken(7, 'pm'), 'to', DayToken(7, 7, 2018)])  # ignore meaningless 'to'  # TODO: assert?
     [7 pm, 7/7/2018]
     >>> combine_ranges([DayToken(7, 5, 2018), 'to', DayTimeToken(2018, 7, 7, 11)])
-    [7/5/2018 11 am - 7/7/2018 11 am]
+    [7/5/2018 11:00 - 7/7/2018 11:00]
     >>> combine_ranges([DayTimeToken(2018, 7, 17, 15, 30), '-', TimeToken(16)])
     [7/17/2018 3:30-4 pm]
     """
@@ -153,15 +157,15 @@ def combine_ranges(tokens):
 def combine_on_at(tokens):
     """
     >>> combine_on_at([TimeToken(9), 'on', DayToken(7, 5, 2018)])
-    [7/5/2018 9 am]
+    [7/5/2018 9:00]
     >>> combine_on_at([DayToken(7, 5, 2018), 'at', TimeToken(9)])
-    [7/5/2018 9 am]
+    [7/5/2018 9:00]
     >>> combine_on_at(['at', TimeToken(9)])
-    [9 am]
+    [9:00]
     >>> combine_on_at([TimeToken(9), 'on'])
-    [9 am]
+    [9:00]
     >>> combine_on_at([TimeToken(9), 'at', TimeToken(9)])  # malformed, ignored at  # TODO: alert?
-    [9 am, 9 am]
+    [9:00, 9:00]
     """
     for keyword in ('on', 'at'):
         while keyword in tokens:
@@ -182,11 +186,11 @@ def combine_on_at(tokens):
 def combine_days_and_times(tokens):
     """
     >>> combine_days_and_times([DayToken(7, 5, 2018), 'or', DayToken(7, 7, 2018), TimeToken(11)])
-    [7/5/2018, 'or', 7/7/2018 11 am]
+    [7/5/2018, 'or', 7/7/2018 11:00]
     >>> combine_days_and_times(['or', DayToken(7, 7, 2018), TimeToken(11)])
-    ['or', 7/7/2018 11 am]
+    ['or', 7/7/2018 11:00]
     >>> combine_days_and_times([TimeToken(11), DayToken(7, 7, 2018)])
-    [7/7/2018 11 am]
+    [7/7/2018 11:00]
     >>> combine_days_and_times([DayToken(7, 17, 2018), TimeToken(15, minute=30), '-', TimeToken(16)])
     [7/17/2018 3:30 pm, '-', 4 pm]
     """
@@ -210,16 +214,19 @@ def combine_days_and_times(tokens):
     return tokens
 
 
-def combine_ors(tokens):
+def apply_ors(tokens):
     """Transfer times across days if the other days don't have times.
 
-    >>> combine_ors([DayToken(7, 5, 2018), 'or', DayToken(7, 7, 2018)])
+    >>> apply_ors([DayToken(7, 5, 2018), 'or', DayToken(7, 7, 2018)])
     [7/5/2018, 'or', 7/7/2018]
-    >>> combine_ors([TimeToken(3, None), 'or', TimeToken(4, 'pm')])
+    >>> apply_ors([TimeToken(3, None), 'or', TimeToken(4, 'pm')])
     [3 pm, 'or', 4 pm]
-    >>> combine_ors(['or', TimeToken(4, 'pm')])
+    >>> apply_ors([DayToken(7, 5, 2018), 'or', DayTimeToken(2018, 7, 7, 15)])
+    [7/5/2018 3 pm, 'or', 7/7/2018 3 pm]
+    >>> apply_ors(['or', TimeToken(4, 'pm')])
     ['or', 4 pm]
     """
+    tokens = [token if token != ',' else 'or' for token in tokens]
     index = 1
     while index + 1 < len(tokens):
         if tokens[index] != 'or':
@@ -229,15 +236,18 @@ def combine_ors(tokens):
         # TODO: too explicit, need generic way to "cast"
         candidates = (tokens[index-1], tokens[index+1])
         day_or_time_daytime_step = ifmatchinstance(candidates, ((TimeToken, DayToken), DayTimeToken))
-        time_time_step = ifmatchinstance(candidates, (TimeToken, TimeToken))
         amb_timerange_step = ifmatchinstance(candidates, (AmbiguousToken, TimeRange))
         timerange_daytimerange_step = ifmatchinstance(candidates, (TimeRange, DayTimeRange))
         if day_or_time_daytime_step:
-            day_or_time, daytime = candidates[::day_or_time_daytime_step]
-            tokens[index-day_or_time_daytime_step] = daytime.combine(day_or_time)
-        elif time_time_step:
-            time1, time2 = candidates[::time_time_step]
+            day_or_time, daytime1 = candidates[::day_or_time_daytime_step]
+            daytime2 = daytime1.combine(day_or_time)
+            tokens[index-day_or_time_daytime_step] = daytime2
+        elif areinstance(candidates, TimeToken):
+            time1, time2 = candidates
             time1.apply(time2)
+        elif areinstance(candidates, DayToken):
+            day1, day2 = candidates
+            day1.apply(day2)
         elif amb_timerange_step and candidates[::amb_timerange_step][0].has_time_range_token():
             ambiguous, timerange = candidates[::amb_timerange_step]
             tokens[index-amb_timerange_step] = ambiguous.get_time_range_token()
@@ -255,4 +265,62 @@ def combine_ors(tokens):
             timerange1.start.apply(timerange2.start)
             timerange1.end.apply(timerange2.end)
         index += 1
+    return tokens
+
+
+def combine_ors(tokens):
+    """Combine lists.
+
+    >>> combine_ors([DayToken(7, 5, 2018), 'or', DayToken(7, 7, 2018), 'or', DayToken(7, 9, 2018), 'or', DayTimeToken(2018, 7, 11, 15)])
+    [[7/5/2018 3 pm, 7/7/2018 3 pm, 7/9/2018 3 pm, 7/11/2018 3 pm]]
+    >>> combine_ors([TimeToken(3, 'pm'), 'or', TimeToken(4, 'pm')])
+    [[3 pm, 4 pm]]
+    >>> combine_ors([DayToken(7, 5, 2018), 'or', DayToken(7, 7, 2018), 'or', TimeToken(4, 'pm')])
+    [[7/5/2018 4 pm, 7/7/2018 4 pm]]
+    >>> combine_ors([DayTimeToken(2018, 7, 5, 12), 'or', DayTimeToken(2018, 7, 7, 15), 'or', DayToken(7, 9, 2018)])
+    [[7/5/2018 12 pm, 7/7/2018 3 pm, 7/9/2018 3 pm]]
+    >>> combine_ors(['or', TimeToken(4, 'pm')])
+    ['or', 4 pm]
+    """
+    tokens = [token if token != ',' else 'or' for token in tokens]
+    index = 1
+    while index + 1 < len(tokens):
+        if tokens[index] != 'or':
+            index += 1
+            continue
+
+        candidates = (tokens[index-1], tokens[index+1])
+        if areinstance(candidates, DayTimeToken):
+            daytime1, daytime2 = candidates
+            tokens = tokens[:index-1] + [DayTimeList(daytime1, daytime2)] + tokens[index+2:]
+        elif areinstance(candidates, TimeToken):
+            time1, time2 = candidates
+            tokens = tokens[:index-1] + [TimeList(time1, time2)] + tokens[index+2:]
+        elif areinstance(candidates, DayToken):
+            day1, day2 = candidates
+            tokens = tokens[:index-1] + [DayList(day1, day2)] + tokens[index+2:]
+        elif areinstance(candidates, (DayTimeList, (TimeToken, DayToken))):
+            lst, token = candidates
+            lst.append(lst[-1].combine(token))
+            tokens = tokens[:index] + tokens[index+2:]
+        elif areinstance(candidates, (DayTimeList, DayTimeToken)):
+            lst, token = candidates
+            lst.append(token)
+            tokens = tokens[:index] + tokens[index+2:]
+        elif areinstance(candidates, (DayList, DayToken)):
+            lst, token = candidates
+            lst.append(token)
+            tokens = tokens[:index] + tokens[index+2:]
+        elif areinstance(candidates, (DayList, DayTimeToken)):
+            lst, token = candidates
+            lst = lst.combine(token)
+            lst.append(token)
+            tokens[index-1] = lst
+            tokens = tokens[:index] + tokens[index+2:]
+        elif areinstance(candidates, (DayList, TimeToken)):
+            lst, token = candidates
+            tokens[index-1] = lst.combine(token)
+            tokens = tokens[:index] + tokens[index+2:]
+        else:
+            index += 1
     return tokens

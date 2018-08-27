@@ -32,8 +32,8 @@ Use any human-readable format with a time range, choices of times, or choices of
 Parse lists of dates and times with more complex relationships.
 
 ```
->>> timefhuman('7/17, 7/18, 7/19 at 2')  # coming soon
-
+>>> timefhuman('7/17, 7/18, 7/19 at 2')
+[datetime.datetime(2018, 7, 17, 2, 0), datetime.datetime(2018, 7, 18, 2, 0), datetime.datetime(2018, 7, 19, 2, 0)]
 >>> timefhuman('2 PM on 7/17 or 7/19')
 [datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]
 ```

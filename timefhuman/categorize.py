@@ -154,14 +154,14 @@ def maybe_substitute_using_month(tokens, now=datetime.datetime.now()):
     """
 
     >>> now = datetime.datetime(year=2018, month=7, day=7)
-    >>> maybe_substitute_using_month(['July', '17', '2018', 'at'])
+    >>> maybe_substitute_using_month(['July', '17', ',', '2018', 'at'])
     [7/17/2018, 'at']
     >>> maybe_substitute_using_month(['Jul', '17', 'at'], now=now)
     [7/17/2018, 'at']
     >>> maybe_substitute_using_month(['July', 'at'], now=now)
     [7/7/2018, 'at']
-    >>> maybe_substitute_using_month(['August', '17'], now=now)
-    [8/17/2018]
+    >>> maybe_substitute_using_month(['August', '17', ','], now=now)
+    [8/17/2018, ',']
     >>> maybe_substitute_using_month(['Aug', 'at'], now=now)
     [8/1/2018, 'at']
     >>> maybe_substitute_using_month(['gibberish'], now=now)
@@ -198,8 +198,14 @@ def maybe_substitute_using_month(tokens, now=datetime.datetime.now()):
             day = DayToken(month=mo, day=day, year=now.year)
             return tokens[:index] + [day] + tokens[index+1:]
 
+        # allow formats July 17, 2018. Do not consume comma if July 17, July 18 ...
         next_candidate = int(next_candidate)
         next_next_candidate = tokens[index+2] if len(tokens) > index+2 else ''
+        if next_next_candidate == ',':
+            next_next_candidate = tokens[index+3] if len(tokens) > index+3 else ''
+            if next_next_candidate.isnumeric():
+                tokens = tokens[:index+1] + tokens[index+2:]
+
         if next_candidate > 31:
             day = 1 if now.month != mo else now.day
             day = DayToken(month=mo, day=day, year=next_candidate)

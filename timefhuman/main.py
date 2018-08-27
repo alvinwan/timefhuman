@@ -50,7 +50,7 @@ def timefhuman(string, now=None, raw=None):
     >>> timefhuman('2 PM on 7/17 or 7/19')  # time applies to both dates
     [datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]
     >>> timefhuman('2 PM on 7/17 or 7/19', raw=True)
-    [7/17/2018 2 pm, 'or', 7/19/2018 2 pm]
+    [[7/17/2018 2 pm, 7/19/2018 2 pm]]
     """
     if now is None:
         now = datetime.datetime.now()

@@ -20,13 +20,22 @@ class Token:
             setter(other, property, mine)
 
 
-class ListToken:
+class ListToken(Token):
 
     def __init__(self, *tokens):
-        self.tokens = tokens
+        self.tokens = list(tokens)
+
+    def append(self, other):
+        self.tokens.append(other)
+
+    def extend(self, others):
+        self.tokens.extend(others)
 
     def datetime(self, now):
         return [token.datetime(now) for token in self.tokens]
+
+    def __getitem__(self, i):
+        return self.tokens[i]
 
     def __repr__(self):
         tokens = list(map(repr, self.tokens))
@@ -35,7 +44,7 @@ class ListToken:
 
 class DayTimeToken(Token):
 
-    def __init__(self, year, month, day, relative_hour, minute=0, time_of_day='am'):
+    def __init__(self, year, month, day, relative_hour, minute=0, time_of_day=None):
         self.day = DayToken(month, day, year)
         self.time = TimeToken(relative_hour, time_of_day, minute)
 
@@ -79,11 +88,11 @@ class DayTimeRange(Token):
     >>> dt3 = DayTimeToken(2018, 8, 1, 1, time_of_day='pm')
     >>> dt4 = DayTimeToken(2018, 8, 3, 11)
     >>> DayTimeRange(dt1, dt2)
-    8/1/2018 10-11 am
+    8/1/2018 10:00 - 11:00
     >>> DayTimeRange(dt1, dt3)
-    8/1/2018 10 am - 1 pm
+    8/1/2018 10:00 - 1 pm
     >>> DayTimeRange(dt1, dt4)
-    8/1/2018 10 am - 8/3/2018 11 am
+    8/1/2018 10:00 - 8/3/2018 11:00
     """
 
     def __init__(self, start, end):
@@ -107,7 +116,7 @@ class DayTimeList(ListToken):
     >>> dt2 = DayTimeToken(2018, 8, 1, 11)
     >>> dts = DayTimeList(dt1, dt2)
     >>> dts
-    [8/1/2018 10 am, 8/1/2018 11 am]
+    [8/1/2018 10:00, 8/1/2018 11:00]
     >>> dts.datetime(now)
     [datetime.datetime(2018, 8, 1, 10, 0), datetime.datetime(2018, 8, 1, 11, 0)]
     """
@@ -134,9 +143,11 @@ class DayToken(Token):
         >>> day.combine(time_range)
         8/5/2018 3-5 pm
         """
-        assert isinstance(time, (TimeRange, TimeToken))
+        assert isinstance(time, (TimeRange, TimeToken, DayTimeToken))
         if isinstance(time, TimeToken):
             return DayTimeToken.from_day_time(self, time)
+        if isinstance(time, DayTimeToken):
+            return self.combine(time.time)
         return DayTimeRange(
             DayTimeToken.from_day_time(self, time.start),
             DayTimeToken.from_day_time(self, time.end))
@@ -233,7 +244,7 @@ class DayList(ListToken):
     """
 
     def combine(self, other):
-        if isinstance(other, (TimeRange, TimeToken)):
+        if isinstance(other, (TimeRange, TimeToken, DayTimeToken)):
             return DayTimeList(*[token.combine(other) for token in self.tokens])
         return self
 
@@ -252,14 +263,16 @@ class TimeToken(Token):
     >>> TimeToken(3, None)
     3:00
     >>> TimeToken(3)
-    3 am
+    3:00
     >>> TimeToken(12, 'pm')
     12 pm
     >>> TimeToken(12, 'am')
     12 am
+    >>> TimeToken(12)
+    12 pm
     """
 
-    def __init__(self, relative_hour, time_of_day='am', minute=0):
+    def __init__(self, relative_hour, time_of_day=None, minute=0):
         self.relative_hour = relative_hour
         self.minute = minute
         self.time_of_day = time_of_day
@@ -269,10 +282,15 @@ class TimeToken(Token):
             self.relative_hour = relative_hour - 12
             self.hour = relative_hour
             self.time_of_day = 'pm'
+        elif time_of_day == 'pm' and relative_hour == 12:
+            self.hour = 12
         elif time_of_day == 'pm' and relative_hour != 12:
             self.hour = self.relative_hour + 12
         elif time_of_day == 'am' and relative_hour == 12:
             self.hour = 0
+        elif relative_hour == 12:
+            self.hour = 12
+            self.time_of_day = 'pm'
         else:
             self.hour = self.relative_hour
 
