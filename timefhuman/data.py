@@ -39,6 +39,24 @@ class DayTimeToken(Token):
         self.day = DayToken(month, day, year)
         self.time = TimeToken(relative_hour, time_of_day, minute)
 
+    def combine(self, other):
+        """
+
+        >>> dt = DayTimeToken(2018, 8, 18, 3, 0, 'pm')
+        >>> day = DayToken(8, 20, 2018)
+        >>> dt.combine(day)
+        8/20/2018 3 pm
+        >>> time = TimeToken(5, 'pm')
+        >>> dt.combine(time)
+        8/18/2018 5 pm
+        """
+        assert isinstance(other, (DayToken, TimeToken))
+        if isinstance(other, DayToken):
+            return other.combine(self.time)
+        elif isinstance(other, TimeToken):
+            self.time.apply(other)
+            return self.day.combine(other)
+
     def datetime(self, now):
         # TODO: handle Nones
         return datetime.datetime(

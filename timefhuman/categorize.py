@@ -23,6 +23,8 @@ def categorize(tokens, now):
     [8/6/2018, 'or', 8/7/2018, 12 pm]
     >>> categorize(['7/17', '4', 'or', '5', 'PM'], now)
     [7/17/2018, 4:00, 'or', 5 pm]
+    >>> categorize(['7/17', '3', 'pm', '-', '7/19', '2', 'pm'], now)
+    [7/17/2018, 3 pm, '-', 7/19/2018, 2 pm]
     """
     tokens = list(tokens)
     tokens = convert_day_of_week(tokens, now)
@@ -224,18 +226,17 @@ def maybe_substitute_using_date(tokens, now=datetime.datetime.now()):
     (month).(day).(year)
     (month)-(day)-(year)
 
+    >>> now = datetime.datetime(2018, 8, 18)
     >>> maybe_substitute_using_date(['7/17/18'])
     [7/17/2018]
     >>> maybe_substitute_using_date(['7-17-18'])
     [7/17/2018]
     >>> maybe_substitute_using_date(['3', 'on', '7.17.18'])
     ['3', 'on', 7/17/2018]
-    >>> maybe_substitute_using_date(['7-25', '3-4', 'pm'])
+    >>> maybe_substitute_using_date(['7-25', '3-4', 'pm'], now=now)
     [7/25/2018, 3/4/2018 OR 3:00 - 4:00, 'pm']
-    >>> maybe_substitute_using_date(['7/4', '-', '7/6'])
+    >>> maybe_substitute_using_date(['7/4', '-', '7/6'], now=now)
     [7/4/2018, '-', 7/6/2018]
-    >>> maybe_substitute_using_date(['7/17-7/18'])
-    [7/17/2018, '-', 7/18/2018]
     """
     i = 0
     while i < len(tokens):
@@ -249,11 +250,6 @@ def maybe_substitute_using_date(tokens, now=datetime.datetime.now()):
             if punctuation not in token:
                 continue
 
-            if '-' in token and '-' != punctuation:
-                parts = token.split('-')
-                tokens = tokens[:i] + [parts[0], '-', parts[1]] + tokens[i+1:]
-                i -= 1
-                break
             parts = tuple(map(int, token.split(punctuation)))
             if len(parts) == 2:
                 day = DayToken(month=parts[0], day=parts[1], year=now.year)

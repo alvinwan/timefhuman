@@ -4,13 +4,26 @@ import string
 def tokenize(characters):
     """Tokenize all characters in the string.
 
-    >>> list(tokenize('7/17/18 3:00 p.m.'))
+    >>> list(tokenize('7/17-7/18 3 pm- 4 pm'))
+    ['7/17', '-', '7/18', '3', 'pm', '-', '4', 'pm']
+    >>> list(tokenize('7/17 3 pm- 7/19 2 pm'))
+    ['7/17', '3', 'pm', '-', '7/19', '2', 'pm']
+    """
+    tokens = generic_tokenize(characters)
+    tokens = clean_dash_tokens(tokens)
+    return tokens
+
+
+def generic_tokenize(characters):
+    """Default tokenizer
+
+    >>> list(generic_tokenize('7/17/18 3:00 p.m.'))
     ['7/17/18', '3:00', 'p.m.']
-    >>> list(tokenize('July 17, 2018 at 3p.m.'))
+    >>> list(generic_tokenize('July 17, 2018 at 3p.m.'))
     ['July', '17', '2018', 'at', '3', 'p.m.']
-    >>> list(tokenize('July 17, 2018 3 p.m.'))
+    >>> list(generic_tokenize('July 17, 2018 3 p.m.'))
     ['July', '17', '2018', '3', 'p.m.']
-    >>> list(tokenize('3PM on July 17'))
+    >>> list(generic_tokenize('3PM on July 17'))
     ['3', 'PM', 'on', 'July', '17']
     """
     token = ''
@@ -32,6 +45,31 @@ def tokenize(characters):
         token += character
         last_type = type
     yield token
+
+
+def clean_dash_tokens(tokens):
+    """Clean up dash tokens.
+
+    - If the dash-delimited values are not integers, the values joined by dashes
+      will need further parsing.
+
+    >>> list(clean_dash_tokens(['7-18', '3', 'pm-']))
+    ['7-18', '3', 'pm', '-']
+    >>> list(clean_dash_tokens(['7/17-7/18']))
+    ['7/17', '-', '7/18']
+    """
+    for token in tokens:
+        if '-' in token:
+            parts = token.split('-')
+            if not all([s.isdigit() for s in parts]):
+                if parts[0]:
+                    yield parts[0]
+                for part in parts[1:]:
+                    yield '-'
+                    if part:
+                        yield part
+                continue
+        yield token
 
 
 def get_character_type(character):
