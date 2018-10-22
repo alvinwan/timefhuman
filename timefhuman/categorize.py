@@ -53,6 +53,10 @@ def convert_day_of_week(tokens, now=datetime.datetime.now()):
     [8/13/2018, 'at', '3']
     >>> convert_day_of_week(['past', 'Monday', 'at', '3'], now)
     [7/30/2018, 'at', '3']
+    >>> convert_day_of_week(['sat', 'at', '5'], now)
+    [8/4/2018, 'at', '5']
+    >>> convert_day_of_week(['suNday', 'at', '5'], now)
+    [8/5/2018, 'at', '5']
     """
     tokens = tokens.copy()
     for i in range(7):
@@ -60,12 +64,12 @@ def convert_day_of_week(tokens, now=datetime.datetime.now()):
         day_of_week = DAYS_OF_WEEK[day.weekday()]
 
         for string in (day_of_week, day_of_week[:3], day_of_week[:2]):
-            if string in tokens:
-                index = tokens.index(string)
-                new_index, tokens, weeks = extract_weeks_offset(tokens, end=index)
-                day = now + datetime.timedelta(weeks*7 + i)
-                tokens[new_index] = DayToken(day.month, day.day, day.year)
-                break
+            for index, token in enumerate(tokens):
+                if isinstance(token, str) and string.lower() == token.lower():
+                    new_index, tokens, weeks = extract_weeks_offset(tokens, end=index)
+                    day = now + datetime.timedelta(weeks*7 + i)
+                    tokens[new_index] = DayToken(day.month, day.day, day.year)
+                    break
     return tokens
 
 
