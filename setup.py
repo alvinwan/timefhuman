@@ -24,7 +24,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-VERSION = '0.0.4'
+VERSION = '0.0.5'
 
 setup(
     name="timefhuman",
