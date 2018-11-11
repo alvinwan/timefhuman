@@ -64,3 +64,11 @@ def test_edge_cases_range(now):
     assert timefhuman('7/17 3 pm- 7/19 2 pm') == (
         datetime.datetime(2018, 7, 17, 15, 0),
         datetime.datetime(2018, 7, 19, 14, 0),)
+
+
+def test_comma_delimited_combination(now):
+    assert timefhuman('tomorrow noon,Wed 3 p.m.,Fri 11 AM', now) == [
+        datetime.datetime(2018, 8, 5, 12, 0),
+        datetime.datetime(2018, 8, 8, 15, 0),
+        datetime.datetime(2018, 8, 10, 11, 0)
+    ]

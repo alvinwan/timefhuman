@@ -27,6 +27,8 @@ def generic_tokenize(characters):
     ['July', '17', ',', '2018', '3', 'p.m.']
     >>> list(generic_tokenize('3PM on July 17'))
     ['3', 'PM', 'on', 'July', '17']
+    >>> list(generic_tokenize('tomorrow noon,Wed 3 p.m.,Fri 11 AM'))
+    ['tomorrow', 'noon', ',', 'Wed', '3', 'p.m.', ',', 'Fri', '11', 'AM']
     """
     token = ''
     punctuation = ''
@@ -43,6 +45,9 @@ def generic_tokenize(characters):
                 yield token
                 token = ''
             token = character if not is_skip_character else ''
+            if is_break_character:
+                yield token
+                token = ''
             last_type = type
             continue
         token += character
