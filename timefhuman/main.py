@@ -47,9 +47,9 @@ def timefhuman(string, now=None, raw=None):
     [datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 18, 15, 0)]
     >>> timefhuman('today or tomorrow noon', now=now)  # choices w. natural language
     [datetime.datetime(2018, 8, 4, 12, 0), datetime.datetime(2018, 8, 5, 12, 0)]
-    >>> timefhuman('2 PM on 7/17 or 7/19')  # time applies to both dates
+    >>> timefhuman('2 PM on 7/17 or 7/19', now=now)  # time applies to both dates
     [datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]
-    >>> timefhuman('2 PM on 7/17 or 7/19', raw=True)
+    >>> timefhuman('2 PM on 7/17 or 7/19', raw=True, now=now)
     [[7/17/2018 2 pm, 7/19/2018 2 pm]]
     """
     if now is None:
