@@ -18,6 +18,9 @@ class Token:
             setter(self, property, others)
         elif others is None and mine is not None:
             setter(other, property, mine)
+    
+    def isnumeric(self):
+        return False
 
 
 class ListToken(Token):

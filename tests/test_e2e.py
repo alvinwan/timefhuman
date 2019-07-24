@@ -35,11 +35,11 @@ def test_choices(now):
         datetime.datetime(2018, 7, 17, 16, 0),
         datetime.datetime(2018, 7, 17, 17, 0),
     ]
-    assert timefhuman('7/17 4-5 PM or 5-6 PM') == [
+    assert timefhuman('7/17 4-5 PM or 5-6 PM', now) == [
         (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
         (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))
     ]
-    assert timefhuman('7/17 4-5 or 5-6 PM') == [
+    assert timefhuman('7/17 4-5 or 5-6 PM', now) == [
         (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
         (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))
     ]
@@ -61,7 +61,7 @@ def test_edge_cases_range(now):
     assert timefhuman('7/17-7/18', now) == (
         datetime.datetime(2018, 7, 17, 0, 0),
         datetime.datetime(2018, 7, 18, 0, 0),)
-    assert timefhuman('7/17 3 pm- 7/19 2 pm') == (
+    assert timefhuman('7/17 3 pm- 7/19 2 pm', now) == (
         datetime.datetime(2018, 7, 17, 15, 0),
         datetime.datetime(2018, 7, 19, 14, 0),)
 
@@ -72,3 +72,15 @@ def test_comma_delimited_combination(now):
         datetime.datetime(2018, 8, 8, 15, 0),
         datetime.datetime(2018, 8, 10, 11, 0)
     ]
+
+def test_multiple_datetimes(now):
+    assert timefhuman('Jun 28 5:00 PM - Aug 02 7:00 PM', now) == \
+        (datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))
+    assert timefhuman('Jun 28 2019 5:00 PM - Aug 02 2019 7:00 PM', now) == \
+        (datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))
+    assert timefhuman('Jun 28, 2019 5:00 PM - Aug 02, 2019 7:00 PM', now) == \
+        (datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))
+    assert timefhuman('6/28 5:00 PM - 8/02 7:00 PM', now) == \
+        (datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))
+    assert timefhuman('6/28/2019 5:00 PM - 8/02/2019 7:00 PM', now) == \
+        (datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))

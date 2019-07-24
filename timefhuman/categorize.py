@@ -216,11 +216,11 @@ def maybe_substitute_using_month(tokens, now=datetime.datetime.now()):
             return tokens[:index] + [day] + tokens[index+2:]
         elif not next_next_candidate.isnumeric():
             day = DayToken(month=mo, day=next_candidate, year=now.year)
-            return tokens[:index] + [day] + tokens[index+2:]
+            return maybe_substitute_using_month(tokens[:index] + [day] + tokens[index+2:], now)
 
         next_next_candidate = int(next_next_candidate)
         day = DayToken(month=mo, day=next_candidate, year=next_next_candidate)
-        return tokens[:index] + [day] + tokens[index+3:]
+        return maybe_substitute_using_month(tokens[:index] + [day] + tokens[index+3:], now)
     return tokens
 
 
