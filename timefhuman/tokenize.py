@@ -1,5 +1,5 @@
+import re
 import string
-
 
 def tokenize(characters):
     """Tokenize all characters in the string.
@@ -11,10 +11,12 @@ def tokenize(characters):
     >>> list(tokenize('7/17, 7/18, 7/19 at 2'))
     ['7/17', ',', '7/18', ',', '7/19', 'at', '2']
     """
-    tokens = generic_tokenize(characters)
+    tokens = generic_tokenize(remove_day_suffix(characters))
     tokens = clean_dash_tokens(tokens)
     return tokens
 
+def remove_day_suffix(characters):
+    return re.sub(r'(\d+)(th|st|nd|rd)', '\g<1>', characters)
 
 def generic_tokenize(characters):
     """Default tokenizer
