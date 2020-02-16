@@ -316,6 +316,33 @@ def extract_hour_minute(string, time_of_day=None):
     return TimeToken(relative_hour=hour, minute=minute, time_of_day=time_of_day)
 
 
+def extract_hour_minute_token(tokens, time_of_day=None):
+    """Attempt to extract the exact token which contains the hour and minute and convert it into a number.
+    This will either be 1 before or 2 before the am/pm token.
+    12:00 is the default token to prevent failure
+
+    """
+    number_words = ["zero", "one", "two", "three", "four", "five", "six",
+                    "seven", "eight", "nine", "ten", "eleven", "twelve"]
+
+    # look at previous n tokens
+    n = 2
+    for i in range(1, n+1):
+        try:
+            current_token = tokens[-i]
+            if current_token.lower() in number_words:
+                current_token = str(number_words.index(current_token.lower()))
+            return tokens[:-i-1], extract_hour_minute(current_token, time_of_day)
+        # if nothing is returned from extract_hour_minute
+        except ValueError:
+            pass
+        # if the tokens list is only of length 1
+        except IndexError:
+            pass
+    # default return value
+    return tokens, "12:00"
+
+
 def maybe_substitute_hour_minute(tokens):
     """Attempt to extract hour and minute.
 
@@ -347,8 +374,8 @@ def maybe_substitute_hour_minute(tokens):
     for time_of_day in ('am', 'pm'):
         while time_of_day in temp_tokens:
             index = temp_tokens.index(time_of_day)
-            time_token = extract_hour_minute(temp_tokens[index-1], time_of_day)
-            tokens = tokens[:index-1] + [time_token] + tokens[index+1:]
+            (previous_tokens, time_token) = extract_hour_minute_token(temp_tokens[:index], time_of_day)
+            tokens = previous_tokens + [time_token] + tokens[index+1:]
             temp_tokens = clean_tokens(tokens, remove_dots)
 
     tokens = [extract_hour_minute(token, None)
