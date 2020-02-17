@@ -332,7 +332,7 @@ def extract_hour_minute_token(tokens, time_of_day=None):
             current_token = tokens[-i]
             if current_token.lower() in number_words:
                 current_token = str(number_words.index(current_token.lower()))
-            return tokens[:-i-1], extract_hour_minute(current_token, time_of_day)
+            return -i, extract_hour_minute(current_token, time_of_day)
         # if nothing is returned from extract_hour_minute
         except ValueError:
             pass
@@ -340,7 +340,7 @@ def extract_hour_minute_token(tokens, time_of_day=None):
         except IndexError:
             pass
     # default return value
-    return tokens, "12:00"
+    return -1, "12:00"
 
 
 def maybe_substitute_hour_minute(tokens):
@@ -374,8 +374,8 @@ def maybe_substitute_hour_minute(tokens):
     for time_of_day in ('am', 'pm'):
         while time_of_day in temp_tokens:
             index = temp_tokens.index(time_of_day)
-            (previous_tokens, time_token) = extract_hour_minute_token(temp_tokens[:index], time_of_day)
-            tokens = previous_tokens + [time_token] + tokens[index+1:]
+            (unchanged_index, time_token) = extract_hour_minute_token(temp_tokens[:index], time_of_day)
+            tokens = tokens[:index+unchanged_index] + [time_token] + tokens[index+1:]
             temp_tokens = clean_tokens(tokens, remove_dots)
 
     tokens = [extract_hour_minute(token, None)
