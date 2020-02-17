@@ -27,6 +27,7 @@ def categorize(tokens, now):
     [7/17/2018, 3 pm, '-', 7/19/2018, 2 pm]
     """
     tokens = list(tokens)
+    tokens = convert_words_to_numbers(tokens)
     tokens = convert_day_of_week(tokens, now)
     tokens = convert_relative_days(tokens, now)
     tokens = convert_time_of_day(tokens)
@@ -34,6 +35,24 @@ def categorize(tokens, now):
     tokens = maybe_substitute_using_date(tokens, now)
     tokens = maybe_substitute_using_month(tokens, now)
     tokens = substitute_hour_minute_in_remaining(tokens, now)
+    return tokens
+
+
+# TODO: add conversions for thirty, fourty-five
+# TODO: maybe set default for seven o'clock to 7 pm not am?
+def convert_words_to_numbers(tokens):
+    """
+    Converts numbers in word format into number format
+    >>> convert_words_to_numbers(['five', "o'clock"])
+    ['5', "o'clock"]
+    >>> convert_words_to_numbers(['seven', "o'clock"])
+    ['7', "o'clock"]
+    """
+    number_words = ["zero", "one", "two", "three", "four", "five", "six",
+                    "seven", "eight", "nine", "ten", "eleven", "twelve"]
+    for index, token in enumerate(tokens):
+        if token.lower() in number_words:
+            tokens[index] = str(number_words.index(token.lower()))
     return tokens
 
 
@@ -317,22 +336,18 @@ def extract_hour_minute(string, time_of_day=None):
 
 
 def extract_hour_minute_token(tokens, time_of_day=None):
-    """Attempt to extract the exact token which contains the hour and minute and convert it into a number.
-    This will either be 1 before or 2 before the am/pm token.
-    12:00 is the default token to prevent failure
-
     """
-    number_words = ["zero", "one", "two", "three", "four", "five", "six",
-                    "seven", "eight", "nine", "ten", "eleven", "twelve"]
+        Attempt to extract the exact token which contains the hour and minute and convert it into a number.
+        This will either be 1 before or 2 before the am/pm token.
+        12:00 is the default token to prevent failure
+        Tests for this helper function are included in maybe_substitute_hour_minute
+    """
 
     # look at previous n tokens
     n = 2
     for i in range(1, n+1):
         try:
-            current_token = tokens[-i]
-            if current_token.lower() in number_words:
-                current_token = str(number_words.index(current_token.lower()))
-            return -i, extract_hour_minute(current_token, time_of_day)
+            return -i, extract_hour_minute(tokens[-i], time_of_day)
         # if nothing is returned from extract_hour_minute
         except ValueError:
             pass
@@ -367,6 +382,10 @@ def maybe_substitute_hour_minute(tokens):
     ['7/17/18', 3 pm]
     >>> maybe_substitute_hour_minute(['3', 'p.m.', '-', '4', 'p.m.'])
     [3 pm, '-', 4 pm]
+    >>> maybe_substitute_hour_minute(['5', "o'clock", 'pm'])
+    [5 pm]
+    >>> maybe_substitute_hour_minute(['12', "o'clock", 'pm'])
+    [12 pm]
     """
     remove_dots = lambda token: token.replace('.', '')
     temp_tokens = clean_tokens(tokens, remove_dots)
