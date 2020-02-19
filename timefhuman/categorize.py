@@ -109,7 +109,6 @@ def convert_relative_days(tokens, now=datetime.datetime.now()):
     return tokens
 
 
-
 # TODO: convert to new token-based system
 def extract_weeks_offset(tokens, end=None, key_tokens=(
         'next', 'previous', 'last', 'upcoming', 'past', 'prev')):
@@ -341,6 +340,12 @@ def extract_hour_minute_token(tokens, time_of_day=None):
         This will either be 1 before or 2 before the am/pm token.
         12:00 is the default token to prevent failure
         Tests for this helper function are included in maybe_substitute_hour_minute
+        >>> extract_hour_minute_token(["3", "o'clock"])
+        -2, 3
+        >>> extract_hour_minute_token(["Gibberish", "twice"])
+        -1, 12
+        >>> extract_hour_minute_token(["only one value"])
+        -1 12
     """
 
     # look at previous n tokens
@@ -355,7 +360,7 @@ def extract_hour_minute_token(tokens, time_of_day=None):
         except IndexError:
             pass
     # default return value
-    return -1, "12:00"
+    return -1, 12
 
 
 def maybe_substitute_hour_minute(tokens):
