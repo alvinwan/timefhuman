@@ -341,11 +341,11 @@ def extract_hour_minute_token(tokens, time_of_day=None):
         12:00 is the default token to prevent failure
         Tests for this helper function are included in maybe_substitute_hour_minute
         >>> extract_hour_minute_token(["3", "o'clock"])
-        -2, 3
+        (-2, 3:00)
         >>> extract_hour_minute_token(["Gibberish", "twice"])
-        -1, 12
+        (-1, 12)
         >>> extract_hour_minute_token(["only one value"])
-        -1 12
+        (-1, 12)
     """
 
     # look at previous n tokens
