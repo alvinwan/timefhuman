@@ -29,7 +29,7 @@ def categorize(tokens, now):
     tokens = list(tokens)
     tokens = convert_words_to_numbers(tokens)
     tokens = convert_day_of_week(tokens, now)
-    tokens = convert_relative_days(tokens, now)
+    tokens = convert_relative_days_ranges(tokens, now)
     tokens = convert_time_of_day(tokens)
     tokens = maybe_substitute_hour_minute(tokens)
     tokens = maybe_substitute_using_date(tokens, now)
@@ -92,17 +92,31 @@ def convert_day_of_week(tokens, now=datetime.datetime.now()):
     return tokens
 
 
-def convert_relative_days(tokens, now=datetime.datetime.now()):
+def convert_relative_days_ranges(tokens, now=datetime.datetime.now()):
     """Convert relative days (e.g., "today", "tomorrow") into date-like string.
 
+    Additionally converts known ranges (e.g., "weekend", "weekdays")
+
     >>> now = datetime.datetime(2018, 8, 6)
-    >>> convert_relative_days(['today', 'or', 'tomorrow', TimeToken(12, 'pm')], now)
+    >>> convert_relative_days_ranges(['today', 'or', 'tomorrow', TimeToken(12, 'pm')], now)
     [8/6/2018, 'or', 8/7/2018, 12 pm]
+    >>> convert_relative_days_ranges(['next', 'weekend'], now)
+    ['next', 8/11/2018 - 8/12/2018]
+    >>> convert_relative_days_ranges(['weekdays'], now)
+    [8/6/2018 - 8/10/2018]
     """
+    # TODO: what if user says 'this weekend' and it is currently the weekend?
+    # for weekends, use 'next' as +1 and this weekend is the ranging including
+    # today
+    # TODO: add support for 'next weekday' (not daterange, conditioinal lookahead)
+    (saturday,) = convert_day_of_week(['upcoming', 'Saturday'], now)
+    (monday,) = convert_day_of_week(['upcoming', 'Monday'], now)
     for keywords, replacement in (
             (("today",), DayToken.from_datetime(now)),
             (("tomorrow", "tmw"), DayToken.from_datetime(now + datetime.timedelta(1))),
-            (("yesterday",), DayToken.from_datetime(now - datetime.timedelta(1)))):
+            (("yesterday",), DayToken.from_datetime(now - datetime.timedelta(1))),
+            (("weekend",), DayRange(saturday, saturday + 1)),
+            (("weekdays",), DayRange(monday, monday + 4))):
         for keyword in keywords:
             tokens = [replacement if token == keyword else token \
                         for token in tokens]
