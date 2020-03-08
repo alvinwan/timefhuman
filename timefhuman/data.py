@@ -169,10 +169,20 @@ class DayToken(Token):
             self.share(attr, other)
 
     def __add__(self, other):
+        """
+        >>> d1 = DayToken(3, 2, None)
+        >>> d1 + 3
+        3/5
+        """
         assert isinstance(other, int)
         return DayToken(self.month, self.day + other, self.year)
 
     def __radd__(self, other):
+        """
+        >>> d1 = DayToken(3, 2, None)
+        >>> 3 + d1
+        3/5
+        """
         assert isinstance(other, int)
         return DayToken(self.month, self.day + other, self.year)
 
@@ -195,7 +205,13 @@ class DayToken(Token):
         return self.month == other.month and self.day == other.day and \
             self.year == other.year
 
-    def __repr__(self):  # TODO: handles Nones
+    def __repr__(self):
+        if not self.year:
+            return '{}/{}'.format(self.month, self.day)
+        if not self.day:
+            return '{}/{}'.format(self.month, self.year)
+        # either all fields populated or would be confusing w/o null fields
+        # (e.g., only month is non-null)
         return '{}/{}/{}'.format(
             self.month, self.day, self.year)
 
