@@ -179,7 +179,7 @@ def maybe_substitute_using_month(tokens, now=datetime.datetime.now()):
     >>> day_range = DayRange(DayToken(None, 3, None), DayToken(None, 5, None))
     >>> day = DayToken(3, 5, 2018)
     >>> ambiguous_token = AmbiguousToken(time_range, day, day_range)
-    >>> maybe_substitute_using_month(['May', ambiguous_token])
+    >>> maybe_substitute_using_month(['May', ambiguous_token], now=now)
     [5/3/2018 - 5/5/2018]
     """
     temp_tokens = [token.lower() if isinstance(token, str) else token for token in tokens]

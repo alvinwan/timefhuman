@@ -35,11 +35,11 @@ def test_choices(now):
         datetime.datetime(2018, 7, 17, 16, 0),
         datetime.datetime(2018, 7, 17, 17, 0),
     ]
-    assert timefhuman('7/17 4-5 PM or 5-6 PM') == [
+    assert timefhuman('7/17 4-5 PM or 5-6 PM', now) == [
         (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
         (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))
     ]
-    assert timefhuman('7/17 4-5 or 5-6 PM') == [
+    assert timefhuman('7/17 4-5 or 5-6 PM', now) == [
         (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
         (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))
     ]
@@ -61,6 +61,6 @@ def test_edge_cases_range(now):
     assert timefhuman('7/17-7/18', now) == (
         datetime.datetime(2018, 7, 17, 0, 0),
         datetime.datetime(2018, 7, 18, 0, 0),)
-    assert timefhuman('7/17 3 pm- 7/19 2 pm') == (
+    assert timefhuman('7/17 3 pm- 7/19 2 pm', now) == (
         datetime.datetime(2018, 7, 17, 15, 0),
         datetime.datetime(2018, 7, 19, 14, 0),)
