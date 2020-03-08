@@ -168,6 +168,14 @@ class DayToken(Token):
         for attr in ('year', 'month'):
             self.share(attr, other)
 
+    def __add__(self, other):
+        assert isinstance(other, int)
+        return DayToken(self.month, self.day + other, self.year)
+
+    def __radd__(self, other):
+        assert isinstance(other, int)
+        return DayToken(self.month, self.day + other, self.year)
+
     def datetime(self, now):
         return datetime.datetime(self.year, self.month, self.day)
 
