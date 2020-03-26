@@ -4,6 +4,8 @@ sudo: false
 
 python:
   - "3.6.2"
+  - "3.7.7"
+  - "3.8.2"
 
 install:
   - python setup.py install
