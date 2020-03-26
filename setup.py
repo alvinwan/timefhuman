@@ -36,8 +36,9 @@ setup(
     url="https://github.com/alvinwan/timefhuman",
     packages=['timefhuman'],
     tests_require=tests_require,
-    install_requires=install_requires + tests_require,
+    install_requires=install_requires,
     download_url='https://github.com/alvinwan/timefhuman/archive/%s.zip' % VERSION,
+    extras_require={"test":tests_require}
     classifiers=[
         "Topic :: Utilities",
         "Intended Audience :: Developers",
