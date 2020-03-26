@@ -6,7 +6,7 @@ python:
   - "3.6.2"
 
 install:
-  - python setup.py install
+  - pip install .[test]
 
 script:
   - py.test --cov=timefhuman
