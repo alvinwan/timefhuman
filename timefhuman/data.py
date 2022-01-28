@@ -18,7 +18,7 @@ class Token:
             setter(self, property, others)
         elif others is None and mine is not None:
             setter(other, property, mine)
-    
+
     def isnumeric(self):
         return False
 
@@ -178,7 +178,9 @@ class DayToken(Token):
         3/5
         """
         assert isinstance(other, int)
-        return DayToken(self.month, self.day + other, self.year)
+        d = datetime.date(self.year, self.month, self.day)
+        d = d + datetime.timedelta(days=other)
+        return DayToken(d.month, d.day, d.year)
 
     def __radd__(self, other):
         """
@@ -187,7 +189,9 @@ class DayToken(Token):
         3/5
         """
         assert isinstance(other, int)
-        return DayToken(self.month, self.day + other, self.year)
+        d = datetime.date(self.year, self.month, self.day)
+        d = d + datetime.timedelta(days=other)
+        return DayToken(d.month, d.day, d.year)
 
     def datetime(self, now):
         return datetime.datetime(self.year, self.month, self.day)
