@@ -73,6 +73,7 @@ def timefhuman(string, now=None, raw=None):
 def timefhuman_tokens(string, now):
     """Convert string into timefhuman parsed, imputed, combined tokens"""
     tokens = tokenize(string)
+    print(tokens)
     tokens = categorize(tokens, now)
     tokens = build_tree(tokens, now)
     return tokens
