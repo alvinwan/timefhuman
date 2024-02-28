@@ -6,6 +6,8 @@
 
 Convert human-readable, date-like strings written in natural language to Python objects. Describe specific datetimes or ranges of datetimes. [Supports Python3+](https://github.com/alvinwan/timefhuman/issues/3)
 
+Try the demo on [pytwiddle &raquo;](https://pytwiddle.com/?id=example:datetime.py)
+
 To start, describe days of the week or times of day in the vernacular.
 
 ```
@@ -57,6 +59,8 @@ pip install timefhuman
 ```
 
 Optionally, clone the repository and run `python setup.py install`.
+
+You can also try timefhuman without a local installation using the [twiddle](https://pytwiddle.com/?id=example:datetime.py).
 
 # Usage
 
