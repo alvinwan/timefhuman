@@ -56,6 +56,7 @@ def timefhuman(string, now=None, raw=None):
         now = datetime.datetime.now()
 
     tokens = timefhuman_tokens(string, now)
+    #print(isinstance(tokens[1], Token))
 
     if raw:
         return tokens
@@ -75,3 +76,5 @@ def timefhuman_tokens(string, now):
     tokens = categorize(tokens, now)
     tokens = build_tree(tokens, now)
     return tokens
+if __name__ == '__main__':
+    print(timefhuman('next month'))

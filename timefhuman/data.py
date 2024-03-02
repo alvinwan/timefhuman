@@ -1,5 +1,6 @@
 import datetime
 
+monthlengths={1:31,2:28,3:31,4:30,5:31,6:30,7:31,8:31,9:30,10:31,11:30,12:31}
 
 class Token:
 
@@ -178,7 +179,13 @@ class DayToken(Token):
         3/5
         """
         assert isinstance(other, int)
-        return DayToken(self.month, self.day + other, self.year)
+        if self.day+other<=monthlengths[self.month]:
+            return DayToken(self.month, self.day + other, self.year)
+        elif self.month!=12:
+            return DayToken(self.month + 1, self.day + other - monthlengths[self.month], self.year)
+        else:
+            return DayToken(1, self.day + other - monthlengths[self.month], self.year+1)
+            
 
     def __radd__(self, other):
         """

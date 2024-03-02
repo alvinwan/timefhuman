@@ -111,12 +111,19 @@ def convert_relative_days_ranges(tokens, now=datetime.datetime.now()):
     # TODO: add support for 'next weekday' (not daterange, conditioinal lookahead)
     (saturday,) = convert_day_of_week(['upcoming', 'Saturday'], now)
     (monday,) = convert_day_of_week(['upcoming', 'Monday'], now)
+    month_= (now.replace(day=28)+datetime.timedelta(days=4)).replace(day=1)
+    month_end_= (((now.replace(day=28)+datetime.timedelta(days=4)).replace(day=28)+datetime.timedelta(days=4)).replace(day=1)-datetime.timedelta(days=1))
+    month=DayToken(month_.month,month_.day,month_.year)
+    month_end=DayToken(month_end_.month,month_end_.day,month_end_.year)
+    
     for keywords, replacement in (
             (("today",), DayToken.from_datetime(now)),
             (("tomorrow", "tmw"), DayToken.from_datetime(now + datetime.timedelta(1))),
             (("yesterday",), DayToken.from_datetime(now - datetime.timedelta(1))),
             (("weekend",), DayRange(saturday, saturday + 1)),
-            (("weekdays",), DayRange(monday, monday + 4))):
+            (("weekdays",), DayRange(monday, monday + 4)),
+            (("week",), DayRange(monday, monday + 6)),
+            (("month",), DayRange(month, month_end))):
         for keyword in keywords:
             tokens = [replacement if token == keyword else token \
                         for token in tokens]
