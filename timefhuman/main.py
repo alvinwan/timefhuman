@@ -59,7 +59,7 @@ def timefhuman(string, now=None, raw=None):
 
     if raw:
         return tokens
-    datetimes = [tok.datetime(now) for tok in tokens if isinstance(tok, Token)]
+    datetimes = [(tok.datetime(now), tok.recurrant)  if "recurrant" in dir(tok) and tok.recurrant else tok.datetime(now) for tok in tokens if isinstance(tok, Token)]
 
     if len(datetimes) == 1:  # TODO: bad idea?
         return datetimes[0]

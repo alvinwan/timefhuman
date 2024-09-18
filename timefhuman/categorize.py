@@ -82,12 +82,12 @@ def convert_day_of_week(tokens, now=datetime.datetime.now()):
         day = now + datetime.timedelta(i)
         day_of_week = DAYS_OF_WEEK[day.weekday()]
 
-        for string in (day_of_week, day_of_week[:2], day_of_week[:3], day_of_week[:4]):
+        for string, n in zip((day_of_week, day_of_week[:2], day_of_week[:3], day_of_week[:4], day_of_week+'s'), range(5)):
             for index, token in enumerate(tokens):
                 if isinstance(token, str) and string.lower() == token.lower():
                     new_index, tokens, weeks = extract_weeks_offset(tokens, end=index)
                     day = now + datetime.timedelta(weeks*7 + i)
-                    tokens[new_index] = DayToken(day.month, day.day, day.year)
+                    tokens[new_index] = DayToken(day.month, day.day, day.year, recurrant=True if n == 4 else False)
                     break
     return tokens
 
