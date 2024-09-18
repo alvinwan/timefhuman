@@ -47,10 +47,10 @@ class ListToken(Token):
 
 class DayTimeToken(Token):
 
-    def __init__(self, year, month, day, relative_hour, minute=0, time_of_day=None, recurrant=False):
+    def __init__(self, year, month, day, relative_hour, minute=0, time_of_day=None, recurrent=False):
         self.day = DayToken(month, day, year)
         self.time = TimeToken(relative_hour, time_of_day, minute)
-        self.recurrant = recurrant
+        self.recurrent = recurrent
 
     def combine(self, other):
         """
@@ -79,7 +79,7 @@ class DayTimeToken(Token):
     def from_day_time(day, time):
         return DayTimeToken(
             day.year, day.month, day.day, time.relative_hour, time.minute,
-            time.time_of_day, day.recurrant)
+            time.time_of_day, day.recurrent)
 
     def __repr__(self):
         return '{} {}'.format(repr(self.day), repr(self.time))
@@ -129,11 +129,11 @@ class DayTimeList(ListToken):
 
 class DayToken(Token):
 
-    def __init__(self, month, day, year, recurrant=False):  # TODO: default Nones?
+    def __init__(self, month, day, year, recurrent=False):  # TODO: default Nones?
         self.month = month
         self.day = day
         self.year = year
-        self.recurrant = recurrant
+        self.recurrent = recurrent
 
         assert month is None or 1 <= month <= 12
         assert day is None or 1 <= day <= 31

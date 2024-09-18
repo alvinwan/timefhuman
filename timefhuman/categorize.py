@@ -87,7 +87,7 @@ def convert_day_of_week(tokens, now=datetime.datetime.now()):
                 if isinstance(token, str) and string.lower() == token.lower():
                     new_index, tokens, weeks = extract_weeks_offset(tokens, end=index)
                     day = now + datetime.timedelta(weeks*7 + i)
-                    tokens[new_index] = DayToken(day.month, day.day, day.year, recurrant=True if n == 4 else False)
+                    tokens[new_index] = DayToken(day.month, day.day, day.year, recurrent=True if n == 4 else False)
                     break
     return tokens
 
