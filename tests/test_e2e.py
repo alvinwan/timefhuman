@@ -9,7 +9,7 @@ def now():
 
 
 def test_main(now):
-    assert timefhuman('5p.m.', now) == datetime.time(hour=17, minute=0)
+    assert timefhuman('5p', now) == datetime.time(hour=17, minute=0)
     assert timefhuman('July 17, 2018 at 3p.m.', now) == \
         datetime.datetime(2018, 7, 17, 15, 0)
     assert timefhuman('July 17, 2018 3 p.m.', now) == \

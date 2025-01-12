@@ -34,7 +34,7 @@ MONTHNAME: /(?i)(january|february|march|april|may|june|july|august|september|oct
 WEEKDAY: /(?i)(mon|tue|wed|thu|fri|sat|sun)/
 
 // Meridiem token (am/pm, with optional dots)
-MERIDIEM: /(?i)([ap]\.?m\.?)/
+MERIDIEM: /(?i)([ap](\.?m\.?)?)/
 
 // ----------------------
 // PARSER RULES
@@ -58,7 +58,8 @@ datetime: date ("at" time)?
         | date time
         | time "on" date
 
-date: month "/" day "/" year
+date: month "/" day ("/" year)?
+    | month "-" day ("-" year)?
     | "tomorrow"i 
     | "today"i 
     | weekday
@@ -258,9 +259,9 @@ class TimeFHumanTransformer(Transformer):
         meridiem = data.get("meridiem")  # e.g. 'pm' or 'am'
 
         # 5) Apply am/pm logic
-        if meridiem == "pm" and hour != 12:
+        if meridiem and meridiem.startswith("p") and hour != 12:
             hour += 12
-        elif meridiem == "am" and hour == 12:
+        elif meridiem and meridiem.startswith("a") and hour == 12:
             hour = 0
 
         return time(hour=hour, minute=minute)
