@@ -13,65 +13,254 @@ Convert human-readable date-like string to Python datetime object.
 @site: alvinwan.com
 """
 
-from .tokenize import tokenize
-from .categorize import categorize
-from .tree import build_tree
-from .data import Token
-from .data import TimeToken
-from .data import DayToken
-from .data import TimeRange
-from .data import DayRange
-import datetime
-import string
-
 
 __all__ = ('timefhuman',)
 
+from lark import Lark
+
+grammar = """
+%import common.WS
+%import common.INT
+%ignore WS
+
+// ----------------------
+// TERMINAL DEFINITIONS
+// ----------------------
+
+// Month names as a regex token, case-insensitive
+MONTHNAME: /(?i)(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)/
+
+// For weekdays, also as a single regex token, case-insensitive
+WEEKDAY: /(?i)(mon|tue|wed|thu|fri|sat|sun)/
+
+// Meridiem token (am/pm, with optional dots)
+MERIDIEM: /(?i)([ap]\.?m\.?)/
+
+// ----------------------
+// PARSER RULES
+// ----------------------
+start: expression
+
+expression: range 
+          | list 
+          | single
+
+range: single ("to" | "-") single
+
+list: single ("," single)+ 
+    | single ("or" single)+
+
+single: datetime 
+       | date 
+       | time
+
+datetime: date ("at" time)?
+        | date time
+        | time "on" date
+
+date: month "/" day "/" year
+    | "tomorrow"i 
+    | "today"i 
+    | weekday
+    | monthname day ("," year)?
+
+time: hour ":" minute MERIDIEM? 
+    | hour (MERIDIEM)?
+    | "noon"i
+
+weekday: WEEKDAY
+monthname: MONTHNAME
+
+day: INT
+month: INT
+year: INT
+
+hour: INT
+minute: INT
+"""
+
 
 def timefhuman(string, now=None, raw=None):
-    """A simple parsing function for date-related strings.
+    parser = Lark(grammar, start="start")
+    tree = parser.parse(string)
 
-    :param string: date-like string to parse
-    :param now: datetime for now, will default to datetime.datetime.now()
-
-    >>> now = datetime.datetime(year=2018, month=8, day=4)
-    >>> timefhuman('upcoming Monday noon', now=now)  # natural language
-    datetime.datetime(2018, 8, 6, 12, 0)
-    >>> timefhuman('Monday 3 pm, Tu noon', now=now)  # multiple datetimes
-    [datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
-    >>> timefhuman('7/17 3:30-4 PM', now=now)  # time range
-    (datetime.datetime(2018, 7, 17, 15, 30), datetime.datetime(2018, 7, 17, 16, 0))
-    >>> timefhuman('7/17 3:30 p.m. - 4 p.m.', now=now)
-    (datetime.datetime(2018, 7, 17, 15, 30), datetime.datetime(2018, 7, 17, 16, 0))
-    >>> timefhuman('7/17 or 7/18 3 p.m.', now=now)  # date range
-    [datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 18, 15, 0)]
-    >>> timefhuman('today or tomorrow noon', now=now)  # choices w. natural language
-    [datetime.datetime(2018, 8, 4, 12, 0), datetime.datetime(2018, 8, 5, 12, 0)]
-    >>> timefhuman('2 PM on 7/17 or 7/19', now=now)  # time applies to both dates
-    [datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]
-    >>> timefhuman('2 PM on 7/17 or 7/19', raw=True, now=now)
-    [[7/17/2018 2 pm, 7/19/2018 2 pm]]
-    """
-    if now is None:
-        now = datetime.datetime.now()
-
-    tokens = timefhuman_tokens(string, now)
+    transformer = TimeFHumanTransformer(now=now)
+    result = transformer.transform(tree)
 
     if raw:
-        return tokens
-    datetimes = [tok.datetime(now) for tok in tokens if isinstance(tok, Token)]
+        return tree
 
-    if len(datetimes) == 1:  # TODO: bad idea?
-        return datetimes[0]
-    return datetimes
+    if isinstance(result, (list, tuple)):
+        return result
 
-    # TODO: What if user specifies vernacular AND actual date time. Let
-    # specified date time take precedence.
+    return result
 
 
-def timefhuman_tokens(string, now):
-    """Convert string into timefhuman parsed, imputed, combined tokens"""
-    tokens = tokenize(string)
-    tokens = categorize(tokens, now)
-    tokens = build_tree(tokens, now)
-    return tokens
+from datetime import datetime, time, timedelta
+from lark import Transformer
+
+class TimeFHumanTransformer(Transformer):
+    def __init__(self, now=None):
+        self.now = now
+
+    def start(self, children):
+        """Strip the 'start' rule and return child(ren) directly."""
+        if len(children) == 1:
+            return children[0]
+        return children
+
+    def expression(self, children):
+        """The top-level expression could be a range, list, or single."""
+        if len(children) == 1:
+            return children[0]
+        return children
+
+    def single(self, children):
+        """A single object can be a datetime, a date, or a time."""
+        return children[0]
+
+    def range(self, children):
+        """Handles expressions like '7/17 3 PM - 7/18 4 PM'."""
+        return tuple(children)
+
+    def list(self, children):
+        """Handles comma/or lists like '7/17, 7/18, 7/19' or '7/17 or 7/18'."""
+        return children
+
+    def datetime(self, children):
+        """
+        A 'datetime' node can contain:
+          - date + time
+          - date + 'at' + time
+          - just date
+          - just time
+        We combine them here into a single datetime if both parts are present.
+        """
+        date_part = next((c for c in children if isinstance(c, datetime)), None)
+        time_part = next((c for c in children if isinstance(c, time)), None)
+
+        if date_part and time_part:
+            return datetime.combine(date_part, time_part)
+        elif date_part:
+            return date_part
+        elif time_part:
+            return datetime.combine(self.now.date(), time_part)
+        return None
+
+    def date(self, children):
+        """
+        A 'date' node can match:
+          1) month/day/year (numeric)
+          2) 'tomorrow', 'today', or a weekday
+          3) monthname day, optional year
+        We iterate through tokens, collect info, then build a datetime.
+        """
+        data = {}
+
+        for child in children:
+            if not child.children:
+                continue
+
+            val = child.children[0].value
+            if child.data == "month":
+                data["month"] = int(val)
+            elif child.data == "monthname":
+                data["monthname"] = val  # e.g. "July", "jul"
+            elif child.data == "day":
+                data["day"] = int(val)
+            elif child.data in ["year", "year4"]:
+                data["year"] = int(val)
+            elif child.data == "weekday":
+                data["weekday"] = val.lower()  # e.g. "mon", "tue"
+
+        # Handle special strings like 'tomorrow', 'today', or a plain weekday
+        # Because Lark might return these as literal matches with no children.
+        # We find them by checking the raw string in tokens:
+        for token in children:
+            if isinstance(token, str):
+                # Lark might match 'tomorrow' or 'today' as a plain string
+                if token.lower() == "tomorrow":
+                    dt = self.now + timedelta(days=1)
+                    return datetime(dt.year, dt.month, dt.day)
+                elif token.lower() == "today":
+                    return datetime(self.now.year, self.now.month, self.now.day)
+                else:
+                    # Possibly a weekday (like 'wed')
+                    # You could parse next occurrence of that weekday, etc.
+                    pass
+
+        # If we have a named month, map it to a numeric month
+        month_mapping = {
+            "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+            "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
+            "jan": 1, "feb": 2, "mar": 3, "apr": 4, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12
+        }
+
+        if "monthname" in data and "month" not in data:
+            key = data["monthname"].lower().replace(".", "")
+            data["month"] = month_mapping.get(key, self.now.month)
+            
+        if data["day"] > 31 and "year" not in data:
+            data["year"] = data.pop("day")
+
+        if "day" not in data:
+            data["day"] = 1  # the only exception. just use the first day of the month
+        if "year" not in data:
+            data["year"] = self.now.year
+        if "month" not in data:
+            data["month"] = self.now.month
+            
+        if 50 < data["year"] < 100:
+            data["year"] = 1900 + data["year"]
+        elif data["year"] < 50:
+            data["year"] = 2000 + data["year"]
+
+        return datetime(data["year"], data["month"], data["day"])
+
+    def time(self, children):
+        """
+        A 'time' node might contain:
+        - hour, minute, optional am/pm (captured by the MERIDIEM token)
+        - just hour + am/pm
+        - the literal string 'noon'
+        We produce a timedelta, which is easier to add to a date.
+        """
+        # 1) Check for 'noon' as a direct match (often a plain string)
+        for child in children:
+            if isinstance(child, str) and child.lower() == "noon":
+                return time(hour=12, minute=0)
+
+        data = {}
+        for child in children:
+            # 2) If this is a Tree, it has child.data and child.children
+            if hasattr(child, "data"):
+                # The grammar says hour -> INT, minute -> INT, so
+                # we'd expect something like Tree("hour", [Token("INT","3")])
+                if child.data == "hour":
+                    data["hour"] = int(child.children[0].value)
+                elif child.data == "minute":
+                    data["minute"] = int(child.children[0].value)
+
+            # 3) If this is a Token, check child.type and child.value
+            elif hasattr(child, "type"):
+                # The grammar defines MERIDIEM as a token
+                if child.type == "MERIDIEM":
+                    # child.value might be 'pm', 'a.m.', etc.
+                    data["meridiem"] = child.value.lower().replace(".", "")
+
+            # 4) If it's a plain string (already checked 'noon' above), do nothing
+            else:
+                pass
+
+        # Extract the final hour/minute/meridiem
+        hour = data.get("hour", 0)
+        minute = data.get("minute", 0)
+        meridiem = data.get("meridiem")  # e.g. 'pm' or 'am'
+
+        # 5) Apply am/pm logic
+        if meridiem == "pm" and hour != 12:
+            hour += 12
+        elif meridiem == "am" and hour == 12:
+            hour = 0
+
+        return time(hour=hour, minute=minute)
