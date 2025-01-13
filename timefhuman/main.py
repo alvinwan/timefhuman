@@ -13,10 +13,6 @@ Convert human-readable date-like string to Python datetime object.
 @site: alvinwan.com
 """
 
-# TODO: support duration ranges/lists
-# TODO: support more than just 'minutes' - the rest are recognized but not correctly procesed
-# TODO: support natural language for duration like "three and a half hours" or floats like "3.5 hours"
-# TODO: support natural language times like "3 o'clock" or "quarter to 3"
 
 __all__ = ('timefhuman',)
 
@@ -99,7 +95,7 @@ time: hour ":" minute meridiem?
     | hour meridiem?
     | timename
 
-duration: duration_part (("and"|",")? duration_part)*
+duration: ("in"|"for")? duration_part (("and"|",")? duration_part)* ("ago")?
 duration_part: duration_number duration_unit
 duration_number: DURATION_NUMBER
 duration_unit: DURATION_UNIT

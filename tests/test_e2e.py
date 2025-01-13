@@ -25,7 +25,7 @@ def now():
     ('July 17 at 3', datetime.datetime(2018, 7, 17, 3, 0)),
     ('7/17/18 3:00 p.m.', datetime.datetime(2018, 7, 17, 15, 0)),
     ('3 p.m. today', datetime.datetime(2018, 8, 4, 15, 0)),
-    ('Tomorrow 3p', datetime.datetime(2018, 8, 5, 15, 0)),
+    ('Tomorrow 3p', datetime.datetime(2018, 8, 5, 15, 0)), # gh#24
     ('3p tomorrow', datetime.datetime(2018, 8, 5, 15, 0)),
     
     # date-only ranges
@@ -88,10 +88,11 @@ def test_default(now, test_input, expected):
     ('30 mins', datetime.timedelta(minutes=30)),
     ('2 hours', datetime.timedelta(hours=2)),
     ('2 hours 30 minutes', datetime.timedelta(hours=2, minutes=30)),
-    ('2 hours and 30 minutes', datetime.timedelta(hours=2, minutes=30)),
+    ('2 hours and 30 minutes', datetime.timedelta(hours=2, minutes=30)), # gh#22
     ('2h30m', datetime.timedelta(hours=2, minutes=30)),
     ('1 day and an hour', datetime.timedelta(days=1, hours=1)),
     ('1.5 hours', datetime.timedelta(hours=1, minutes=30)),
+    ('in five minutes', datetime.timedelta(minutes=5)), # gh#25
     # ('one and a half hour', datetime.timedelta(hours=1, minutes=30)), # TODO
     # ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))), # TODO
     # ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]), # TODO
