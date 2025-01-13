@@ -92,3 +92,11 @@ def test_multiple_datetimes(now):
         (datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))
     assert timefhuman('6/28/2019 5:00 PM - 8/02/2019 7:00 PM', now) == \
         (datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))
+        
+        
+def test_duration(now):
+    assert timefhuman('30 minutes', now) == datetime.timedelta(minutes=30)
+    assert timefhuman('30 mins', now) == datetime.timedelta(minutes=30)
+    
+    # # TODO: fix this
+    # assert timefhuman('30-40 mins', now) == (datetime.timedelta(minutes=30), datetime.timedelta(minutes=60))

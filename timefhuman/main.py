@@ -14,6 +14,9 @@ Convert human-readable date-like string to Python datetime object.
 """
 
 
+# TODO: support duration ranges/lists
+# TODO: support more than just 'minutes' - the rest are recognized but not correctly procesed
+
 __all__ = ('timefhuman',)
 
 from lark import Lark, Transformer
@@ -44,6 +47,9 @@ DATENAME: /(?i)(today|tomorrow|tmw|yesterday)/
 // Timename token (noon)
 TIMENAME: /(?i)(noon|midday|midnight)/
 
+// Duration unit (minutes, hours, days, etc.)
+DURATION_UNIT: /(?i)(minutes|mins|min|m|hours|hrs|hr|h|days|days|d|w|wk|week|weeks|mo|month|months|months|y|yrs|year|years)/
+
 // ----------------------
 // PARSER RULES
 // ----------------------
@@ -62,6 +68,7 @@ list: single ("," single)+
 single: datetime 
        | date 
        | time
+       | duration
 
 datetime: date ("at" time)?
         | date time
@@ -77,6 +84,9 @@ date: month "/" day ("/" year)?
 time: hour ":" minute meridiem? 
     | hour meridiem?
     | timename
+
+duration: INT duration_unit
+duration_unit: DURATION_UNIT
 
 timename: TIMENAME
 weekday: WEEKDAY
@@ -215,6 +225,10 @@ class TimeFHumanTransformer(Transformer):
     def list(self, children):
         """Handles comma/or lists like '7/17, 7/18, 7/19' or '7/17 or 7/18'."""
         return list(infer(children))
+    
+    def duration(self, children):
+        # TODO: minutes is hard-coded here. need to support other units
+        return timedelta(minutes=int(children[0].value))
 
     def datetime(self, children):
         """
