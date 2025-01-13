@@ -25,6 +25,8 @@ def now():
     ('July 17 at 3', datetime.datetime(2018, 7, 17, 3, 0)),
     ('7/17/18 3:00 p.m.', datetime.datetime(2018, 7, 17, 15, 0)),
     ('3 p.m. today', datetime.datetime(2018, 8, 4, 15, 0)),
+    ('Tomorrow 3p', datetime.datetime(2018, 8, 5, 15, 0)),
+    ('3p tomorrow', datetime.datetime(2018, 8, 5, 15, 0)),
     
     # date-only ranges
     ('7/17-7/18', (datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))),
