@@ -6,7 +6,7 @@ from timefhuman.main import Direction, tfhConfig
 
 @pytest.fixture
 def now():
-    return datetime.datetime(year=2018, month=8, day=4)
+    return datetime.datetime(year=2018, month=8, day=4, hour=14)
 
 
 @pytest.mark.parametrize("test_input, expected", [
@@ -33,7 +33,7 @@ def now():
     # time-only ranges
     ('3p -4p', (datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))),
     ('3-4p', (datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))), # distribute meridiem
-    # ('6:00 pm - 12:00 am', (datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))), # TODO 
+    # ('6:00 pm - 12:00 am', (datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))), # TODO gh#8
     
     # basic date and time ranges
     ('7/17 3 pm- 7/19 2 pm', (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 19, 14, 0))),
@@ -98,6 +98,7 @@ def test_no_inference(now, test_input, expected):
     
     (tfhConfig(infer_datetimes=True), '5p', datetime.datetime(2018, 8, 4, 17, 0)),
     (tfhConfig(infer_datetimes=False), '5p', datetime.time(hour=17, minute=0)),
+    # (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
     
     # TODO: add tests for 'next/last'
 ])      
