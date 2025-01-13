@@ -118,6 +118,24 @@ def timefhuman(string, now=None, raw=None):
     return result
 
 
+def infer(datetimes):
+    # distribute first datetime's date to all datetimes
+    if isinstance(datetimes[0], datetime) and datetimes[0]._date:
+        for i, dt in enumerate(datetimes[1:], start=1):
+            if isinstance(dt, time):
+                datetimes[i] = tfhDatetime.combine(datetimes[0]._date, dt)
+
+    # distribute last time's meridiem to all datetimes
+    if isinstance(datetimes[-1], datetime) and datetimes[-1]._time.meridiem:
+        for i, dt in enumerate(datetimes[:-1]):
+            # TODO: force all datetimes to have _date and _time
+            if isinstance(dt, datetime) and dt._time and not dt._time.meridiem:
+                dt._time.meridiem = datetimes[-1]._time.meridiem
+                datetimes[i] = dt + timedelta(hours=12)
+                
+    return datetimes
+
+
 class TimeFHumanTransformer(Transformer):
     def __init__(self, now=None):
         self.now = now
@@ -141,17 +159,11 @@ class TimeFHumanTransformer(Transformer):
     def range(self, children):
         """Handles expressions like '7/17 3 PM - 7/18 4 PM'."""
         assert len(children) == 2
-        start, end = children
-        if isinstance(start, datetime) and isinstance(end, time):
-            end = tfhDatetime.combine(start._date, end)
-        if isinstance(start, datetime) and isinstance(end, datetime) and end._time.meridiem and not start._time.meridiem and start._time.hour < 12 and end._time.meridiem.startswith("p"):
-            start._time.meridiem = end._time.meridiem
-            start += timedelta(hours=12)
-        return (start, end) 
+        return tuple(infer(children))
 
     def list(self, children):
         """Handles comma/or lists like '7/17, 7/18, 7/19' or '7/17 or 7/18'."""
-        return children
+        return list(infer(children))
 
     def datetime(self, children):
         """
