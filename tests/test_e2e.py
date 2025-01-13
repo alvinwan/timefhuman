@@ -19,12 +19,13 @@ def test_main(now):
     assert timefhuman('July 17 at 3', now) == \
         datetime.datetime(2018, 7, 17, 3, 0)
     assert timefhuman('July 2019', now) == \
-        datetime.datetime(2019, 7, 1, 0, 0)
+        datetime.date(2019, 7, 1)
     assert timefhuman('7/17/18 3:00 p.m.', now) == \
         datetime.datetime(2018, 7, 17, 15, 0)
 
 
 def test_ambiguity(now):
+    # distribute the meridiem
     assert timefhuman('7-17 3-4 p.m.', now) == (
         datetime.datetime(2018, 7, 17, 15, 0),
         datetime.datetime(2018, 7, 17, 16, 0)
@@ -56,12 +57,12 @@ def test_multiple_choices(now):
 
 
 def test_edge_cases_range(now):
-    assert timefhuman('3-4 pm', now) == (
-        datetime.datetime(2018, 8, 4, 15, 0),
-        datetime.datetime(2018, 8, 4, 16, 0),)
+    assert timefhuman('3p -4p', now) == (
+        datetime.time(15, 0),
+        datetime.time(16, 0),)
     assert timefhuman('7/17-7/18', now) == (
-        datetime.datetime(2018, 7, 17, 0, 0),
-        datetime.datetime(2018, 7, 18, 0, 0),)
+        datetime.date(2018, 7, 17),
+        datetime.date(2018, 7, 18),)
     assert timefhuman('7/17 3 pm- 7/19 2 pm', now) == (
         datetime.datetime(2018, 7, 17, 15, 0),
         datetime.datetime(2018, 7, 19, 14, 0),)

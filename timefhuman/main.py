@@ -16,7 +16,9 @@ Convert human-readable date-like string to Python datetime object.
 
 __all__ = ('timefhuman',)
 
-from lark import Lark
+from lark import Lark, Transformer
+from datetime import datetime, date, time, timedelta
+from typing import Optional
 
 grammar = """
 %import common.WS
@@ -63,10 +65,10 @@ date: month "/" day ("/" year)?
     | "tomorrow"i 
     | "today"i 
     | weekday
-    | monthname day ("," year)?
+    | monthname day ("," year)? // `day` here is read as `year` if invalid day
 
-time: hour ":" minute MERIDIEM? 
-    | hour (MERIDIEM)?
+time: hour ":" minute meridiem? 
+    | hour meridiem?
     | "noon"i
 
 weekday: WEEKDAY
@@ -78,8 +80,31 @@ year: INT
 
 hour: INT
 minute: INT
+meridiem: MERIDIEM
 """
 
+
+class tfhTime(time):
+    meridiem: Optional[str] = None
+    
+    def __new__(cls, *args, meridiem=None, **kwargs):
+        result = time.__new__(cls, *args, **kwargs)
+        result.meridiem = meridiem
+        return result
+
+
+class tfhDatetime(datetime):
+    _date: Optional[date] = None
+    _time: Optional[time] = None
+    
+    @classmethod
+    def combine(cls, date, time):
+        result = datetime.combine(date, time)
+        result = cls(result.year, result.month, result.day, result.hour, result.minute)
+        result._date = date
+        result._time = time
+        return result
+    
 
 def timefhuman(string, now=None, raw=None):
     parser = Lark(grammar, start="start")
@@ -90,15 +115,8 @@ def timefhuman(string, now=None, raw=None):
 
     if raw:
         return tree
-
-    if isinstance(result, (list, tuple)):
-        return result
-
     return result
 
-
-from datetime import datetime, time, timedelta
-from lark import Transformer
 
 class TimeFHumanTransformer(Transformer):
     def __init__(self, now=None):
@@ -122,7 +140,14 @@ class TimeFHumanTransformer(Transformer):
 
     def range(self, children):
         """Handles expressions like '7/17 3 PM - 7/18 4 PM'."""
-        return tuple(children)
+        assert len(children) == 2
+        start, end = children
+        if isinstance(start, datetime) and isinstance(end, time):
+            end = tfhDatetime.combine(start._date, end)
+        if isinstance(start, datetime) and isinstance(end, datetime) and end._time.meridiem and not start._time.meridiem and start._time.hour < 12 and end._time.meridiem.startswith("p"):
+            start._time.meridiem = end._time.meridiem
+            start += timedelta(hours=12)
+        return (start, end) 
 
     def list(self, children):
         """Handles comma/or lists like '7/17, 7/18, 7/19' or '7/17 or 7/18'."""
@@ -137,15 +162,18 @@ class TimeFHumanTransformer(Transformer):
           - just time
         We combine them here into a single datetime if both parts are present.
         """
-        date_part = next((c for c in children if isinstance(c, datetime)), None)
+        date_part = next((c for c in children if isinstance(c, date)), None)
         time_part = next((c for c in children if isinstance(c, time)), None)
 
         if date_part and time_part:
-            return datetime.combine(date_part, time_part)
+            result = tfhDatetime.combine(date_part, time_part)
+            result._date = date_part
+            result._time = time_part
+            return result
         elif date_part:
             return date_part
         elif time_part:
-            return datetime.combine(self.now.date(), time_part)
+            return time_part
         return None
 
     def date(self, children):
@@ -182,9 +210,9 @@ class TimeFHumanTransformer(Transformer):
                 # Lark might match 'tomorrow' or 'today' as a plain string
                 if token.lower() == "tomorrow":
                     dt = self.now + timedelta(days=1)
-                    return datetime(dt.year, dt.month, dt.day)
+                    return date(dt.year, dt.month, dt.day)
                 elif token.lower() == "today":
-                    return datetime(self.now.year, self.now.month, self.now.day)
+                    return date(self.now.year, self.now.month, self.now.day)
                 else:
                     # Possibly a weekday (like 'wed')
                     # You could parse next occurrence of that weekday, etc.
@@ -216,7 +244,7 @@ class TimeFHumanTransformer(Transformer):
         elif data["year"] < 50:
             data["year"] = 2000 + data["year"]
 
-        return datetime(data["year"], data["month"], data["day"])
+        return date(data["year"], data["month"], data["day"])
 
     def time(self, children):
         """
@@ -229,34 +257,14 @@ class TimeFHumanTransformer(Transformer):
         # 1) Check for 'noon' as a direct match (often a plain string)
         for child in children:
             if isinstance(child, str) and child.lower() == "noon":
-                return time(hour=12, minute=0)
+                return tfhTime(hour=12, minute=0, meridiem=None)
 
-        data = {}
-        for child in children:
-            # 2) If this is a Tree, it has child.data and child.children
-            if hasattr(child, "data"):
-                # The grammar says hour -> INT, minute -> INT, so
-                # we'd expect something like Tree("hour", [Token("INT","3")])
-                if child.data == "hour":
-                    data["hour"] = int(child.children[0].value)
-                elif child.data == "minute":
-                    data["minute"] = int(child.children[0].value)
-
-            # 3) If this is a Token, check child.type and child.value
-            elif hasattr(child, "type"):
-                # The grammar defines MERIDIEM as a token
-                if child.type == "MERIDIEM":
-                    # child.value might be 'pm', 'a.m.', etc.
-                    data["meridiem"] = child.value.lower().replace(".", "")
-
-            # 4) If it's a plain string (already checked 'noon' above), do nothing
-            else:
-                pass
-
+        data = {child.data.value: child.children[0].value for child in children}
+        
         # Extract the final hour/minute/meridiem
-        hour = data.get("hour", 0)
-        minute = data.get("minute", 0)
-        meridiem = data.get("meridiem")  # e.g. 'pm' or 'am'
+        hour = int(data.get("hour", 0))
+        minute = int(data.get("minute", 0))
+        meridiem = data.get("meridiem", '').lower()  # e.g. 'pm' or 'am'
 
         # 5) Apply am/pm logic
         if meridiem and meridiem.startswith("p") and hour != 12:
@@ -264,4 +272,4 @@ class TimeFHumanTransformer(Transformer):
         elif meridiem and meridiem.startswith("a") and hour == 12:
             hour = 0
 
-        return time(hour=hour, minute=minute)
+        return tfhTime(hour=hour, minute=minute, meridiem=meridiem)
