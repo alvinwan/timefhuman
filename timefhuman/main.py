@@ -24,10 +24,14 @@ from lark import Lark, Transformer
 from datetime import datetime, date, time, timedelta
 from typing import Optional
 from enum import Enum
+from dataclasses import dataclass
 
 
 Direction = Enum('Direction', ['previous', 'next'])
 
+@dataclass
+class tfhConfig:
+    direction: Direction = Direction.next
 
 grammar = """
 %import common.WS
@@ -131,11 +135,11 @@ class tfhDatetime(datetime):
         return result
     
 
-def timefhuman(string, now=None, raw=None, direction=Direction.next):
+def timefhuman(string, now=None, raw=None, config: tfhConfig = tfhConfig()):
     parser = Lark(grammar, start="start")
     tree = parser.parse(string)
 
-    transformer = tfhTransformer(now=now, direction=direction)
+    transformer = tfhTransformer(now=now, config=config)
     result = transformer.transform(tree)
 
     if raw:
@@ -204,9 +208,9 @@ def infer(datetimes):
 
 
 class tfhTransformer(Transformer):
-    def __init__(self, now=None, direction=Direction.next):
+    def __init__(self, now=None, config: tfhConfig = tfhConfig()):
         self.now = now
-        self.direction = direction
+        self.config = config
 
     def start(self, children):
         """Strip the 'start' rule and return child(ren) directly."""
@@ -266,12 +270,12 @@ class tfhTransformer(Transformer):
         target_weekday = weekdays.index(weekday)
         current_weekday = self.now.weekday()
         
-        if self.direction == Direction.previous:
+        if self.config.direction == Direction.previous:
             days_until = (target_weekday - current_weekday) % 7 - 7
-        elif self.direction == Direction.next:
+        elif self.config.direction == Direction.next:
             days_until = (7 - (current_weekday - target_weekday)) % 7
         else:
-            raise ValueError(f"Invalid direction: {self.direction}")
+            raise ValueError(f"Invalid direction: {self.config.direction}")
         days_until = days_until or 7  # If today is the target day, go to the next week
         
         dt = self.now.date() + timedelta(days=days_until)

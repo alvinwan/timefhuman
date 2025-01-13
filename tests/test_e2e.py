@@ -1,7 +1,7 @@
 from timefhuman import timefhuman
 import datetime
 import pytest
-from timefhuman.main import Direction
+from timefhuman.main import Direction, tfhConfig
 
 @pytest.fixture
 def now():
@@ -107,5 +107,5 @@ def test_direction(now):
     # assert timefhuman('next mon', now) == datetime.date(2018, 8, 6)
     # assert timefhuman('previous mon', now) == datetime.date(2018, 7, 30)
     
-    assert timefhuman('mon', now, direction=Direction.previous) == datetime.date(2018, 7, 30)
-    assert timefhuman('mon', now, direction=Direction.next) == datetime.date(2018, 8, 6)
+    assert timefhuman('mon', now, config=tfhConfig(direction=Direction.previous)) == datetime.date(2018, 7, 30)
+    assert timefhuman('mon', now, config=tfhConfig(direction=Direction.next)) == datetime.date(2018, 8, 6)
