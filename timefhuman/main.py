@@ -51,6 +51,7 @@ range: single ("to" | "-") single
 
 list: single ("," single)+ 
     | single ("or" single)+
+    | range ("or" range)+
 
 single: datetime 
        | date 
@@ -126,12 +127,21 @@ def infer(datetimes):
                 datetimes[i] = tfhDatetime.combine(datetimes[0]._date, dt)
 
     # distribute last time's meridiem to all datetimes
-    if isinstance(datetimes[-1], datetime) and datetimes[-1]._time.meridiem:
+    if (
+        isinstance(datetimes[-1], datetime) and (meridiem := datetimes[-1]._time.meridiem)
+    ) or (
+        isinstance(datetimes[-1], time) and (meridiem := datetimes[-1].meridiem)
+    ):
         for i, dt in enumerate(datetimes[:-1]):
             # TODO: force all datetimes to have _date and _time
+            if meridiem.startswith("a"):
+                break
             if isinstance(dt, datetime) and dt._time and not dt._time.meridiem:
-                dt._time.meridiem = datetimes[-1]._time.meridiem
+                dt._time.meridiem = meridiem
                 datetimes[i] = dt + timedelta(hours=12)
+            elif isinstance(dt, time) and not dt.meridiem:
+                dt.meridiem = meridiem
+                datetimes[i] = tfhTime(dt.hour + 12, dt.minute, meridiem=meridiem)
                 
     return datetimes
 
