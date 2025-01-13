@@ -118,3 +118,12 @@ def test_no_inference(now, test_input, expected):
 ])      
 def test_custom_config(now, config, test_input, expected):
     assert timefhuman(test_input, now, config=config) == expected
+
+
+# TODO: is this possible? to extract and match only parts of text?
+# @pytest.mark.parametrize("test_input, expected", [
+#     ('September 30, 2019.', datetime.datetime(2019, 9, 30, 0, 0)), # gh#26
+#     # TODO: get matched characters
+# ])
+# def test_with_random_text(now, test_input, expected):
+#     assert timefhuman(test_input, now) == expected

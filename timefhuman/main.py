@@ -91,7 +91,7 @@ date: month "/" day ("/" year)?
     | weekday
     | monthname day ((",")? year)? // `day` here is read as `year` if invalid day
 
-time: hour ":" minute meridiem? 
+time: hour ":" minute meridiem?
     | hour meridiem?
     | timename
 
