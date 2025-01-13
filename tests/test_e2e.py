@@ -109,3 +109,8 @@ def test_direction(now):
     
     assert timefhuman('mon', now, config=tfhConfig(direction=Direction.previous)) == datetime.date(2018, 7, 30)
     assert timefhuman('mon', now, config=tfhConfig(direction=Direction.next)) == datetime.date(2018, 8, 6)
+
+
+def test_infer_datetimes(now):
+    assert timefhuman('5p', now, config=tfhConfig(infer_datetimes=True)) == datetime.datetime(2018, 8, 4, 17, 0)
+    assert timefhuman('5p', now, config=tfhConfig(infer_datetimes=False)) == datetime.time(hour=17, minute=0)

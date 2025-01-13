@@ -32,6 +32,7 @@ Direction = Enum('Direction', ['previous', 'next'])
 @dataclass
 class tfhConfig:
     direction: Direction = Direction.next
+    infer_datetimes: bool = False
 
 grammar = """
 %import common.WS
@@ -207,6 +208,23 @@ def infer(datetimes):
     return datetimes
 
 
+def infer_datetimes(datetimes, now):
+    result = []
+    for dt in datetimes:
+        if isinstance(dt, (date, time, datetime)):
+            if isinstance(dt, date) and not isinstance(dt, datetime):
+                result.append(tfhDatetime.combine(dt, time(0, 0)))
+            elif isinstance(dt, time):
+                result.append(tfhDatetime.combine(now.date(), dt))
+        elif isinstance(dt, (tuple, list)):
+            result.append(infer_datetimes(dt, now))
+        else:
+            result.append(dt)
+    if isinstance(datetimes, tuple):
+        return tuple(result)
+    return result
+
+
 class tfhTransformer(Transformer):
     def __init__(self, now=None, config: tfhConfig = tfhConfig()):
         self.now = now
@@ -214,6 +232,10 @@ class tfhTransformer(Transformer):
 
     def start(self, children):
         """Strip the 'start' rule and return child(ren) directly."""
+        if self.config.infer_datetimes:
+            # TODO: move this logic into single after we correctly abstract away details
+            # in the main `infer` function
+            children = infer_datetimes(children, self.now)
         if len(children) == 1:
             return children[0]
         return children
