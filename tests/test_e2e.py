@@ -22,7 +22,9 @@ def test_main(now):
         datetime.date(2019, 7, 1)
     assert timefhuman('7/17/18 3:00 p.m.', now) == \
         datetime.datetime(2018, 7, 17, 15, 0)
-
+    # TODO: does not work
+    # assert timefhuman('3 p.m. today', now) == \
+    #     datetime.datetime(2018, 8, 4, 15, 0)
 
 def test_ambiguity(now):
     # distribute the meridiem across the range
@@ -38,6 +40,11 @@ def test_choices(now):
         datetime.datetime(2018, 7, 17, 16, 0),
         datetime.datetime(2018, 7, 17, 17, 0),
     ]
+    # TODO: fix time date above, then add this test
+    # assert timefhuman('7/17 4-5 PM or 5-6 PM today', now) == [
+    #     (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
+    #     (datetime.datetime(2018, 8, 4, 17, 0), datetime.datetime(2018, 8, 4, 18, 0))
+    # ]
     assert timefhuman('7/17 4-5 PM or 5-6 PM', now) == [
         (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
         (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))
