@@ -65,7 +65,7 @@ date: month "/" day ("/" year)?
     | "tomorrow"i 
     | "today"i 
     | weekday
-    | monthname day ("," year)? // `day` here is read as `year` if invalid day
+    | monthname day ((",")? year)? // `day` here is read as `year` if invalid day
 
 time: hour ":" minute meridiem? 
     | hour meridiem?
