@@ -38,6 +38,12 @@ WEEKDAY: /(?i)(mon|tue|wed|thu|fri|sat|sun)/
 // Meridiem token (am/pm, with optional dots)
 MERIDIEM: /(?i)([ap](\.?m\.?)?)/
 
+// Datename token (today, tomorrow, yesterday)
+DATENAME: /(?i)(today|tomorrow|tmw|yesterday)/
+
+// Timename token (noon)
+TIMENAME: /(?i)(noon|midday|midnight)/
+
 // ----------------------
 // PARSER RULES
 // ----------------------
@@ -63,17 +69,18 @@ datetime: date ("at" time)?
 
 date: month "/" day ("/" year)?
     | month "-" day ("-" year)?
-    | "tomorrow"i 
-    | "today"i 
+    | datename
     | weekday
     | monthname day ((",")? year)? // `day` here is read as `year` if invalid day
 
 time: hour ":" minute meridiem? 
     | hour meridiem?
-    | "noon"i
+    | timename
 
+timename: TIMENAME
 weekday: WEEKDAY
 monthname: MONTHNAME
+datename: DATENAME
 
 day: INT
 month: INT
@@ -197,6 +204,37 @@ class TimeFHumanTransformer(Transformer):
         elif time_part:
             return time_part
         return None
+    
+    def weekday(self, children):
+        weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+        weekday = children[0].value[:3].lower()
+        target_weekday = weekdays.index(weekday)
+        current_weekday = self.now.weekday()
+        
+        # Calculate days until the target weekday
+        days_until = (target_weekday - current_weekday + 7) % 7
+        days_until = days_until or 7  # If today is the target day, go to the next week
+        
+        dt = self.now.date() + timedelta(days=days_until)
+        return dt
+    
+    def datename(self, children):
+        datename = children[0].value.lower()
+        if datename == 'today':
+            return self.now.date()
+        elif datename == 'tomorrow':
+            return self.now.date() + timedelta(days=1)
+        elif datename == 'yesterday':
+            return self.now.date() - timedelta(days=1)
+        
+    def timename(self, children):
+        timename = children[0].value.lower()
+        if timename == 'noon':
+            return tfhTime(hour=12, minute=0, meridiem="pm")
+        elif timename == 'midday':
+            return tfhTime(hour=12, minute=0, meridiem="pm")
+        elif timename == 'midnight':
+            return tfhTime(hour=0, minute=0, meridiem="am")
 
     def date(self, children):
         """
@@ -206,39 +244,18 @@ class TimeFHumanTransformer(Transformer):
           3) monthname day, optional year
         We iterate through tokens, collect info, then build a datetime.
         """
-        data = {}
+        if children and isinstance(children[0], date):
+            return children[0]
+        
+        data = {child.data.value: child.children[0].value for child in children if hasattr(child, 'children')}
 
-        for child in children:
-            if not child.children:
-                continue
-
-            val = child.children[0].value
-            if child.data == "month":
-                data["month"] = int(val)
-            elif child.data == "monthname":
-                data["monthname"] = val  # e.g. "July", "jul"
-            elif child.data == "day":
-                data["day"] = int(val)
-            elif child.data in ["year", "year4"]:
-                data["year"] = int(val)
-            elif child.data == "weekday":
-                data["weekday"] = val.lower()  # e.g. "mon", "tue"
-
-        # Handle special strings like 'tomorrow', 'today', or a plain weekday
-        # Because Lark might return these as literal matches with no children.
-        # We find them by checking the raw string in tokens:
-        for token in children:
-            if isinstance(token, str):
-                # Lark might match 'tomorrow' or 'today' as a plain string
-                if token.lower() == "tomorrow":
-                    dt = self.now + timedelta(days=1)
-                    return date(dt.year, dt.month, dt.day)
-                elif token.lower() == "today":
-                    return date(self.now.year, self.now.month, self.now.day)
-                else:
-                    # Possibly a weekday (like 'wed')
-                    # You could parse next occurrence of that weekday, etc.
-                    pass
+        if isinstance(data.get('day'), str) and data.get('day').isdigit():
+            data['day'] = int(data['day'])
+        
+        if isinstance(data.get('year'), str) and data.get('year').isdigit():
+            data['year'] = int(data['year'])
+        if isinstance(data.get('month'), str) and data.get('month').isdigit():
+            data['month'] = int(data['month'])
 
         # If we have a named month, map it to a numeric month
         month_mapping = {
@@ -251,7 +268,7 @@ class TimeFHumanTransformer(Transformer):
             key = data["monthname"].lower().replace(".", "")
             data["month"] = month_mapping.get(key, self.now.month)
             
-        if data["day"] > 31 and "year" not in data:
+        if data.get("day", -1) > 31 and "year" not in data:
             data["year"] = data.pop("day")
 
         if "day" not in data:
@@ -276,6 +293,9 @@ class TimeFHumanTransformer(Transformer):
         - the literal string 'noon'
         We produce a timedelta, which is easier to add to a date.
         """
+        if children and isinstance(children[0], time):
+            return children[0]
+        
         # 1) Check for 'noon' as a direct match (often a plain string)
         for child in children:
             if isinstance(child, str) and child.lower() == "noon":
