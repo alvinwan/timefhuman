@@ -56,7 +56,6 @@ def test_choices(now):
 
 
 def test_multiple_choices(now):
-    print(timefhuman('7/17, 7/18, 7/19 at 2', now, raw=True))
     assert timefhuman('7/17, 7/18, 7/19 at 2', now) == [
         datetime.datetime(2018, 7, 17, 2, 0),
         datetime.datetime(2018, 7, 18, 2, 0),

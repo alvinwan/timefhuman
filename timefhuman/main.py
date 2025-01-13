@@ -149,7 +149,13 @@ def infer(datetimes):
             elif isinstance(dt, time) and not dt.meridiem:
                 dt.meridiem = meridiem
                 datetimes[i] = tfhTime(dt.hour + 12, dt.minute, meridiem=meridiem)
-                
+
+    if isinstance(datetimes[-1], (time, datetime)):
+        for i, dt in enumerate(datetimes[:-1]):
+            # NOTE: subclass date so can we match date-only's
+            if isinstance(dt, date) and not isinstance(dt, datetime):
+                datetimes[i] = tfhDatetime.combine(dt, datetimes[-1] if isinstance(datetimes[-1], time) else datetimes[-1]._time)
+
     return datetimes
 
 
