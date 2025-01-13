@@ -24,8 +24,10 @@ from lark import Lark, Transformer
 from datetime import datetime, date, time, timedelta
 from typing import Optional
 from enum import Enum
-# enum for inference mode
+
+
 Direction = Enum('Direction', ['previous', 'next'])
+
 
 grammar = """
 %import common.WS
@@ -133,7 +135,7 @@ def timefhuman(string, now=None, raw=None, direction=Direction.next):
     parser = Lark(grammar, start="start")
     tree = parser.parse(string)
 
-    transformer = TimeFHumanTransformer(now=now, direction=direction)
+    transformer = tfhTransformer(now=now, direction=direction)
     result = transformer.transform(tree)
 
     if raw:
@@ -201,7 +203,7 @@ def infer(datetimes):
     return datetimes
 
 
-class TimeFHumanTransformer(Transformer):
+class tfhTransformer(Transformer):
     def __init__(self, now=None, direction=Direction.next):
         self.now = now
         self.direction = direction
