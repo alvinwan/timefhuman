@@ -127,6 +127,7 @@ def timefhuman(string, now=None, raw=None):
 
 
 def infer(datetimes):
+    # TODO: This needs a major refactor to abstract away details and apply to all cases
     # distribute first datetime's date to all datetimes
     if isinstance(datetimes[0], datetime) and datetimes[0]._date:
         for i, dt in enumerate(datetimes[1:], start=1):
@@ -150,12 +151,35 @@ def infer(datetimes):
                 dt.meridiem = meridiem
                 datetimes[i] = tfhTime(dt.hour + 12, dt.minute, meridiem=meridiem)
 
+    # distribute last time across previous dates
     if isinstance(datetimes[-1], (time, datetime)):
         for i, dt in enumerate(datetimes[:-1]):
             # NOTE: subclass date so can we match date-only's
             if isinstance(dt, date) and not isinstance(dt, datetime):
                 datetimes[i] = tfhDatetime.combine(dt, datetimes[-1] if isinstance(datetimes[-1], time) else datetimes[-1]._time)
 
+    # distribute last time range's meridiem to all previous datetime ranges
+    if isinstance(datetimes[-1], tuple) and isinstance(datetimes[-1][0], time) and datetimes[-1][0].meridiem and datetimes[-1][0].meridiem.startswith("p"):
+        for i, dt in enumerate(datetimes[:-1]):
+            if isinstance(dt, tuple) and isinstance(dt[0], (time, datetime)):
+                _dts = []
+                for _dt in dt:
+                    if isinstance(_dt, time):
+                        _dt = tfhTime(_dt.hour + 12, _dt.minute, meridiem=datetimes[-1][0].meridiem)
+                    elif isinstance(_dt, datetime) and _dt._time and not _dt._time.meridiem:
+                        _dt._time.meridiem = datetimes[-1][0].meridiem
+                        _dt = _dt + timedelta(hours=12)
+                    _dts.append(_dt)
+                datetimes[i] = tuple(_dts)
+
+    # distribute first datetime range's date across all following time ranges
+    if isinstance(datetimes[0], tuple) and isinstance(datetimes[0][0], datetime):
+        for i, dt in enumerate(datetimes[1:], start=1):
+            if isinstance(dt, time) or isinstance(dt, tuple) and isinstance(dt[0], time): # if a time range
+                datetimes[i] = tuple(
+                    tfhDatetime.combine(datetimes[0][0], dt)
+                    for dt in datetimes[i]
+                )
     return datetimes
 
 
