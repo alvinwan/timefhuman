@@ -84,7 +84,18 @@ def test_default(now, test_input, expected):
     # durations
     ('30 minutes', datetime.timedelta(minutes=30)),
     ('30 mins', datetime.timedelta(minutes=30)),
+    ('2 hours', datetime.timedelta(hours=2)),
+    ('2 hours 30 minutes', datetime.timedelta(hours=2, minutes=30)),
+    ('2 hours and 30 minutes', datetime.timedelta(hours=2, minutes=30)),
+    ('2h30m', datetime.timedelta(hours=2, minutes=30)),
+    ('1 day and an hour', datetime.timedelta(days=1, hours=1)),
+    ('1.5 hours', datetime.timedelta(hours=1, minutes=30)),
+    # ('one and a half hour', datetime.timedelta(hours=1, minutes=30)), # TODO
     # ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))), # TODO
+    # ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]), # TODO
+    # TODO: support duration ranges/lists
+    # TODO: support natural language for duration like "three and a half hours"
+    # TODO: support natural language times like "3 o'clock" or "quarter to 3"
 ])
 def test_no_inference(now, test_input, expected):
     """Return exactly the date or time, without inferring the other."""
@@ -99,7 +110,7 @@ def test_no_inference(now, test_input, expected):
     (tfhConfig(infer_datetimes=True), '5p', datetime.datetime(2018, 8, 4, 17, 0)),
     (tfhConfig(infer_datetimes=False), '5p', datetime.time(hour=17, minute=0)),
     # (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
-    
+
     # TODO: add tests for 'next/last'
 ])      
 def test_custom_config(now, config, test_input, expected):

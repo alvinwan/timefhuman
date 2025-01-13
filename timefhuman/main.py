@@ -59,7 +59,10 @@ DATENAME: /(?i)(today|tomorrow|tmw|yesterday)/
 TIMENAME: /(?i)(noon|midday|midnight)/
 
 // Duration unit (minutes, hours, days, etc.)
-DURATION_UNIT: /(?i)(minutes|mins|min|m|hours|hrs|hr|h|days|days|d|w|wk|week|weeks|mo|month|months|months|y|yrs|year|years)/
+DURATION_UNIT: /(?i)(minutes|mins|min|m|hours|hour|hrs|hr|h|days|day|d|weeks|week|wks|wk|months|month|mos|years|years)/
+
+// Duration number (digits like "1", or words like "an", "a", "one", "two", etc.)
+DURATION_NUMBER: /(?i)(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|[0-9]+(\.[0-9]+)?)/
 
 // ----------------------
 // PARSER RULES
@@ -96,7 +99,9 @@ time: hour ":" minute meridiem?
     | hour meridiem?
     | timename
 
-duration: INT duration_unit
+duration: duration_part (("and"|",")? duration_part)*
+duration_part: duration_number duration_unit
+duration_number: DURATION_NUMBER
 duration_unit: DURATION_UNIT
 
 timename: TIMENAME
@@ -262,8 +267,53 @@ class tfhTransformer(Transformer):
         return list(infer(children))
     
     def duration(self, children):
-        # TODO: minutes is hard-coded here. need to support other units
-        return timedelta(minutes=int(children[0].value))
+        return sum(children, timedelta())
+    
+    def duration_part(self, children):
+        data = {child.data.value: child.children[0].value for child in children}
+        mapping = {
+            'an': 1,
+            'a': 1,
+            'one': 1,
+            'two': 2,
+            'three': 3,
+            'four': 4,
+            'five': 5,
+            'six': 6,
+            'seven': 7,
+            'eight': 8,
+            'nine': 9,
+            'ten': 10,
+            'eleven': 11,
+            'twelve': 12,
+            'thirteen': 13,
+            'fourteen': 14,
+            'fifteen': 15,
+            'sixteen': 16,
+            'seventeen': 17,
+            'eighteen': 18,
+            'nineteen': 19,
+            'twenty': 20,
+            'thirty': 30,
+            'forty': 40,
+            'fifty': 50,
+            'sixty': 60,
+            'seventy': 70,
+            'eighty': 80,
+            'ninety': 90,
+        }
+        data['duration_number'] = mapping.get(data['duration_number'], data['duration_number'])
+        for group in (
+            ('minutes', 'minute', 'mins', 'min', 'm'),
+            ('hours', 'hour', 'hrs', 'hr', 'h'),
+            ('days', 'day', 'd'),
+            ('weeks', 'week', 'wks', 'wk'),
+            ('months', 'month', 'mos'),
+            ('years', 'year', 'yrs', 'yr'),
+        ):
+            if data['duration_unit'] in group:
+                return timedelta(**{group[0]: float(data['duration_number'])})
+        raise NotImplementedError(f"Unknown duration unit: {data['duration_unit']}")
 
     def datetime(self, children):
         """
