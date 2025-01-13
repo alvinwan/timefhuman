@@ -1,7 +1,7 @@
 from timefhuman import timefhuman
 import datetime
 import pytest
-
+from timefhuman.main import Direction
 
 @pytest.fixture
 def now():
@@ -100,3 +100,12 @@ def test_duration(now):
     
     # # TODO: fix this
     # assert timefhuman('30-40 mins', now) == (datetime.timedelta(minutes=30), datetime.timedelta(minutes=60))
+    
+    
+def test_direction(now):
+    # TODO: add support for modifiers
+    # assert timefhuman('next mon', now) == datetime.date(2018, 8, 6)
+    # assert timefhuman('previous mon', now) == datetime.date(2018, 7, 30)
+    
+    assert timefhuman('mon', now, direction=Direction.previous) == datetime.date(2018, 7, 30)
+    assert timefhuman('mon', now, direction=Direction.next) == datetime.date(2018, 8, 6)
