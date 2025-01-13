@@ -65,6 +65,7 @@ single: datetime
 
 datetime: date ("at" time)?
         | date time
+        | time date
         | time "on" date
 
 date: month "/" day ("/" year)?
@@ -128,11 +129,14 @@ def timefhuman(string, now=None, raw=None):
 
 def infer(datetimes):
     # TODO: This needs a major refactor to abstract away details and apply to all cases
-    # distribute first datetime's date to all datetimes
-    if isinstance(datetimes[0], datetime) and datetimes[0]._date:
-        for i, dt in enumerate(datetimes[1:], start=1):
+    # TODO: distribute any to any (dates/meridiems/times etc.)
+
+    # distribute first or last datetime's date to all datetimes
+    if (isinstance(datetimes[0], datetime) and (target_date := datetimes[0]._date)) or \
+        (isinstance(datetimes[-1], datetime) and (target_date := datetimes[-1]._date)):
+        for i, dt in enumerate(datetimes):
             if isinstance(dt, time):
-                datetimes[i] = tfhDatetime.combine(datetimes[0]._date, dt)
+                datetimes[i] = tfhDatetime.combine(target_date, dt)
 
     # distribute last time's meridiem to all datetimes
     if (
