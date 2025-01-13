@@ -32,7 +32,7 @@ Direction = Enum('Direction', ['previous', 'next'])
 @dataclass
 class tfhConfig:
     direction: Direction = Direction.next
-    infer_datetimes: bool = False
+    infer_datetimes: bool = True
 
 grammar = """
 %import common.WS
@@ -216,6 +216,8 @@ def infer_datetimes(datetimes, now):
                 result.append(tfhDatetime.combine(dt, time(0, 0)))
             elif isinstance(dt, time):
                 result.append(tfhDatetime.combine(now.date(), dt))
+            else:
+                result.append(dt)
         elif isinstance(dt, (tuple, list)):
             result.append(infer_datetimes(dt, now))
         else:
