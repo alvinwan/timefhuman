@@ -16,7 +16,7 @@ Convert human-readable date-like string to Python datetime object.
 
 __all__ = ('timefhuman',)
 
-from lark import Lark, Transformer
+from lark import Lark, Transformer, Tree, Token
 from datetime import datetime, date, time, timedelta
 from typing import Optional
 from enum import Enum
@@ -66,8 +66,8 @@ DURATION_NUMBER: /(?i)(an|a|one|two|three|four|five|six|seven|eight|nine|ten|ele
 start: expression
 
 expression: single
-          | range
           | list
+          | range
 
 range: single ("to" | "-") single
 
@@ -85,11 +85,14 @@ datetime: date ("at" time)?
         | time date
         | time "on" date
 
-date: month "/" day ("/" year)?
-    | month "-" day ("-" year)?
+date: month "/" day "/" year
+    | month "/" dayoryear
+    | month "-" day "-" year
+    | month "-" dayoryear
     | datename
     | weekday
-    | monthname day ((",")? year)? // `day` here is read as `year` if invalid day
+    | monthname day (",")? year
+    | monthname dayoryear
 
 time: hour ":" minute meridiem?
     | hour meridiem?
@@ -104,6 +107,7 @@ timename: TIMENAME
 weekday: WEEKDAY
 monthname: MONTHNAME
 datename: DATENAME
+dayoryear: INT
 
 day: INT
 month: INT
@@ -368,6 +372,13 @@ class tfhTransformer(Transformer):
             return tfhTime(hour=12, minute=0, meridiem="pm")
         elif timename == 'midnight':
             return tfhTime(hour=0, minute=0, meridiem="am")
+        
+    def dayoryear(self, children):
+        if children[0].value.isdigit():
+            value = int(children[0].value)
+            rule = 'day' if value < 32 else 'year'
+            return Tree(Token('RULE', rule), [Token('INT', value)])
+        raise NotImplementedError(f"Unknown day or year: {children[0]}")
 
     def date(self, children):
         """

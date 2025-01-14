@@ -16,7 +16,7 @@ def now():
     # date only
     ('July 2019', datetime.datetime(2019, 7, 1, 0, 0)),
     ('7-17-18', datetime.datetime(2018, 7, 17, 0, 0)),
-    # ('7/2018', datetime.datetime(2018, 7, 1, 0, 0)),
+    ('7/2018', datetime.datetime(2018, 7, 1, 0, 0)),
     
     # datetimes
     ('July 17, 2018 at 3p.m.', datetime.datetime(2018, 7, 17, 15, 0)),
