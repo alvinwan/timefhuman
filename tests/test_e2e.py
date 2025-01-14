@@ -66,7 +66,7 @@ def now():
 ])
 def test_default(now, test_input, expected):
     """Default behavior should be to infer datetimes and times."""
-    assert timefhuman(test_input, now) == expected
+    assert timefhuman(test_input, config=tfhConfig(now=now)) == expected
 
 
 @pytest.mark.parametrize("test_input, expected", [
@@ -102,8 +102,8 @@ def test_default(now, test_input, expected):
 ])
 def test_no_inference(now, test_input, expected):
     """Return exactly the date or time, without inferring the other."""
-    config = tfhConfig(infer_datetimes=False)
-    assert timefhuman(test_input, now, config=config) == expected
+    config = tfhConfig(infer_datetimes=False, now=now)
+    assert timefhuman(test_input, config=config) == expected
 
 
 @pytest.mark.parametrize("config, test_input, expected", [
@@ -117,7 +117,8 @@ def test_no_inference(now, test_input, expected):
     # TODO: add tests for 'next/last'
 ])      
 def test_custom_config(now, config, test_input, expected):
-    assert timefhuman(test_input, now, config=config) == expected
+    config.now = now
+    assert timefhuman(test_input, config=config) == expected
 
 
 # TODO: is this possible? to extract and match only parts of text?

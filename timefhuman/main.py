@@ -29,6 +29,7 @@ Direction = Enum('Direction', ['previous', 'next'])
 class tfhConfig:
     direction: Direction = Direction.next
     infer_datetimes: bool = True
+    now: datetime = datetime.now()
 
 grammar = """
 %import common.WS
@@ -146,11 +147,11 @@ class tfhDatetime(datetime):
         return result
     
 
-def timefhuman(string, now=None, raw=None, config: tfhConfig = tfhConfig()):
+def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     parser = Lark(grammar, start="start")
     tree = parser.parse(string)
 
-    transformer = tfhTransformer(now=now, config=config)
+    transformer = tfhTransformer(config=config)
     result = transformer.transform(tree)
 
     if raw:
@@ -238,8 +239,7 @@ def infer_datetimes(datetimes, now):
 
 
 class tfhTransformer(Transformer):
-    def __init__(self, now=None, config: tfhConfig = tfhConfig()):
-        self.now = now
+    def __init__(self, config: tfhConfig = tfhConfig()):
         self.config = config
 
     def start(self, children):
@@ -247,7 +247,7 @@ class tfhTransformer(Transformer):
         if self.config.infer_datetimes:
             # TODO: move this logic into single after we correctly abstract away details
             # in the main `infer` function
-            children = infer_datetimes(children, self.now)
+            children = infer_datetimes(children, self.config.now)
         if len(children) == 1:
             return children[0]
         return children
@@ -347,7 +347,7 @@ class tfhTransformer(Transformer):
         weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
         weekday = children[0].value[:3].lower()
         target_weekday = weekdays.index(weekday)
-        current_weekday = self.now.weekday()
+        current_weekday = self.config.now.weekday()
         
         if self.config.direction == Direction.previous:
             days_until = (target_weekday - current_weekday) % 7 - 7
@@ -357,17 +357,17 @@ class tfhTransformer(Transformer):
             raise ValueError(f"Invalid direction: {self.config.direction}")
         days_until = days_until or 7  # If today is the target day, go to the next week
         
-        dt = self.now.date() + timedelta(days=days_until)
+        dt = self.config.now.date() + timedelta(days=days_until)
         return dt
     
     def datename(self, children):
         datename = children[0].value.lower()
         if datename == 'today':
-            return self.now.date()
+            return self.config.now.date()
         elif datename == 'tomorrow':
-            return self.now.date() + timedelta(days=1)
+            return self.config.now.date() + timedelta(days=1)
         elif datename == 'yesterday':
-            return self.now.date() - timedelta(days=1)
+            return self.config.now.date() - timedelta(days=1)
         
     def timename(self, children):
         timename = children[0].value.lower()
@@ -415,7 +415,7 @@ class tfhTransformer(Transformer):
 
         if "monthname" in data and "month" not in data:
             key = data["monthname"].lower().replace(".", "")
-            data["month"] = month_mapping.get(key, self.now.month)
+            data["month"] = month_mapping.get(key, self.config.now.month)
             
         if data.get("day", -1) > 31 and "year" not in data:
             data["year"] = data.pop("day")
@@ -423,9 +423,9 @@ class tfhTransformer(Transformer):
         if "day" not in data:
             data["day"] = 1  # the only exception. just use the first day of the month
         if "year" not in data:
-            data["year"] = self.now.year
+            data["year"] = self.config.now.year
         if "month" not in data:
-            data["month"] = self.now.month
+            data["month"] = self.config.now.month
             
         if 50 < data["year"] < 100:
             data["year"] = 1900 + data["year"]
