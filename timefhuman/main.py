@@ -60,6 +60,9 @@ DURATION_UNIT: /(?i)(minutes|mins|min|m|hours|hour|hrs|hr|h|days|day|d|weeks|wee
 // Duration number (digits like "1", or words like "an", "a", "one", "two", etc.)
 DURATION_NUMBER: /(?i)(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|[0-9]+(\.[0-9]+)?)/
 
+// Day suffix (th, rd, st, nd)
+DAY_SUFFIX: /(?i)(th|rd|st|nd)/
+
 // ----------------------
 // PARSER RULES
 // ----------------------
@@ -91,7 +94,8 @@ date: month "/" day "/" year
     | month "-" dayoryear
     | datename
     | weekday
-    | monthname day (",")? year
+    | monthname day DAY_SUFFIX? (",")? year
+    | monthname day DAY_SUFFIX
     | monthname dayoryear
 
 time: hour ":" minute meridiem?
