@@ -65,9 +65,9 @@ DURATION_NUMBER: /(?i)(an|a|one|two|three|four|five|six|seven|eight|nine|ten|ele
 // ----------------------
 start: expression
 
-expression: range 
-          | list 
-          | single
+expression: single
+          | range
+          | list
 
 range: single ("to" | "-") single
 
