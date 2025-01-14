@@ -96,6 +96,7 @@ date: month "/" day "/" year
     | weekday
     | monthname day DAY_SUFFIX? (",")? year
     | monthname day DAY_SUFFIX
+    | day DAY_SUFFIX
     | monthname dayoryear
 
 time: hour ":" minute meridiem?
