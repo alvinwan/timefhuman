@@ -95,10 +95,9 @@ def test_default(now, test_input, expected):
     ('1.5 hours', datetime.timedelta(hours=1, minutes=30)),
     ('in five minutes', datetime.timedelta(minutes=5)), # gh#25
     # ('one and a half hour', datetime.timedelta(hours=1, minutes=30)), # TODO
-    # ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))), # TODO
-    # ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]), # TODO
+    # ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))), # TODO: handle unidentifiable ints
+    # ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]), # TODO: handle unidentifiable ints
     # TODO: support duration ranges/lists
-    # TODO: support natural language for duration like "three and a half hours"
     # TODO: support natural language times like "3 o'clock" or "quarter to 3"
 ])
 def test_no_inference(now, test_input, expected):
