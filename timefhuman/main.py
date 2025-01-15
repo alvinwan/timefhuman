@@ -125,7 +125,11 @@ meridiem: MERIDIEM
 """
 
 
-class tfhRange:
+class tfhToken:
+    pass
+
+
+class tfhRange(tfhToken):
     def __init__(self, start, end):
         self.start = start
         self.end = end
@@ -137,7 +141,7 @@ class tfhRange:
         return f"tfhRange({self.start}, {self.end})"
 
 
-class tfhList:
+class tfhList(tfhToken):
     def __init__(self, items):
         self.items = items
 
@@ -148,7 +152,7 @@ class tfhList:
         return f"tfhList({self.items})"
 
 
-class tfhTimedelta:
+class tfhTimedelta(tfhToken):
     def __init__(self, days: int = 0, seconds: int = 0):
         self.days = days
         self.seconds = seconds
@@ -164,7 +168,7 @@ class tfhTimedelta:
         return f"tfhTimedelta(days={self.days}, seconds={self.seconds})"
 
 
-class tfhDate:
+class tfhDate(tfhToken):
     def __init__(
         self, 
         year: Optional[int] = None, 
@@ -188,7 +192,7 @@ class tfhDate:
                 f"year={self.year}, month={self.month}, day={self.day})")
 
 
-class tfhTime:
+class tfhTime(tfhToken):
     Meridiem = Enum('Meridiem', ['AM', 'PM'])
     
     def __init__(
@@ -219,7 +223,7 @@ class tfhTime:
                 f"hour={self.hour}, minute={self.minute}, meridiem={self.meridiem})")
 
 
-class tfhDatetime:
+class tfhDatetime(tfhToken):
     """A combination of tfhDate + tfhTime."""
     def __init__(
         self, 
@@ -251,7 +255,6 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     parser = Lark(grammar, start="start")
     tree = parser.parse(string)
     
-    print(tree)
     if raw:
         return tree
 
@@ -280,45 +283,14 @@ def infer_from(source, target):
 
 
 def infer(datetimes):
-    # TODO: This needs a major refactor to abstract away details and apply to all cases
-    # TODO: distribute any to any (dates/meridiems/times etc.)
-    
+    """
+    Infer any missing components of datetimes from the first or last datetime.
+    """
     for dt in datetimes[1:]:
         infer_from(datetimes[0], dt)
         
     for dt in datetimes[:-1]:
         infer_from(datetimes[-1], dt)
-
-    # # distribute first or last datetime's date to all datetimes
-    # if (isinstance(datetimes[0], datetime) and (target_date := datetimes[0]._date)) or \
-    #     (isinstance(datetimes[-1], datetime) and (target_date := datetimes[-1]._date)):
-    #     for i, dt in enumerate(datetimes):
-    #         if isinstance(dt, time):
-    #             datetimes[i] = tfhDatetime.combine(target_date, dt)
-
-    # # distribute last time's meridiem to all datetimes
-    # if (
-    #     isinstance(datetimes[-1], datetime) and (meridiem := datetimes[-1]._time.meridiem)
-    # ) or (
-    #     isinstance(datetimes[-1], time) and (meridiem := datetimes[-1].meridiem)
-    # ):
-    #     for i, dt in enumerate(datetimes[:-1]):
-    #         # TODO: force all datetimes to have _date and _time
-    #         if meridiem.startswith("a"):
-    #             break
-    #         if isinstance(dt, datetime) and dt._time and not dt._time.meridiem:
-    #             dt._time.meridiem = meridiem
-    #             datetimes[i] = dt + timedelta(hours=12)
-    #         elif isinstance(dt, time) and not dt.meridiem:
-    #             dt.meridiem = meridiem
-    #             datetimes[i] = tfhTime(dt.hour + 12, dt.minute, meridiem=meridiem)
-
-    # # distribute last time across previous dates
-    # if isinstance(datetimes[-1], (time, datetime)):
-    #     for i, dt in enumerate(datetimes[:-1]):
-    #         # NOTE: subclass date so can we match date-only's
-    #         if isinstance(dt, date) and not isinstance(dt, datetime):
-    #             datetimes[i] = tfhDatetime.combine(dt, datetimes[-1] if isinstance(datetimes[-1], time) else datetimes[-1]._time)
 
     # # distribute last time range's meridiem to all previous datetime ranges
     # if isinstance(datetimes[-1], tuple) and isinstance(datetimes[-1][0], time) and datetimes[-1][0].meridiem and datetimes[-1][0].meridiem.startswith("p"):
@@ -361,6 +333,8 @@ def infer_datetimes(datetimes, now):
             result.append(infer_datetimes(dt, now))
         else:
             result.append(dt)
+    if isinstance(datetimes, tuple):
+        return tuple(result)
     return result
 
 
@@ -375,14 +349,12 @@ class tfhTransformer(Transformer):
 
     def expression(self, children):
         """The top-level expression could be a range, list, or single."""
-        print('expression', children)
         if len(children) == 1:
             return children[0]
         return children
 
     def single(self, children):
         """A single object can be a datetime, a date, or a time."""
-        print('single', children)
         return children[0]
 
     def range(self, children):
@@ -556,25 +528,20 @@ class tfhTransformer(Transformer):
         - the literal string 'noon'
         We produce a timedelta, which is easier to add to a date.
         """
-        if children and isinstance(children[0], time):
+        if children and isinstance(children[0], tfhTime):
             return children[0]
         
-        # TODO: is this still used because of timename?
-        # # 1) Check for 'noon' as a direct match (often a plain string)
-        # for child in children:
-        #     if isinstance(child, str) and child.lower() == "noon":
-        #         return tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
-
+        # TODO: guard against random other objects
         data = {child.data.value: child.children[0].value for child in children}
-        
+
         # Extract the final hour/minute/meridiem
         hour = int(data.get("hour", 0))
         minute = int(data.get("minute", 0))
         
         meridiem = None
-        if data.get("meridiem", '').startswith("a"):
+        if data.get("meridiem", '').lower().startswith("a"):
             meridiem = tfhTime.Meridiem.AM
-        elif data.get("meridiem", '').startswith("p"):
+        elif data.get("meridiem", '').lower().startswith("p"):
             meridiem = tfhTime.Meridiem.PM
         
         # 5) Apply am/pm logic
