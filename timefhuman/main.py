@@ -125,34 +125,83 @@ meridiem: MERIDIEM
 """
 
 
-class tfhToken:
-    pass
+class tfhResult:
+    """
+    A result is a single object that can be converted to a datetime, date, or time.
+    
+    It must provide settable properties for date, time, and meridiem.
+    """
+    date: Optional['tfhDate'] = None
+    time: Optional['tfhTime'] = None
+    meridiem: Optional['tfhTime.Meridiem'] = None
+    
+    def to_object(self) -> Union[datetime, 'date', 'time', timedelta]:
+        """Convert to real datetime, date, or time. Assumes partial fields are filled."""
+        raise NotImplementedError("Subclass must implement to_object()")
+    
+    @classmethod
+    def from_object(cls, obj: Union[datetime, 'date', 'time', timedelta]):
+        raise NotImplementedError("Subclass must implement from_object()")
 
 
-class tfhRange(tfhToken):
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
+class tfhCollection(tfhResult):
+    def __init__(self, items):
+        self.items = items
+    
+    @property
+    def date(self):
+        for item in self.items:
+            if item.date:
+                return item.date
+        return None
+    
+    @date.setter
+    def date(self, value):
+        for item in self.items:
+            item.date = value
+    
+    @property
+    def time(self):
+        for item in self.items:
+            if item.time:
+                return item.time
+        return None
+    
+    @time.setter
+    def time(self, value):
+        for item in self.items:
+            item.time = value
+    
+    @property
+    def meridiem(self):
+        for item in self.items:
+            if item.meridiem:
+                return item.meridiem
+        return None
+    
+    @meridiem.setter
+    def meridiem(self, value):
+        for item in self.items:
+            item.meridiem = value
 
+
+class tfhRange(tfhCollection):
     def to_object(self):
-        return (self.start.to_object(), self.end.to_object())
+        return tuple([item.to_object() for item in self.items])
 
     def __repr__(self):
         return f"tfhRange({self.start}, {self.end})"
 
 
-class tfhList(tfhToken):
-    def __init__(self, items):
-        self.items = items
-
+class tfhList(tfhCollection):
     def to_object(self):
-        return [item.to_object() for item in self.items]
+        return list([item.to_object() for item in self.items])
 
     def __repr__(self):
         return f"tfhList({self.items})"
 
 
-class tfhTimedelta(tfhToken):
+class tfhTimedelta(tfhResult):
     def __init__(self, days: int = 0, seconds: int = 0):
         self.days = days
         self.seconds = seconds
@@ -168,7 +217,7 @@ class tfhTimedelta(tfhToken):
         return f"tfhTimedelta(days={self.days}, seconds={self.seconds})"
 
 
-class tfhDate(tfhToken):
+class tfhDate:
     def __init__(
         self, 
         year: Optional[int] = None, 
@@ -192,7 +241,7 @@ class tfhDate(tfhToken):
                 f"year={self.year}, month={self.month}, day={self.day})")
 
 
-class tfhTime(tfhToken):
+class tfhTime:
     Meridiem = Enum('Meridiem', ['AM', 'PM'])
     
     def __init__(
@@ -223,8 +272,18 @@ class tfhTime(tfhToken):
                 f"hour={self.hour}, minute={self.minute}, meridiem={self.meridiem})")
 
 
-class tfhDatetime(tfhToken):
+class tfhDatetime(tfhResult):
     """A combination of tfhDate + tfhTime."""
+    
+    @property
+    def meridiem(self):
+        return self.time.meridiem if self.time else None
+    
+    @meridiem.setter
+    def meridiem(self, value):
+        if self.time:
+            self.time.meridiem = value
+    
     def __init__(
         self, 
         date: Optional[tfhDate] = None, 
@@ -272,13 +331,13 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     return results
 
 
-def infer_from(source, target):
+def infer_from(source: tfhResult, target: tfhResult):
     if source.date and not target.date:
         target.date = source.date
     if source.time and not target.time:
         target.time = source.time
-    if source.time and source.time.meridiem and target.time and not target.time.meridiem:
-        target.time.meridiem = source.time.meridiem
+    if source.meridiem and not target.meridiem:
+        target.meridiem = source.meridiem
     return target
 
 
@@ -292,29 +351,6 @@ def infer(datetimes):
     for dt in datetimes[:-1]:
         infer_from(datetimes[-1], dt)
 
-    # # distribute last time range's meridiem to all previous datetime ranges
-    # if isinstance(datetimes[-1], tuple) and isinstance(datetimes[-1][0], time) and datetimes[-1][0].meridiem and datetimes[-1][0].meridiem.startswith("p"):
-    #     for i, dt in enumerate(datetimes[:-1]):
-    #         if isinstance(dt, tuple) and isinstance(dt[0], (time, datetime)):
-    #             _dts = []
-    #             for _dt in dt:
-    #                 if isinstance(_dt, time):
-    #                     _dt = tfhTime(_dt.hour + 12, _dt.minute, meridiem=datetimes[-1][0].meridiem)
-    #                 elif isinstance(_dt, datetime) and _dt._time and not _dt._time.meridiem:
-    #                     _dt._time.meridiem = datetimes[-1][0].meridiem
-    #                     _dt = _dt + timedelta(hours=12)
-    #                 _dts.append(_dt)
-    #             datetimes[i] = tuple(_dts)
-
-    # # distribute first datetime range's date across all following time ranges
-    # if isinstance(datetimes[0], tuple) and isinstance(datetimes[0][0], datetime):
-    #     for i, dt in enumerate(datetimes[1:], start=1):
-    #         if isinstance(dt, time) or isinstance(dt, tuple) and isinstance(dt[0], time): # if a time range
-    #             datetimes[i] = tuple(
-    #                 tfhDatetime.combine(datetimes[0][0], dt)
-    #                 for dt in datetimes[i]
-    #             )
-    
     return datetimes
 
 
@@ -360,7 +396,7 @@ class tfhTransformer(Transformer):
     def range(self, children):
         """Handles expressions like '7/17 3 PM - 7/18 4 PM'."""
         assert len(children) == 2
-        return tfhRange(*infer(children))
+        return tfhRange(infer(children))
 
     def list(self, children):
         """Handles comma/or lists like '7/17, 7/18, 7/19' or '7/17 or 7/18'."""
