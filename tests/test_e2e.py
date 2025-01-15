@@ -54,6 +54,7 @@ def now():
     ('July 4th or 5th at 3PM', [datetime.datetime(2018, 7, 4, 15, 0), datetime.datetime(2018, 7, 5, 15, 0)]), # distribute month and time
     ('7/17, 7/18, 7/19 at 2', [datetime.datetime(2018, 7, 17, 2, 0), datetime.datetime(2018, 7, 18, 2, 0), datetime.datetime(2018, 7, 19, 2, 0)]), # distribute meridiem
     ('tomorrow noon,Wed 3 p.m.,Fri 11 AM', [datetime.datetime(2018, 8, 5, 12, 0), datetime.datetime(2018, 8, 8, 15, 0), datetime.datetime(2018, 8, 10, 11, 0)]), # distribute meridiem
+    # ('2, 3, or 4p tmw', [datetime.datetime(2018, 8, 4, 2, 0), datetime.datetime(2018, 8, 4, 3, 0), datetime.datetime(2018, 8, 4, 4, 0)]), # multiple ambiguous tokens #TODO (check month?)
     
     # choices of ranges
     ('7/17 4-5 PM or 5-6 PM today', [

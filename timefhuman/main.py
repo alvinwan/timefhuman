@@ -75,9 +75,8 @@ expression: single
 
 range: single ("to" | "-") single
 
-list: single ("," single)+ 
-    | single ("or" single)+
-    | range ("or" range)+
+list: single ((","|"or")+ single)+ 
+    | range ((","|"or")+ range)+
 
 single: datetime 
        | duration
@@ -438,9 +437,8 @@ def infer_from(source: tfhResult, target: tfhResult):
         else:
             raise NotImplementedError(f"Not enough context to infer what {target} is")
     if isinstance(source, tfhAmbiguous) and isinstance(target, tfhAmbiguous):
-        # TODO: list of ranges could possibly be inferred. how would that work? we currently only infer
-        # from a 'sibling' value, but this is a 'cousin' value.
-        raise NotImplementedError(f"Not enough context to infer what to do with two ambiguous values {source} and {target}")
+        # NOTE: nothing we can do here. both are ambiguous.
+        return target
     if source.date and not target.date:
         target.date = source.date
     if source.time and not target.time:
