@@ -125,38 +125,96 @@ meridiem: MERIDIEM
 """
 
 
-class tfhTime(time):
-    meridiem: Optional[str] = None
-    
-    def __new__(cls, *args, meridiem=None, **kwargs):
-        result = time.__new__(cls, *args, **kwargs)
-        result.meridiem = meridiem
-        return result
+class tfhDate:
+    def __init__(
+        self, 
+        year: Optional[int] = None, 
+        month: Optional[int] = None, 
+        day: Optional[int] = None,
+    ):
+        self.year = year
+        self.month = month
+        self.day = day
 
-
-class tfhDatetime(datetime):
-    _date: Optional[date] = None
-    _time: Optional[time] = None
+    def to_object(self) -> date:
+        """Convert to a real date. Assumes all fields are filled in."""
+        return date(self.year, self.month, self.day)
     
     @classmethod
-    def combine(cls, date, time):
-        result = datetime.combine(date, time)
-        result = cls(result.year, result.month, result.day, result.hour, result.minute)
-        result._date = date
-        result._time = time
-        return result
+    def from_object(cls, obj: date):
+        return cls(year=obj.year, month=obj.month, day=obj.day)
+
+    def __repr__(self):
+        return (f"tfhDate("
+                f"year={self.year}, month={self.month}, day={self.day})")
+
+
+class tfhTime:
+    def __init__(
+        self, 
+        hour: Optional[int] = None, 
+        minute: Optional[int] = None, 
+        meridiem: Optional[str] = None,
+    ):
+        self.hour = hour
+        self.minute = minute
+        self.meridiem = meridiem
+
+    def to_object(self) -> time:
+        """Convert to a real time object. Assumes all fields are filled in."""
+        # TODO: handle pm here?
+        return time(self.hour, self.minute or 0)
+    
+    @classmethod
+    def from_object(cls, obj: time):
+        return cls(hour=obj.hour, minute=obj.minute, meridiem=obj.meridiem)
+
+    def __repr__(self):
+        return (f"tfhTime("
+                f"hour={self.hour}, minute={self.minute}, meridiem={self.meridiem})")
+
+
+class tfhDatetime:
+    """A combination of tfhDate + tfhTime."""
+    def __init__(
+        self, 
+        date: Optional[tfhDate] = None, 
+        time: Optional[tfhTime] = None
+    ):
+        self.date = date
+        self.time = time
+
+    def to_object(self) -> datetime:
+        """Convert to real datetime, assumes partial fields are filled."""
+        if not self.date:
+            # TODO: fallback to 'today'?
+            raise ValueError("No partial date to form a datetime")
+        d = self.date.to_object()
+        if self.time:
+            t = self.time.to_object()
+            return datetime(d.year, d.month, d.day, t.hour, t.minute)
+        else:
+            return datetime(d.year, d.month, d.day)
+        
+    @classmethod
+    def from_object(cls, obj: datetime):
+        return cls(date=tfhDate.from_object(obj.date()), time=tfhTime.from_object(obj.time()))
+
+    def __repr__(self):
+        return f"tfhDatetime({self.date}, {self.time})"
     
 
 def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     parser = Lark(grammar, start="start")
     tree = parser.parse(string)
+    
+    if raw:
+        return tree
 
     transformer = tfhTransformer(config=config)
     result = transformer.transform(tree)
 
-    if raw:
-        return tree
-    return result
+    return result.to_object()
 
 
 def infer(datetimes):
@@ -244,6 +302,7 @@ class tfhTransformer(Transformer):
 
     def start(self, children):
         """Strip the 'start' rule and return child(ren) directly."""
+        # TODO: move this logic to timefhuman?
         if self.config.infer_datetimes:
             # TODO: move this logic into single after we correctly abstract away details
             # in the main `infer` function
@@ -432,7 +491,7 @@ class tfhTransformer(Transformer):
         elif data["year"] < 50:
             data["year"] = 2000 + data["year"]
 
-        return date(data["year"], data["month"], data["day"])
+        return tfhDate(year=data["year"], month=data["month"], day=data["day"])
 
     def time(self, children):
         """
