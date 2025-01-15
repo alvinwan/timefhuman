@@ -132,10 +132,12 @@ class tfhResult:
     It must provide settable properties for date, time, and meridiem.
     """
     date: Optional['tfhDate'] = None
+    month: Optional[int] = None
+    year: Optional[int] = None
     time: Optional['tfhTime'] = None
     meridiem: Optional['tfhTime.Meridiem'] = None
     
-    def to_object(self) -> Union[datetime, 'date', 'time', timedelta]:
+    def to_object(self, now: datetime = datetime.now()) -> Union[datetime, 'date', 'time', timedelta]:
         """Convert to real datetime, date, or time. Assumes partial fields are filled."""
         raise NotImplementedError("Subclass must implement to_object()")
     
@@ -183,19 +185,43 @@ class tfhCollection(tfhResult):
     def meridiem(self, value):
         for item in self.items:
             item.meridiem = value
+            
+    @property
+    def year(self):
+        for item in self.items:
+            if item.year:
+                return item.year
+        return None
+    
+    @year.setter
+    def year(self, value):
+        for item in self.items:
+            item.year = value
+            
+    @property
+    def month(self):
+        for item in self.items:
+            if item.month:
+                return item.month
+        return None
+    
+    @month.setter
+    def month(self, value):
+        for item in self.items:
+            item.month = value
 
 
 class tfhRange(tfhCollection):
-    def to_object(self):
-        return tuple([item.to_object() for item in self.items])
+    def to_object(self, now: datetime = datetime.now()):
+        return tuple([item.to_object(now) for item in self.items])
 
     def __repr__(self):
         return f"tfhRange({self.start}, {self.end})"
 
 
 class tfhList(tfhCollection):
-    def to_object(self):
-        return list([item.to_object() for item in self.items])
+    def to_object(self, now: datetime = datetime.now()):
+        return list([item.to_object(now) for item in self.items])
 
     def __repr__(self):
         return f"tfhList({self.items})"
@@ -206,7 +232,7 @@ class tfhTimedelta(tfhResult):
         self.days = days
         self.seconds = seconds
 
-    def to_object(self):
+    def to_object(self, now: datetime = datetime.now()):
         return timedelta(days=self.days, seconds=self.seconds)
     
     @classmethod
@@ -228,9 +254,10 @@ class tfhDate:
         self.month = month
         self.day = day
 
-    def to_object(self) -> date:
+    def to_object(self, now: datetime = datetime.now()) -> date:
         """Convert to a real date. Assumes all fields are filled in."""
-        return date(self.year, self.month, self.day)
+        # NOTE: This must be here, because we need values for each field
+        return date(self.year or now.year, self.month or now.month, self.day or 1)
     
     @classmethod
     def from_object(cls, obj: date):
@@ -254,7 +281,7 @@ class tfhTime:
         self.minute = minute
         self.meridiem = meridiem
 
-    def to_object(self) -> time:
+    def to_object(self, now: datetime = datetime.now()) -> time:
         """Convert to a real time object. Assumes all fields are filled in."""
         # TODO: handle pm in a global infer function?
         if self.meridiem == tfhTime.Meridiem.PM and self.hour < 12:
@@ -283,6 +310,24 @@ class tfhDatetime(tfhResult):
     def meridiem(self, value):
         if self.time:
             self.time.meridiem = value
+            
+    @property
+    def year(self):
+        return self.date.year if self.date else None
+    
+    @year.setter
+    def year(self, value):
+        if self.date:
+            self.date.year = value
+            
+    @property
+    def month(self):
+        return self.date.month if self.date else None
+    
+    @month.setter
+    def month(self, value):
+        if self.date:
+            self.date.month = value
     
     def __init__(
         self, 
@@ -292,14 +337,14 @@ class tfhDatetime(tfhResult):
         self.date = date
         self.time = time
 
-    def to_object(self) -> Union[datetime, date, time]:
+    def to_object(self, now: datetime = datetime.now()) -> Union[datetime, date, time]:
         """Convert to real datetime, assumes partial fields are filled."""
         if self.date and self.time:
-            return datetime.combine(self.date.to_object(), self.time.to_object())
+            return datetime.combine(self.date.to_object(now), self.time.to_object(now))
         elif self.date:
-            return self.date.to_object()
+            return self.date.to_object(now)
         elif self.time:
-            return self.time.to_object()
+            return self.time.to_object(now)
         raise ValueError("Datetime is missing both date and time")
         
     @classmethod
@@ -320,7 +365,7 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     transformer = tfhTransformer(config=config)
     results = transformer.transform(tree)
     
-    results = [result.to_object() for result in results]
+    results = [result.to_object(config.now) for result in results]
     if config.infer_datetimes:
         # TODO: move this logic into single after we correctly abstract away details
         # in the main `infer` function
@@ -336,6 +381,10 @@ def infer_from(source: tfhResult, target: tfhResult):
         target.date = source.date
     if source.time and not target.time:
         target.time = source.time
+    if source.month and not target.month:
+        target.month = source.month
+    if source.year and not target.year:
+        target.year = source.year
     if source.meridiem and not target.meridiem:
         target.meridiem = source.meridiem
     return target
@@ -541,20 +590,14 @@ class tfhTransformer(Transformer):
             
         if data.get("day", -1) > 31 and "year" not in data:
             data["year"] = data.pop("day")
+        
+        year = data.get('year', -1)
+        if 50 < year < 100:
+            data["year"] = 1900 + year
+        elif 0 < year < 50:
+            data["year"] = 2000 + year
 
-        if "day" not in data:
-            data["day"] = 1  # the only exception. just use the first day of the month
-        if "year" not in data:
-            data["year"] = self.config.now.year
-        if "month" not in data:
-            data["month"] = self.config.now.month
-            
-        if 50 < data["year"] < 100:
-            data["year"] = 1900 + data["year"]
-        elif data["year"] < 50:
-            data["year"] = 2000 + data["year"]
-
-        return tfhDate(year=data["year"], month=data["month"], day=data["day"])
+        return tfhDate(year=data.get("year"), month=data.get("month"), day=data.get("day"))
 
     def time(self, children):
         """
