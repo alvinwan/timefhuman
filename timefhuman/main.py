@@ -18,7 +18,7 @@ __all__ = ('timefhuman',)
 
 from lark import Lark, Transformer, Tree, Token
 from datetime import datetime, date, time, timedelta
-from typing import Optional
+from typing import Optional, Union
 from enum import Enum
 from dataclasses import dataclass
 
@@ -229,7 +229,7 @@ class tfhDatetime:
         self.date = date
         self.time = time
 
-    def to_object(self) -> datetime:
+    def to_object(self) -> Union[datetime, date, time]:
         """Convert to real datetime, assumes partial fields are filled."""
         if self.date and self.time:
             return datetime.combine(self.date.to_object(), self.time.to_object())
@@ -256,9 +256,17 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
         return tree
 
     transformer = tfhTransformer(config=config)
-    result = transformer.transform(tree)
+    results = transformer.transform(tree)
+    
+    results = [result.to_object() for result in results]
+    if config.infer_datetimes:
+        # TODO: move this logic into single after we correctly abstract away details
+        # in the main `infer` function
+        results = infer_datetimes(results, config.now)
 
-    return result.to_object()
+    if len(results) == 1:
+        return results[0]
+    return results
 
 
 def infer_from(source, target):
@@ -339,21 +347,20 @@ def infer(datetimes):
 
 
 def infer_datetimes(datetimes, now):
+    # TODO: move this logic to classes?
     result = []
     for dt in datetimes:
         if isinstance(dt, (date, time, datetime)):
             if isinstance(dt, date) and not isinstance(dt, datetime):
-                result.append(tfhDatetime.combine(dt, time(0, 0)))
+                result.append(datetime.combine(dt, time(0, 0)))
             elif isinstance(dt, time):
-                result.append(tfhDatetime.combine(now.date(), dt))
+                result.append(datetime.combine(now.date(), dt))
             else:
                 result.append(dt)
         elif isinstance(dt, (tuple, list)):
             result.append(infer_datetimes(dt, now))
         else:
             result.append(dt)
-    if isinstance(datetimes, tuple):
-        return tuple(result)
     return result
 
 
@@ -364,12 +371,6 @@ class tfhTransformer(Transformer):
     def start(self, children):
         """Strip the 'start' rule and return child(ren) directly."""
         # TODO: move this logic to timefhuman?
-        # if self.config.infer_datetimes:
-        #     # TODO: move this logic into single after we correctly abstract away details
-        #     # in the main `infer` function
-        #     children = infer_datetimes(children, self.config.now)
-        if len(children) == 1:
-            return children[0]
         return children
 
     def expression(self, children):
