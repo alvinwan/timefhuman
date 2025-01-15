@@ -148,6 +148,22 @@ class tfhList:
         return f"tfhList({self.items})"
 
 
+class tfhTimedelta:
+    def __init__(self, days: int = 0, seconds: int = 0):
+        self.days = days
+        self.seconds = seconds
+
+    def to_object(self):
+        return timedelta(days=self.days, seconds=self.seconds)
+    
+    @classmethod
+    def from_object(cls, obj: timedelta):
+        return cls(days=obj.days, seconds=obj.seconds)
+    
+    def __repr__(self):
+        return f"tfhTimedelta(days={self.days}, seconds={self.seconds})"
+
+
 class tfhDate:
     def __init__(
         self, 
@@ -378,7 +394,7 @@ class tfhTransformer(Transformer):
         return tfhList(infer(children))
     
     def duration(self, children):
-        return sum(children, timedelta())
+        return tfhTimedelta.from_object(sum(children, timedelta()))
     
     def duration_part(self, children):
         data = {child.data.value: child.children[0].value for child in children}
@@ -460,11 +476,11 @@ class tfhTransformer(Transformer):
     def datename(self, children):
         datename = children[0].value.lower()
         if datename == 'today':
-            return self.config.now.date()
+            return tfhDate.from_object(self.config.now.date())
         elif datename == 'tomorrow':
-            return self.config.now.date() + timedelta(days=1)
+            return tfhDate.from_object(self.config.now.date() + timedelta(days=1))
         elif datename == 'yesterday':
-            return self.config.now.date() - timedelta(days=1)
+            return tfhDate.from_object(self.config.now.date() - timedelta(days=1))
         
     def timename(self, children):
         timename = children[0].value.lower()
