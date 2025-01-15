@@ -31,7 +31,7 @@ def now():
     
     # date-only ranges
     ('7/17-7/18', (datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))),
-    # ('July 17-18', (datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))), # distribute month
+    ('July 17-18', (datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))), # distribute month
     
     # time-only ranges
     ('3p -4p', (datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))),
