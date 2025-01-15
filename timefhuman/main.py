@@ -81,11 +81,14 @@ list: single ("," single)+
 
 single: datetime 
        | duration
+       | unknown
 
-datetime: date ("at" time)?
-        | date time
-        | time date
-        | time "on" date
+// Only add houronly to specific formats that immediately
+// indicate this is an hour-only time.
+datetime: date ("at" (time | houronly))?
+        | date (time | houronly)
+        | (time | houronly) date
+        | (time | houronly) "on" date
         | date
         | time
 
@@ -100,8 +103,12 @@ date: month "/" day "/" year
     | day DAY_SUFFIX
     | monthname dayoryear
 
+// intentionally not allowing int-only time, so that single-integers can be
+// classified as an unknown token (in case it's a month, day, year, etc.)
+// However, that means to support single-integer (e.g., hour) times, we need
+// to manually add them to the `datetime` rule above.
 time: hour ":" minute meridiem?
-    | hour meridiem?
+    | hour meridiem
     | timename
 
 duration: ("in"|"for")? duration_part (("and"|",")? duration_part)* ("ago")?
@@ -109,7 +116,6 @@ duration_part: duration_number duration_unit
 duration_number: DURATION_NUMBER
 duration_unit: DURATION_UNIT
 
-timename: TIMENAME
 weekday: WEEKDAY
 monthname: MONTHNAME
 datename: DATENAME
@@ -119,9 +125,13 @@ day: INT
 month: INT
 year: INT
 
+timename: TIMENAME
 hour: INT
 minute: INT
 meridiem: MERIDIEM
+houronly: INT
+
+unknown: INT
 """
 
 
@@ -134,6 +144,7 @@ class tfhResult:
     date: Optional['tfhDate'] = None
     month: Optional[int] = None
     year: Optional[int] = None
+    day: Optional[int] = None
     time: Optional['tfhTime'] = None
     meridiem: Optional['tfhTime.Meridiem'] = None
     
@@ -150,6 +161,7 @@ class tfhCollection(tfhResult):
     def __init__(self, items):
         self.items = items
     
+    # TODO: simplify these properties. they're all the same
     @property
     def date(self):
         for item in self.items:
@@ -209,6 +221,18 @@ class tfhCollection(tfhResult):
     def month(self, value):
         for item in self.items:
             item.month = value
+            
+    @property
+    def day(self):
+        for item in self.items:
+            if item.day:
+                return item.day
+        return None
+    
+    @day.setter
+    def day(self, value):
+        for item in self.items:
+            item.day = value
 
 
 class tfhRange(tfhCollection):
@@ -222,7 +246,7 @@ class tfhRange(tfhCollection):
         return tuple([item.to_object(config) for item in self.items])
 
     def __repr__(self):
-        return f"tfhRange({self.start}, {self.end})"
+        return f"tfhRange({self.items})"
 
 
 class tfhList(tfhCollection):
@@ -333,6 +357,15 @@ class tfhDatetime(tfhResult):
     def month(self, value):
         if self.date:
             self.date.month = value
+            
+    @property
+    def day(self):
+        return self.date.day if self.date else None
+    
+    @day.setter
+    def day(self, value):
+        if self.date:
+            self.date.day = value
     
     def __init__(
         self, 
@@ -364,15 +397,28 @@ class tfhDatetime(tfhResult):
         return f"tfhDatetime({self.date}, {self.time})"
     
 
+class tfhAmbiguous:
+    """Can represent an hour, a day, month, or year."""
+    
+    def __init__(self, value: int):
+        self.value = value
+
+    def __repr__(self):
+        return f"tfhAmbiguous({self.value})"
+
+
 def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     parser = Lark(grammar, start="start")
     tree = parser.parse(string)
     
     if raw:
         return tree
+    print(tree.pretty())
 
     transformer = tfhTransformer(config=config)
     results = transformer.transform(tree)
+    
+    print(results)
     
     results = [result.to_object(config) for result in results]
     if len(results) == 1:
@@ -381,6 +427,19 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
 
 
 def infer_from(source: tfhResult, target: tfhResult):
+    if isinstance(source, tfhAmbiguous):
+        return target
+    if isinstance(target, tfhAmbiguous):
+        if source.time:
+            target = tfhDatetime(time=tfhTime(hour=target.value, meridiem=source.meridiem))
+        elif source.year:
+            target = tfhDatetime(date=tfhDate(year=target.value))
+        elif source.day:
+            target = tfhDatetime(date=tfhDate(day=target.value))
+        elif source.month:
+            target = tfhDatetime(date=tfhDate(month=target.value))
+        else:
+            raise NotImplementedError("Cannot infer type of ambiguous integer")
     if source.date and not target.date:
         target.date = source.date
     if source.time and not target.time:
@@ -398,11 +457,11 @@ def infer(datetimes):
     """
     Infer any missing components of datetimes from the first or last datetime.
     """
-    for dt in datetimes[1:]:
-        infer_from(datetimes[0], dt)
+    for i, dt in enumerate(datetimes[1:], start=1):
+        datetimes[i] = infer_from(datetimes[0], dt)
         
-    for dt in datetimes[:-1]:
-        infer_from(datetimes[-1], dt)
+    for i, dt in enumerate(datetimes[:-1]):
+        datetimes[i] = infer_from(datetimes[-1], dt)
 
     return datetimes
 
@@ -413,7 +472,6 @@ class tfhTransformer(Transformer):
 
     def start(self, children):
         """Strip the 'start' rule and return child(ren) directly."""
-        # TODO: move this logic to timefhuman?
         return children
 
     def expression(self, children):
@@ -424,6 +482,8 @@ class tfhTransformer(Transformer):
 
     def single(self, children):
         """A single object can be a datetime, a date, or a time."""
+        if len(children) == 1 and hasattr(children[0], 'data') and children[0].data.value == 'unknown':
+            return tfhAmbiguous(int(children[0].children[0].value))
         return children[0]
 
     def range(self, children):
@@ -615,3 +675,6 @@ class tfhTransformer(Transformer):
             hour = 0
 
         return tfhTime(hour=hour, minute=minute, meridiem=meridiem)
+
+    def houronly(self, children):
+        return tfhTime(hour=int(children[0].value))

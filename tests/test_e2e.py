@@ -79,7 +79,7 @@ def test_default(now, test_input, expected):
     
     # date-only ranges
     ('7/17-7/18', (datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))),
-    # ('July 17-18', (datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))), # distribute month # TODO
+    ('July 17-18', (datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))), # distribute month
     
     # time-only ranges
     ('3p -4p', (datetime.time(15, 0), datetime.time(16, 0))),
@@ -95,6 +95,7 @@ def test_default(now, test_input, expected):
     ('1 day and an hour', datetime.timedelta(days=1, hours=1)),
     ('1.5 hours', datetime.timedelta(hours=1, minutes=30)),
     ('in five minutes', datetime.timedelta(minutes=5)), # gh#25
+    # ('thirty two hours', datetime.timedelta(hours=32)), # TODO
     # ('one and a half hour', datetime.timedelta(hours=1, minutes=30)), # TODO
     # ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))), # TODO: handle unidentifiable ints
     # ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]), # TODO: handle unidentifiable ints
