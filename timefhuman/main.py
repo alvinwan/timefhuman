@@ -125,6 +125,29 @@ meridiem: MERIDIEM
 """
 
 
+class tfhRange:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    def to_object(self):
+        return (self.start.to_object(), self.end.to_object())
+
+    def __repr__(self):
+        return f"tfhRange({self.start}, {self.end})"
+
+
+class tfhList:
+    def __init__(self, items):
+        self.items = items
+
+    def to_object(self):
+        return [item.to_object() for item in self.items]
+
+    def __repr__(self):
+        return f"tfhList({self.items})"
+
+
 class tfhDate:
     def __init__(
         self, 
@@ -150,11 +173,13 @@ class tfhDate:
 
 
 class tfhTime:
+    Meridiem = Enum('Meridiem', ['AM', 'PM'])
+    
     def __init__(
         self, 
         hour: Optional[int] = None, 
         minute: Optional[int] = None, 
-        meridiem: Optional[str] = None,
+        meridiem: Optional[Meridiem] = None,
     ):
         self.hour = hour
         self.minute = minute
@@ -208,6 +233,7 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     parser = Lark(grammar, start="start")
     tree = parser.parse(string)
     
+    print(tree)
     if raw:
         return tree
 
@@ -303,32 +329,34 @@ class tfhTransformer(Transformer):
     def start(self, children):
         """Strip the 'start' rule and return child(ren) directly."""
         # TODO: move this logic to timefhuman?
-        if self.config.infer_datetimes:
-            # TODO: move this logic into single after we correctly abstract away details
-            # in the main `infer` function
-            children = infer_datetimes(children, self.config.now)
+        # if self.config.infer_datetimes:
+        #     # TODO: move this logic into single after we correctly abstract away details
+        #     # in the main `infer` function
+        #     children = infer_datetimes(children, self.config.now)
         if len(children) == 1:
             return children[0]
         return children
 
     def expression(self, children):
         """The top-level expression could be a range, list, or single."""
+        print('expression', children)
         if len(children) == 1:
             return children[0]
         return children
 
     def single(self, children):
         """A single object can be a datetime, a date, or a time."""
+        print('single', children)
         return children[0]
 
     def range(self, children):
         """Handles expressions like '7/17 3 PM - 7/18 4 PM'."""
         assert len(children) == 2
-        return tuple(infer(children))
+        return tfhRange(*infer(children))
 
     def list(self, children):
         """Handles comma/or lists like '7/17, 7/18, 7/19' or '7/17 or 7/18'."""
-        return list(infer(children))
+        return tfhList(infer(children))
     
     def duration(self, children):
         return sum(children, timedelta())
@@ -388,19 +416,16 @@ class tfhTransformer(Transformer):
           - just time
         We combine them here into a single datetime if both parts are present.
         """
-        date_part = next((c for c in children if isinstance(c, date)), None)
-        time_part = next((c for c in children if isinstance(c, time)), None)
+        date_part = next((c for c in children if isinstance(c, tfhDate)), None)
+        time_part = next((c for c in children if isinstance(c, tfhTime)), None)
 
         if date_part and time_part:
-            result = tfhDatetime.combine(date_part, time_part)
-            result._date = date_part
-            result._time = time_part
-            return result
+            return tfhDatetime(date=date_part, time=time_part)
         elif date_part:
             return date_part
         elif time_part:
             return time_part
-        return None
+        raise NotImplementedError("No datetime found")
     
     def weekday(self, children):
         weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
@@ -417,7 +442,7 @@ class tfhTransformer(Transformer):
         days_until = days_until or 7  # If today is the target day, go to the next week
         
         dt = self.config.now.date() + timedelta(days=days_until)
-        return dt
+        return tfhDate.from_object(dt)
     
     def datename(self, children):
         datename = children[0].value.lower()
@@ -431,11 +456,11 @@ class tfhTransformer(Transformer):
     def timename(self, children):
         timename = children[0].value.lower()
         if timename == 'noon':
-            return tfhTime(hour=12, minute=0, meridiem="pm")
+            return tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'midday':
-            return tfhTime(hour=12, minute=0, meridiem="pm")
+            return tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'midnight':
-            return tfhTime(hour=0, minute=0, meridiem="am")
+            return tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM)
         
     def dayoryear(self, children):
         if children[0].value.isdigit():
@@ -452,7 +477,7 @@ class tfhTransformer(Transformer):
           3) monthname day, optional year
         We iterate through tokens, collect info, then build a datetime.
         """
-        if children and isinstance(children[0], date):
+        if children and isinstance(children[0], tfhDate):
             return children[0]
         
         data = {child.data.value: child.children[0].value for child in children if hasattr(child, 'children')}
@@ -473,8 +498,8 @@ class tfhTransformer(Transformer):
         }
 
         if "monthname" in data and "month" not in data:
-            key = data["monthname"].lower().replace(".", "")
-            data["month"] = month_mapping.get(key, self.config.now.month)
+            key = data.pop("monthname").lower().replace(".", "")
+            data["month"] = month_mapping.get(key, self.config.now.month) # TODO: move to infer_now?
             
         if data.get("day", -1) > 31 and "year" not in data:
             data["year"] = data.pop("day")
@@ -504,22 +529,29 @@ class tfhTransformer(Transformer):
         if children and isinstance(children[0], time):
             return children[0]
         
-        # 1) Check for 'noon' as a direct match (often a plain string)
-        for child in children:
-            if isinstance(child, str) and child.lower() == "noon":
-                return tfhTime(hour=12, minute=0, meridiem=None)
+        # TODO: is this still used because of timename?
+        # # 1) Check for 'noon' as a direct match (often a plain string)
+        # for child in children:
+        #     if isinstance(child, str) and child.lower() == "noon":
+        #         return tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
 
         data = {child.data.value: child.children[0].value for child in children}
         
         # Extract the final hour/minute/meridiem
         hour = int(data.get("hour", 0))
         minute = int(data.get("minute", 0))
-        meridiem = data.get("meridiem", '').lower()  # e.g. 'pm' or 'am'
-
+        
+        meridiem = None
+        if data.get("meridiem", '').startswith("a"):
+            meridiem = tfhTime.Meridiem.AM
+        elif data.get("meridiem", '').startswith("p"):
+            meridiem = tfhTime.Meridiem.PM
+        
         # 5) Apply am/pm logic
-        if meridiem and meridiem.startswith("p") and hour != 12:
+        # TODO: move to infer / tfhTime?
+        if meridiem == tfhTime.Meridiem.PM and hour != 12:
             hour += 12
-        elif meridiem and meridiem.startswith("a") and hour == 12:
+        elif meridiem == tfhTime.Meridiem.AM and hour == 12:
             hour = 0
 
         return tfhTime(hour=hour, minute=minute, meridiem=meridiem)
