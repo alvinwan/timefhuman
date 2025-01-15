@@ -80,14 +80,14 @@ list: single ("," single)+
     | range ("or" range)+
 
 single: datetime 
-       | date 
-       | time
        | duration
 
 datetime: date ("at" time)?
         | date time
         | time date
         | time "on" date
+        | date
+        | time
 
 date: month "/" day "/" year
     | month "/" dayoryear
@@ -187,7 +187,11 @@ class tfhTime:
 
     def to_object(self) -> time:
         """Convert to a real time object. Assumes all fields are filled in."""
-        # TODO: handle pm here?
+        # TODO: handle pm in a global infer function?
+        if self.meridiem == tfhTime.Meridiem.PM and self.hour < 12:
+            self.hour += 12
+        elif self.meridiem == tfhTime.Meridiem.AM and self.hour == 12:
+            self.hour = 0
         return time(self.hour, self.minute or 0)
     
     @classmethod
@@ -211,15 +215,13 @@ class tfhDatetime:
 
     def to_object(self) -> datetime:
         """Convert to real datetime, assumes partial fields are filled."""
-        if not self.date:
-            # TODO: fallback to 'today'?
-            raise ValueError("No partial date to form a datetime")
-        d = self.date.to_object()
-        if self.time:
-            t = self.time.to_object()
-            return datetime(d.year, d.month, d.day, t.hour, t.minute)
-        else:
-            return datetime(d.year, d.month, d.day)
+        if self.date and self.time:
+            return datetime.combine(self.date.to_object(), self.time.to_object())
+        elif self.date:
+            return self.date.to_object()
+        elif self.time:
+            return self.time.to_object()
+        raise ValueError("Datetime is missing both date and time")
         
     @classmethod
     def from_object(cls, obj: datetime):
@@ -243,63 +245,80 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     return result.to_object()
 
 
+def infer_from(source, target):
+    if source.date and not target.date:
+        target.date = source.date
+    if source.time and not target.time:
+        target.time = source.time
+    if source.time and source.time.meridiem and target.time and not target.time.meridiem:
+        target.time.meridiem = source.time.meridiem
+    return target
+
+
 def infer(datetimes):
     # TODO: This needs a major refactor to abstract away details and apply to all cases
     # TODO: distribute any to any (dates/meridiems/times etc.)
+    
+    for dt in datetimes[1:]:
+        infer_from(datetimes[0], dt)
+        
+    for dt in datetimes[:-1]:
+        infer_from(datetimes[-1], dt)
 
-    # distribute first or last datetime's date to all datetimes
-    if (isinstance(datetimes[0], datetime) and (target_date := datetimes[0]._date)) or \
-        (isinstance(datetimes[-1], datetime) and (target_date := datetimes[-1]._date)):
-        for i, dt in enumerate(datetimes):
-            if isinstance(dt, time):
-                datetimes[i] = tfhDatetime.combine(target_date, dt)
+    # # distribute first or last datetime's date to all datetimes
+    # if (isinstance(datetimes[0], datetime) and (target_date := datetimes[0]._date)) or \
+    #     (isinstance(datetimes[-1], datetime) and (target_date := datetimes[-1]._date)):
+    #     for i, dt in enumerate(datetimes):
+    #         if isinstance(dt, time):
+    #             datetimes[i] = tfhDatetime.combine(target_date, dt)
 
-    # distribute last time's meridiem to all datetimes
-    if (
-        isinstance(datetimes[-1], datetime) and (meridiem := datetimes[-1]._time.meridiem)
-    ) or (
-        isinstance(datetimes[-1], time) and (meridiem := datetimes[-1].meridiem)
-    ):
-        for i, dt in enumerate(datetimes[:-1]):
-            # TODO: force all datetimes to have _date and _time
-            if meridiem.startswith("a"):
-                break
-            if isinstance(dt, datetime) and dt._time and not dt._time.meridiem:
-                dt._time.meridiem = meridiem
-                datetimes[i] = dt + timedelta(hours=12)
-            elif isinstance(dt, time) and not dt.meridiem:
-                dt.meridiem = meridiem
-                datetimes[i] = tfhTime(dt.hour + 12, dt.minute, meridiem=meridiem)
+    # # distribute last time's meridiem to all datetimes
+    # if (
+    #     isinstance(datetimes[-1], datetime) and (meridiem := datetimes[-1]._time.meridiem)
+    # ) or (
+    #     isinstance(datetimes[-1], time) and (meridiem := datetimes[-1].meridiem)
+    # ):
+    #     for i, dt in enumerate(datetimes[:-1]):
+    #         # TODO: force all datetimes to have _date and _time
+    #         if meridiem.startswith("a"):
+    #             break
+    #         if isinstance(dt, datetime) and dt._time and not dt._time.meridiem:
+    #             dt._time.meridiem = meridiem
+    #             datetimes[i] = dt + timedelta(hours=12)
+    #         elif isinstance(dt, time) and not dt.meridiem:
+    #             dt.meridiem = meridiem
+    #             datetimes[i] = tfhTime(dt.hour + 12, dt.minute, meridiem=meridiem)
 
-    # distribute last time across previous dates
-    if isinstance(datetimes[-1], (time, datetime)):
-        for i, dt in enumerate(datetimes[:-1]):
-            # NOTE: subclass date so can we match date-only's
-            if isinstance(dt, date) and not isinstance(dt, datetime):
-                datetimes[i] = tfhDatetime.combine(dt, datetimes[-1] if isinstance(datetimes[-1], time) else datetimes[-1]._time)
+    # # distribute last time across previous dates
+    # if isinstance(datetimes[-1], (time, datetime)):
+    #     for i, dt in enumerate(datetimes[:-1]):
+    #         # NOTE: subclass date so can we match date-only's
+    #         if isinstance(dt, date) and not isinstance(dt, datetime):
+    #             datetimes[i] = tfhDatetime.combine(dt, datetimes[-1] if isinstance(datetimes[-1], time) else datetimes[-1]._time)
 
-    # distribute last time range's meridiem to all previous datetime ranges
-    if isinstance(datetimes[-1], tuple) and isinstance(datetimes[-1][0], time) and datetimes[-1][0].meridiem and datetimes[-1][0].meridiem.startswith("p"):
-        for i, dt in enumerate(datetimes[:-1]):
-            if isinstance(dt, tuple) and isinstance(dt[0], (time, datetime)):
-                _dts = []
-                for _dt in dt:
-                    if isinstance(_dt, time):
-                        _dt = tfhTime(_dt.hour + 12, _dt.minute, meridiem=datetimes[-1][0].meridiem)
-                    elif isinstance(_dt, datetime) and _dt._time and not _dt._time.meridiem:
-                        _dt._time.meridiem = datetimes[-1][0].meridiem
-                        _dt = _dt + timedelta(hours=12)
-                    _dts.append(_dt)
-                datetimes[i] = tuple(_dts)
+    # # distribute last time range's meridiem to all previous datetime ranges
+    # if isinstance(datetimes[-1], tuple) and isinstance(datetimes[-1][0], time) and datetimes[-1][0].meridiem and datetimes[-1][0].meridiem.startswith("p"):
+    #     for i, dt in enumerate(datetimes[:-1]):
+    #         if isinstance(dt, tuple) and isinstance(dt[0], (time, datetime)):
+    #             _dts = []
+    #             for _dt in dt:
+    #                 if isinstance(_dt, time):
+    #                     _dt = tfhTime(_dt.hour + 12, _dt.minute, meridiem=datetimes[-1][0].meridiem)
+    #                 elif isinstance(_dt, datetime) and _dt._time and not _dt._time.meridiem:
+    #                     _dt._time.meridiem = datetimes[-1][0].meridiem
+    #                     _dt = _dt + timedelta(hours=12)
+    #                 _dts.append(_dt)
+    #             datetimes[i] = tuple(_dts)
 
-    # distribute first datetime range's date across all following time ranges
-    if isinstance(datetimes[0], tuple) and isinstance(datetimes[0][0], datetime):
-        for i, dt in enumerate(datetimes[1:], start=1):
-            if isinstance(dt, time) or isinstance(dt, tuple) and isinstance(dt[0], time): # if a time range
-                datetimes[i] = tuple(
-                    tfhDatetime.combine(datetimes[0][0], dt)
-                    for dt in datetimes[i]
-                )
+    # # distribute first datetime range's date across all following time ranges
+    # if isinstance(datetimes[0], tuple) and isinstance(datetimes[0][0], datetime):
+    #     for i, dt in enumerate(datetimes[1:], start=1):
+    #         if isinstance(dt, time) or isinstance(dt, tuple) and isinstance(dt[0], time): # if a time range
+    #             datetimes[i] = tuple(
+    #                 tfhDatetime.combine(datetimes[0][0], dt)
+    #                 for dt in datetimes[i]
+    #             )
+    
     return datetimes
 
 
@@ -418,14 +437,8 @@ class tfhTransformer(Transformer):
         """
         date_part = next((c for c in children if isinstance(c, tfhDate)), None)
         time_part = next((c for c in children if isinstance(c, tfhTime)), None)
+        return tfhDatetime(date=date_part, time=time_part)
 
-        if date_part and time_part:
-            return tfhDatetime(date=date_part, time=time_part)
-        elif date_part:
-            return date_part
-        elif time_part:
-            return time_part
-        raise NotImplementedError("No datetime found")
     
     def weekday(self, children):
         weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
