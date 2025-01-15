@@ -137,7 +137,7 @@ class tfhResult:
     time: Optional['tfhTime'] = None
     meridiem: Optional['tfhTime.Meridiem'] = None
     
-    def to_object(self, now: datetime = datetime.now()) -> Union[datetime, 'date', 'time', timedelta]:
+    def to_object(self, config: tfhConfig = tfhConfig()) -> Union[datetime, 'date', 'time', timedelta]:
         """Convert to real datetime, date, or time. Assumes partial fields are filled."""
         raise NotImplementedError("Subclass must implement to_object()")
     
@@ -212,16 +212,21 @@ class tfhCollection(tfhResult):
 
 
 class tfhRange(tfhCollection):
-    def to_object(self, now: datetime = datetime.now()):
-        return tuple([item.to_object(now) for item in self.items])
+    def to_object(self, config: tfhConfig = tfhConfig()):
+        if config.infer_datetimes:
+            start, end = self.items[0].to_object(config), self.items[1].to_object(config)
+            if start > end:
+                end += timedelta(days=1)
+            return (start, end)
+        return tuple([item.to_object(config) for item in self.items])
 
     def __repr__(self):
         return f"tfhRange({self.start}, {self.end})"
 
 
 class tfhList(tfhCollection):
-    def to_object(self, now: datetime = datetime.now()):
-        return list([item.to_object(now) for item in self.items])
+    def to_object(self, config: tfhConfig = tfhConfig()):
+        return list([item.to_object(config) for item in self.items])
 
     def __repr__(self):
         return f"tfhList({self.items})"
@@ -232,7 +237,7 @@ class tfhTimedelta(tfhResult):
         self.days = days
         self.seconds = seconds
 
-    def to_object(self, now: datetime = datetime.now()):
+    def to_object(self, config: tfhConfig = tfhConfig()):
         return timedelta(days=self.days, seconds=self.seconds)
     
     @classmethod
@@ -254,10 +259,10 @@ class tfhDate:
         self.month = month
         self.day = day
 
-    def to_object(self, now: datetime = datetime.now()) -> date:
+    def to_object(self, config: tfhConfig = tfhConfig()) -> date:
         """Convert to a real date. Assumes all fields are filled in."""
         # NOTE: This must be here, because we need values for each field
-        return date(self.year or now.year, self.month or now.month, self.day or 1)
+        return date(self.year or config.now.year, self.month or config.now.month, self.day or 1)
     
     @classmethod
     def from_object(cls, obj: date):
@@ -281,9 +286,8 @@ class tfhTime:
         self.minute = minute
         self.meridiem = meridiem
 
-    def to_object(self, now: datetime = datetime.now()) -> time:
+    def to_object(self, config: tfhConfig = tfhConfig()) -> time:
         """Convert to a real time object. Assumes all fields are filled in."""
-        # TODO: handle pm in a global infer function?
         if self.meridiem == tfhTime.Meridiem.PM and self.hour < 12:
             self.hour += 12
         elif self.meridiem == tfhTime.Meridiem.AM and self.hour == 12:
@@ -337,14 +341,18 @@ class tfhDatetime(tfhResult):
         self.date = date
         self.time = time
 
-    def to_object(self, now: datetime = datetime.now()) -> Union[datetime, date, time]:
+    def to_object(self, config: tfhConfig = tfhConfig()) -> Union[datetime, date, time]:
         """Convert to real datetime, assumes partial fields are filled."""
         if self.date and self.time:
-            return datetime.combine(self.date.to_object(now), self.time.to_object(now))
+            return datetime.combine(self.date.to_object(config), self.time.to_object(config))
         elif self.date:
-            return self.date.to_object(now)
+            if config.infer_datetimes:
+                return datetime.combine(self.date.to_object(config), time(0, 0))
+            return self.date.to_object(config)
         elif self.time:
-            return self.time.to_object(now)
+            if config.infer_datetimes:
+                return datetime.combine(config.now.date(), self.time.to_object(config))
+            return self.time.to_object(config)
         raise ValueError("Datetime is missing both date and time")
         
     @classmethod
@@ -365,12 +373,7 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     transformer = tfhTransformer(config=config)
     results = transformer.transform(tree)
     
-    results = [result.to_object(config.now) for result in results]
-    if config.infer_datetimes:
-        # TODO: move this logic into single after we correctly abstract away details
-        # in the main `infer` function
-        results = infer_datetimes(results, config.now)
-
+    results = [result.to_object(config) for result in results]
     if len(results) == 1:
         return results[0]
     return results
@@ -401,26 +404,6 @@ def infer(datetimes):
         infer_from(datetimes[-1], dt)
 
     return datetimes
-
-
-def infer_datetimes(datetimes, now):
-    # TODO: move this logic to classes?
-    result = []
-    for dt in datetimes:
-        if isinstance(dt, (date, time, datetime)):
-            if isinstance(dt, date) and not isinstance(dt, datetime):
-                result.append(datetime.combine(dt, time(0, 0)))
-            elif isinstance(dt, time):
-                result.append(datetime.combine(now.date(), dt))
-            else:
-                result.append(dt)
-        elif isinstance(dt, (tuple, list)):
-            result.append(infer_datetimes(dt, now))
-        else:
-            result.append(dt)
-    if isinstance(datetimes, tuple):
-        return tuple(result)
-    return result
 
 
 class tfhTransformer(Transformer):
