@@ -413,12 +413,9 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     
     if raw:
         return tree
-    print(tree.pretty())
 
     transformer = tfhTransformer(config=config)
     results = transformer.transform(tree)
-    
-    print(results)
     
     results = [result.to_object(config) for result in results]
     if len(results) == 1:
@@ -427,9 +424,9 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
 
 
 def infer_from(source: tfhResult, target: tfhResult):
-    if isinstance(source, tfhAmbiguous):
+    if isinstance(source, tfhAmbiguous) and not isinstance(target, tfhAmbiguous):
         return target
-    if isinstance(target, tfhAmbiguous):
+    if isinstance(target, tfhAmbiguous) and not isinstance(source, tfhAmbiguous):
         if source.time:
             target = tfhDatetime(time=tfhTime(hour=target.value, meridiem=source.meridiem))
         elif source.year:
@@ -439,7 +436,11 @@ def infer_from(source: tfhResult, target: tfhResult):
         elif source.month:
             target = tfhDatetime(date=tfhDate(month=target.value))
         else:
-            raise NotImplementedError("Cannot infer type of ambiguous integer")
+            raise NotImplementedError(f"Not enough context to infer what {target} is")
+    if isinstance(source, tfhAmbiguous) and isinstance(target, tfhAmbiguous):
+        # TODO: list of ranges could possibly be inferred. how would that work? we currently only infer
+        # from a 'sibling' value, but this is a 'cousin' value.
+        raise NotImplementedError(f"Not enough context to infer what to do with two ambiguous values {source} and {target}")
     if source.date and not target.date:
         target.date = source.date
     if source.time and not target.time:
