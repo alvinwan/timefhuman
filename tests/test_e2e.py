@@ -28,6 +28,7 @@ def now():
     ('Tomorrow 3p', datetime.datetime(2018, 8, 5, 15, 0)), # gh#24
     ('3p tomorrow', datetime.datetime(2018, 8, 5, 15, 0)),
     ('July 3rd', datetime.datetime(2018, 7, 3, 0, 0)),
+    ('Monday noon', datetime.datetime(2018, 8, 6, 12, 0)),
     
     # date-only ranges
     ('7/17-7/18', (datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))),
@@ -72,7 +73,7 @@ def test_default(now, test_input, expected):
 
 
 @pytest.mark.parametrize("test_input, expected", [
-    # # time only
+    # time only
     ('5p', datetime.time(hour=17, minute=0)),
     
     # date only

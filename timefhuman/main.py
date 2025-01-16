@@ -44,7 +44,7 @@ grammar = """
 MONTHNAME: /(?i)(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)/
 
 // For weekdays, also as a single regex token, case-insensitive
-WEEKDAY: /(?i)(mon|tue|wed|thu|fri|sat|sun)/
+WEEKDAY: /(?i)(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)/
 
 // Meridiem token (am/pm, with optional dots)
 MERIDIEM: /(?i)([ap](\.?m\.?)?)/
