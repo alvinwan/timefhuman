@@ -38,7 +38,8 @@ datetime.timedelta(seconds=1800)
 >>> timefhuman('7/17 4 or 5 PM')  # infer "PM" for "4" and infer "7/17" for "5 PM"
 [datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)]
 >>> timefhuman('7/17, 7/18, 7/19 at 9')  # infer "9a" for "7/17", "7/18"
-[datetime.datetime(2018, 7, 17, 9, 0), datetime.datetime(2018, 7, 18, 9, 0), datetime.datetime(2018, 7, 19, 9, 0)]
+[datetime.datetime(2018, 7, 17, 9, 0), datetime.datetime(2018, 7, 18, 9, 0),
+ datetime.datetime(2018, 7, 19, 9, 0)]
 ```
 
 You can also pass in irrelevant text, and `timefhuman` will return all datetime-like objects in the text. You could use this to extract datetimes from an email for example.
@@ -85,7 +86,6 @@ datetime.date(2018, 12, 18)
 Here is the full set of supported configuration options:
 
 ```python
-@dataclass
 class tfhConfig:
     direction: Direction = Direction.next  # next/previous/none
     infer_datetimes: bool = True  # infer missing information using current datetime
