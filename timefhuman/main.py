@@ -80,7 +80,7 @@ list: single ((","|"or")+ single)+
 
 single: datetime 
        | duration
-       | unknown
+       | ambiguous
 
 // Only add houronly to specific formats that immediately
 // indicate this is an hour-only time.
@@ -103,7 +103,7 @@ date: month "/" day "/" year
     | monthname dayoryear
 
 // intentionally not allowing int-only time, so that single-integers can be
-// classified as an unknown token (in case it's a month, day, year, etc.)
+// classified as an ambiguous token (in case it's a month, day, year, etc.)
 // However, that means to support single-integer (e.g., hour) times, we need
 // to manually add them to the `datetime` rule above.
 time: hour ":" minute meridiem?
@@ -130,7 +130,7 @@ minute: INT
 meridiem: MERIDIEM
 houronly: INT
 
-unknown: INT
+ambiguous: INT
 """
 
 
@@ -481,7 +481,7 @@ class tfhTransformer(Transformer):
 
     def single(self, children):
         """A single object can be a datetime, a date, or a time."""
-        if len(children) == 1 and hasattr(children[0], 'data') and children[0].data.value == 'unknown':
+        if len(children) == 1 and hasattr(children[0], 'data') and children[0].data.value == 'ambiguous':
             return tfhAmbiguous(int(children[0].children[0].value))
         return children[0]
 
