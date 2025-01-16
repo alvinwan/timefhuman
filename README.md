@@ -9,7 +9,7 @@ Convert human-readable, date-like strings written in natural language to Python 
 
 ----
 
-# Getting Started
+## Getting Started
 
 To start, describe days of the week or times of day in the vernacular.
 
@@ -63,7 +63,7 @@ You can also pass in irrelevant text, and `timefhuman` will return all datetime-
 
 See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
-# Installation
+## Installation
 
 Install with pip using
 
@@ -73,7 +73,7 @@ pip install timefhuman
 
 Optionally, clone the repository and run `pip install -e .`.
 
-# Advanced Usage
+## Advanced Usage
 
 Use the `tfhConfig` class to configure `timefhuman`. For example, you can pass a `now` datetime to use different default values.
 
@@ -105,4 +105,14 @@ class tfhConfig:
     direction: Direction = Direction.next  # next/previous/none
     infer_datetimes: bool = True  # infer missing information using current datetime
     now: datetime = datetime.now()  # current datetime, only used if infer_datetimes is True
+```
+
+## Development
+
+To run tests and simultaneously generate a coverage report, use the following commands:
+
+```shell
+$ py.test --cov
+$ coverage html
+$ open htmlcov/index.html
 ```
