@@ -1,5 +1,5 @@
 [run]
-include = */timefhuman/*
+include = timefhuman/*
 omit = tests/*
 
 [report]
