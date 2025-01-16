@@ -17,15 +17,15 @@ datetime.datetime(2018, 8, 6, 12, 0)
 Use any human-readable format to describe a datetime, datetime range, list of datetimes, or a duration. You can also use any combination of the above, such as a list of ranges.
 
 ```shell
->>> timefhuman('3p-4p')
+>>> timefhuman('3p-4p')  # time range
 (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
->>> timefhuman('7/17 4PM to 7/17 5PM')
+>>> timefhuman('7/17 4PM to 7/17 5PM')  # datetime range
 (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0))
->>> timefhuman('Monday 3 pm or Tu noon')
+>>> timefhuman('Monday 3 pm or Tu noon')  # list of datetimes
 [datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
->>> timefhuman('30 minutes')
+>>> timefhuman('30 minutes')  # duration
 datetime.timedelta(seconds=1800)
->>> timefhuman('7/17 4-5 or 5-6 PM')  # list of ranges!
+>>> timefhuman('7/17 4-5 or 5-6 PM')  # list of datetime ranges
 [(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
  (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))]
 ```
