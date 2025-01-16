@@ -108,6 +108,7 @@ def test_default(now, test_input, expected):
     # TODO: support natural language times like "3 o'clock" or "quarter to 3"
     
     # TODO ('noon next week') <- should be a list of options
+    # TODO: support recurrences, like "5pm on thursdays" (see gh#33)
 ])
 def test_no_inference(now, test_input, expected):
     """Return exactly the date or time, without inferring the other."""
