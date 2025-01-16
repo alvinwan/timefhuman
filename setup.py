@@ -40,7 +40,8 @@ setup(
     tests_require=tests_require,
     install_requires=install_requires,
     download_url='https://github.com/alvinwan/timefhuman/archive/%s.zip' % VERSION,
-    extras_require={"test":tests_require},  
+    extras_require={"test":tests_require},
+    include_package_data=True,
     classifiers=[
         "Topic :: Utilities",
         "Intended Audience :: Developers",
