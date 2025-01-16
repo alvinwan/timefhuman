@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/alvinwan/timefhuman/badge.svg?branch=master)](https://coveralls.io/github/alvinwan/timefhuman?branch=master)
 [![Build Status](https://travis-ci.org/alvinwan/timefhuman.svg?branch=master)](https://travis-ci.org/alvinwan/timefhuman)
 
-Convert human-readable, date-like strings written in natural language to Python objects. Describe specific datetimes, ranges of datetimes, and lists of datetimes. [Supports Python3+](https://github.com/alvinwan/timefhuman/issues/3)
+Convert human-readable, date-like strings written in natural language to Python objects. Find datetimes, ranges of datetimes, lists of datetimes, and durations in text. [Supports Python3+](https://github.com/alvinwan/timefhuman/issues/3)
 
 To start, describe days of the week or times of day in the vernacular.
 
@@ -41,12 +41,14 @@ datetime.timedelta(seconds=1800)
 [datetime.datetime(2018, 7, 17, 9, 0), datetime.datetime(2018, 7, 18, 9, 0), datetime.datetime(2018, 7, 19, 9, 0)]
 ```
 
-You can even pass in a massive piece of text and `timefhuman` will return just the datetimes.
+You can also pass in irrelevant text, and `timefhuman` will return all datetime-like objects in the text. You could use this to extract datetimes from an email for example.
 
 ```shell
 >>> timefhuman("How does 5p mon sound? Or maybe 4p tu?")
 [datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]
 ```
+
+See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
 # Installation
 
@@ -56,7 +58,7 @@ Install with pip using
 pip install timefhuman
 ```
 
-Optionally, clone the repository and run `python setup.py install`.
+Optionally, clone the repository and run `pip install -e .`.
 
 # Advanced Usage
 
@@ -80,6 +82,16 @@ datetime.time(15, 0)
 datetime.date(2018, 12, 18)
 ```
 
+Here is the full set of supported configuration options:
+
+```python
+@dataclass
+class tfhConfig:
+    direction: Direction = Direction.next  # next/previous/none
+    infer_datetimes: bool = True  # infer missing information using current datetime
+    now: datetime = datetime.now()  # current datetime, only used if infer_datetimes is True
+```
+
 # Why
 
 [`dateparser`](https://github.com/scrapinghub/dateparser) is the current king of human-readable-date parsing--it supports most common structured dates by trying each one sequentially ([see code](https://github.com/scrapinghub/dateparser/blob/a01a4d2071a8f1d4b368543e5e09cde5eb880799/dateparser/date.py#L220)). However, this isn't optimal for understanding natural language:
@@ -96,7 +108,7 @@ datetime.datetime(2018, 7, 7, 12, 0)
 datetime.datetime(2018, 7, 3, 16, 0)
 ```
 
-To remedy this, we can replace "noon" with "12 p.m.", "next Monday" with "7/17/18", "Tu" with "Tuesday" etc. and pass the cleaned string to `dateparser`. However, consider the number of ways we can say "next Monday at 12 p.m.". Ignoring synonyms, we have a number of different grammars to express this:
+To remedy this, we can replace "noon" with "12 p.m.", "Monday" with "7/17/18", "Tu" with "Tuesday" etc. and pass the cleaned string to `dateparser`. However, consider the number of ways we can say "Monday at 12 p.m.". Ignoring synonyms, we have a number of different grammars to express this:
 
 - 12 p.m. on Monday
 - first Monday of August 12 p.m.
