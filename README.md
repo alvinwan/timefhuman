@@ -10,6 +10,7 @@ To start, describe days of the week or times of day in the vernacular.
 
 ```shell
 >>> from timefhuman import timefhuman
+
 >>> timefhuman('Monday noon')
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
@@ -19,12 +20,16 @@ Use any human-readable format to describe a datetime, datetime range, list of da
 ```shell
 >>> timefhuman('3p-4p')  # time range
 (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
+
 >>> timefhuman('7/17 4PM to 7/17 5PM')  # datetime range
 (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0))
+
 >>> timefhuman('Monday 3 pm or Tu noon')  # list of datetimes
 [datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
+
 >>> timefhuman('30 minutes')  # duration
 datetime.timedelta(seconds=1800)
+
 >>> timefhuman('7/17 4-5 or 5-6 PM')  # list of datetime ranges
 [(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
  (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))]
@@ -35,8 +40,10 @@ datetime.timedelta(seconds=1800)
 ```shell
 >>> timefhuman('3-4p')  # infer "PM" for "3"
 (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
+
 >>> timefhuman('7/17 4 or 5 PM')  # infer "PM" for "4" and infer "7/17" for "5 PM"
 [datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)]
+
 >>> timefhuman('7/17, 7/18, 7/19 at 9')  # infer "9a" for "7/17", "7/18"
 [datetime.datetime(2018, 7, 17, 9, 0), datetime.datetime(2018, 7, 18, 9, 0),
  datetime.datetime(2018, 7, 19, 9, 0)]
@@ -69,6 +76,7 @@ Use the `tfhConfig` class to configure `timefhuman`. For example, you can pass a
 >>> from timefhuman import timefhuman, tfhConfig
 >>> import datetime
 >>> config = tfhConfig(now=datetime.datetime(2018, 8, 4, 0, 0))
+
 >>> timefhuman('upcoming Monday noon', config=config)
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
@@ -77,8 +85,10 @@ Alternatively, you can completely disable date inference by setting `infer_datet
 
 ```shell
 >>> config = tfhConfig(infer_datetimes=False)
+
 >>> timefhuman('3 PM', config=config)
 datetime.time(15, 0)
+
 >>> timefhuman('12/18/18', config=config)
 datetime.date(2018, 12, 18)
 ```
@@ -91,33 +101,3 @@ class tfhConfig:
     infer_datetimes: bool = True  # infer missing information using current datetime
     now: datetime = datetime.now()  # current datetime, only used if infer_datetimes is True
 ```
-
-# Why
-
-[`dateparser`](https://github.com/scrapinghub/dateparser) is the current king of human-readable-date parsing--it supports most common structured dates by trying each one sequentially ([see code](https://github.com/scrapinghub/dateparser/blob/a01a4d2071a8f1d4b368543e5e09cde5eb880799/dateparser/date.py#L220)). However, this isn't optimal for understanding natural language:
-
-```shell
->>> import dateparser
->>> dateparser.parse("7/7/18 3 p.m.")  # yay!
-datetime.datetime(2018, 7, 7, 15, 0)
->>> dateparser.parse("7/7/18 at 3")  # :(
->>> dateparser.parse("7/17 12 PM")  # yay!
-datetime.datetime(2018, 7, 7, 12, 0)
->>> dateparser.parse("7/17/18 noon")  # :(
->>> dateparser.parse("7/18 3-4 p.m.")  # :((((( Parsed July 18 3-4 p.m. as July 3 4 p.m.
-datetime.datetime(2018, 7, 3, 16, 0)
-```
-
-To remedy this, we can replace "noon" with "12 p.m.", "Monday" with "7/17/18", "Tu" with "Tuesday" etc. and pass the cleaned string to `dateparser`. However, consider the number of ways we can say "Monday at 12 p.m.". Ignoring synonyms, we have a number of different grammars to express this:
-
-- 12 p.m. on Monday
-- first Monday of August 12 p.m.
-- next week Monday noon
-
-This issue compounds when you consider listing noontimes for several different days.
-
-- first half of next week at noon
-- 12 p.m. on Monday Tuesday or Wednesday
-- early next week midday
-
-The permutations--even the possible *combinations*--are endless. Instead of enumerating each permutation, `timefhuman` extracts tokens: "anytime" modifies the type from 'date' to 'range', "next week" shifts the range by 7 days, "p.m." means the string right before is a time or a time range etc. Each set of tokens is then combined to produce datetimes, datetime ranges, or datetime lists. This then allows `timefhuman` to handle any permutation of these modifiers. Said another way: `timefhuman` aims to parse *unstructured* dates, written in natural language.
