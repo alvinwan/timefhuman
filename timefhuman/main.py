@@ -409,8 +409,10 @@ class tfhAmbiguous:
         return f"tfhAmbiguous({self.value})"
 
 
+parser = Lark(grammar, start="start")
+
+
 def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
-    parser = Lark(grammar, start="start")
     tree = parser.parse(string)
     
     if raw:
