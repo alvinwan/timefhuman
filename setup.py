@@ -24,7 +24,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-VERSION = '0.0.5'
+VERSION = '0.1.0'
 
 setup(
     name="timefhuman",
@@ -32,7 +32,9 @@ setup(
     author="Alvin Wan",
     author_email='hi@alvinwan.com',
     description=("Convert natural language date-like string to Python objects"),
-    license="BSD",
+    long_description=open('README.md', 'r', encoding='utf-8').read(),
+    long_description_content_type='text/markdown',
+    license="Apache 2.0",
     url="https://github.com/alvinwan/timefhuman",
     packages=['timefhuman'],
     tests_require=tests_require,
