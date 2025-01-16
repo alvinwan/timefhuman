@@ -2,15 +2,6 @@
 timefhuman
 ===
 Convert human-readable date-like string to Python datetime object.
-
-1. Tokenize string
-2. Parse possible synctatic categories: "day", "time", "time range" etc.
-3. Build parse tree.
-4. Use grammar to resolve lexical ambiguities.
-5. Impute with default values. Output extracted datetime and/or ranges.
-
-@author: Alvin Wan
-@site: alvinwan.com
 """
 
 
@@ -560,7 +551,6 @@ class tfhTransformer(Transformer):
         # TODO: guard against random other objects
         data = {child.data.value: child.children[0].value for child in children}
 
-        # Extract the final hour/minute/meridiem
         hour = int(data.get("hour", 0))
         minute = int(data.get("minute", 0))
         
