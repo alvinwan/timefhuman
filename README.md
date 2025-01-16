@@ -4,11 +4,17 @@
 [![Coverage Status](https://coveralls.io/repos/github/alvinwan/timefhuman/badge.svg?branch=master)](https://coveralls.io/github/alvinwan/timefhuman?branch=master)
 [![Build Status](https://travis-ci.org/alvinwan/timefhuman.svg?branch=master)](https://travis-ci.org/alvinwan/timefhuman)
 
-Convert human-readable, date-like strings written in natural language to Python objects. Find datetimes, ranges of datetimes, lists of datetimes, and durations in text. [Supports Python3+](https://github.com/alvinwan/timefhuman/issues/3)
+Convert human-readable, date-like strings written in natural language to Python objects. Find datetimes, ranges of datetimes, lists of datetimes, and durations in text. Supports Python3+[^1]
+
+[^1]: https://github.com/alvinwan/timefhuman/issues/3
+
+----
+
+# Getting Started
 
 To start, describe days of the week or times of day in the vernacular.
 
-```shell
+```python
 >>> from timefhuman import timefhuman
 
 >>> timefhuman('Monday noon')
@@ -17,7 +23,7 @@ datetime.datetime(2018, 8, 6, 12, 0)
 
 Use any human-readable format to describe a datetime, datetime range, list of datetimes, or a duration. You can also use any combination of the above, such as a list of ranges.
 
-```shell
+```python
 >>> timefhuman('3p-4p')  # time range
 (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
 
@@ -37,7 +43,7 @@ datetime.timedelta(seconds=1800)
 
 `timefhuman` will also infer any missing information, using context from other datetimes.
 
-```shell
+```python
 >>> timefhuman('3-4p')  # infer "PM" for "3"
 (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
 
@@ -51,7 +57,7 @@ datetime.timedelta(seconds=1800)
 
 You can also pass in irrelevant text, and `timefhuman` will return all datetime-like objects in the text. You could use this to extract datetimes from an email for example.
 
-```shell
+```python
 >>> timefhuman("How does 5p mon sound? Or maybe 4p tu?")
 [datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]
 ```
@@ -62,7 +68,7 @@ See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
 Install with pip using
 
-```shell
+```python
 pip install timefhuman
 ```
 
@@ -72,7 +78,7 @@ Optionally, clone the repository and run `pip install -e .`.
 
 Use the `tfhConfig` class to configure `timefhuman`. For example, you can pass a `now` datetime to use different default values.
 
-```shell
+```python
 >>> from timefhuman import timefhuman, tfhConfig
 >>> import datetime
 >>> config = tfhConfig(now=datetime.datetime(2018, 8, 4, 0, 0))
@@ -83,7 +89,7 @@ datetime.datetime(2018, 8, 6, 12, 0)
 
 Alternatively, you can completely disable date inference by setting `infer_datetimes=False`. Instead of always returning a datetime, `timefhuman` will be able to return date-like or time-like objects for only explicitly-written information.
 
-```shell
+```python
 >>> config = tfhConfig(infer_datetimes=False)
 
 >>> timefhuman('3 PM', config=config)
