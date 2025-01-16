@@ -21,8 +21,10 @@ from datetime import datetime, date, time, timedelta
 from typing import Optional, Union
 from enum import Enum
 from dataclasses import dataclass
+from pathlib import Path
 
 
+DIRECTORY = Path(__file__).parent
 Direction = Enum('Direction', ['previous', 'next'])
 
 @dataclass
@@ -30,111 +32,6 @@ class tfhConfig:
     direction: Direction = Direction.next
     infer_datetimes: bool = True
     now: datetime = datetime.now()
-
-grammar = """
-%import common.WS
-%import common.INT
-%ignore WS
-
-// ----------------------
-// TERMINAL DEFINITIONS
-// ----------------------
-
-// Month names as a regex token, case-insensitive
-MONTHNAME: /(?i)(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)/
-
-// For weekdays, also as a single regex token, case-insensitive
-WEEKDAY: /(?i)(monday|mon|tuesday|tues|tue|tu|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)/
-
-// Meridiem token (am/pm, with optional dots)
-MERIDIEM: /(?i)([ap](\.?m\.?)?)/
-
-// Datename token (today, tomorrow, yesterday)
-DATENAME: /(?i)(today|tomorrow|tmw|yesterday)/
-
-// Timename token (noon)
-TIMENAME: /(?i)(noon|midday|midnight)/
-
-// Duration unit (minutes, hours, days, etc.)
-DURATION_UNIT: /(?i)(minutes|mins|min|m|hours|hour|hrs|hr|h|days|day|d|weeks|week|wks|wk|months|month|mos|years|years)/
-
-// Duration number (digits like "1", or words like "an", "a", "one", "two", etc.)
-DURATION_NUMBER: /(?i)(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|[0-9]+(\.[0-9]+)?)/
-
-// Day suffix (th, rd, st, nd)
-DAY_SUFFIX: /(?i)(th|rd|st|nd)/
-
-// ----------------------
-// PARSER RULES
-// ----------------------
-start: expression
-
-expression: (single
-          | list
-          | range
-          | unknown)+
-
-range: single ("to" | "-") single
-
-list: single ((","|"or")+ single)+ 
-    | range ((","|"or")+ range)+
-
-single: datetime 
-       | duration
-       | ambiguous
-
-// Only add houronly to specific formats that immediately
-// indicate this is an hour-only time.
-datetime: date ("at" (time | houronly))?
-        | date (time | houronly)
-        | (time | houronly) date
-        | (time | houronly) "on" date
-        | date
-        | time
-
-date: month "/" day "/" year
-    | month "/" dayoryear
-    | month "-" day "-" year
-    | month "-" dayoryear
-    | datename
-    | weekday
-    | monthname day DAY_SUFFIX? (",")? year
-    | monthname day DAY_SUFFIX
-    | day DAY_SUFFIX
-    | monthname dayoryear
-
-// intentionally not allowing int-only time, so that single-integers can be
-// classified as an ambiguous token (in case it's a month, day, year, etc.)
-// However, that means to support single-integer (e.g., hour) times, we need
-// to manually add them to the `datetime` rule above.
-time: hour ":" minute meridiem?
-    | hour meridiem
-    | timename
-
-duration: ("in"|"for")? duration_part (("and"|",")? duration_part)* ("ago")?
-duration_part: duration_number duration_unit
-duration_number: DURATION_NUMBER
-duration_unit: DURATION_UNIT
-
-weekday: WEEKDAY
-monthname: MONTHNAME
-datename: DATENAME
-dayoryear: INT
-
-day: INT
-month: INT
-year: INT
-
-timename: TIMENAME
-hour: INT
-minute: INT
-meridiem: MERIDIEM
-houronly: INT
-
-ambiguous: INT
-
-unknown: /\S/
-"""
 
 
 class tfhResult:
@@ -409,7 +306,7 @@ class tfhAmbiguous:
         return f"tfhAmbiguous({self.value})"
 
 
-parser = Lark(grammar, start="start")
+parser = Lark.open(DIRECTORY / 'grammar.lark', start="start")
 
 
 def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
