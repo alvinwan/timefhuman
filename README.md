@@ -2,118 +2,117 @@
 
 [![PyPi Downloads per Month](https://img.shields.io/pypi/dm/timefhuman.svg)](https://pypi.python.org/pypi/timefhuman/)
 [![Coverage Status](https://coveralls.io/repos/github/alvinwan/timefhuman/badge.svg?branch=master)](https://coveralls.io/github/alvinwan/timefhuman?branch=master)
-[![Build Status](https://travis-ci.org/alvinwan/timefhuman.svg?branch=master)](https://travis-ci.org/alvinwan/timefhuman)
 
-Convert human-readable, date-like strings written in natural language to Python objects. Describe specific datetimes or ranges of datetimes. [Supports Python3+](https://github.com/alvinwan/timefhuman/issues/3). You can skip installation and try timefhuman directly, using the [pytwiddle demo &rarr;](https://pytwiddle.com/?id=example:datetime.py)
+Convert human-readable, date-like strings written in natural language to Python objects. Find datetimes, ranges of datetimes, lists of datetimes, and durations in text. Supports Python3+[^1]
+
+[^1]: https://github.com/alvinwan/timefhuman/issues/3
+
+----
+
+## Getting Started
 
 To start, describe days of the week or times of day in the vernacular.
 
-```
+```python
 >>> from timefhuman import timefhuman
->>> timefhuman('upcoming Monday noon')
+
+>>> timefhuman('Monday noon')
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
 
-Use any human-readable format with a time range, choices of times, or choices of time ranges.
+Use any human-readable format to describe a datetime, datetime range, list of datetimes, or a duration. You can also use any combination of the above, such as a list of ranges.
 
-```
->>> timefhuman('7/17 3-4 PM')
+```python
+>>> timefhuman('3p-4p')  # time range
 (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
->>> timefhuman('7/17 3 p.m. - 4 p.m.')
-(datetime.datetime(2018, 7, 17, 15, 30), datetime.datetime(2018, 7, 17, 16, 0))
->>> timefhuman('Monday 3 pm or Tu noon')
+
+>>> timefhuman('7/17 4PM to 7/17 5PM')  # datetime range
+(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0))
+
+>>> timefhuman('Monday 3 pm or Tu noon')  # list of datetimes
 [datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
->>> timefhuman('7/17 4 or 5 PM')
-[datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)]
->>> timefhuman('7/17 4-5 or 5-6 PM')
+
+>>> timefhuman('30 minutes')  # duration
+datetime.timedelta(seconds=1800)
+
+>>> timefhuman('7/17 4-5 or 5-6 PM')  # list of datetime ranges
 [(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
  (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))]
 ```
 
-Parse lists of dates and times with more complex relationships.
+`timefhuman` will also infer any missing information, using context from other datetimes.
 
-```
->>> timefhuman('7/17, 7/18, 7/19 at 2')
-[datetime.datetime(2018, 7, 17, 2, 0), datetime.datetime(2018, 7, 18, 2, 0), datetime.datetime(2018, 7, 19, 2, 0)]
->>> timefhuman('2 PM on 7/17 or 7/19')
-[datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]
-```
+```python
+>>> timefhuman('3-4p')  # infer "PM" for "3"
+(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
 
-Use the vernacular to describe ranges or days.
+>>> timefhuman('7/17 4 or 5 PM')  # infer "PM" for "4" and infer "7/17" for "5 PM"
+[datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)]
 
-```
->>> timefhuman('noon next week')  # coming soon
-
->>> timefhuman('today or tomorrow noon')  # when run on August 4, 2018
-[datetime.datetime(2018, 8, 4, 12, 0), datetime.datetime(2018, 8, 5, 12, 0)]
+>>> timefhuman('7/17, 7/18, 7/19 at 9')  # infer "9a" for "7/17", "7/18"
+[datetime.datetime(2018, 7, 17, 9, 0), datetime.datetime(2018, 7, 18, 9, 0),
+ datetime.datetime(2018, 7, 19, 9, 0)]
 ```
 
-# Installation
+You can also pass in irrelevant text, and `timefhuman` will return all datetime-like objects in the text. You could use this to extract datetimes from an email for example.
+
+```python
+>>> timefhuman("How does 5p mon sound? Or maybe 4p tu?")
+[datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]
+```
+
+See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
+
+## Installation
 
 Install with pip using
 
-```
+```python
 pip install timefhuman
 ```
 
-Optionally, clone the repository and run `python setup.py install`.
+Optionally, clone the repository and run `pip install -e .`.
 
-You can also try timefhuman without a local installation using the [twiddle](https://pytwiddle.com/?id=example:datetime.py).
+## Advanced Usage
 
-# Usage
+Use the `tfhConfig` class to configure `timefhuman`. For example, you can pass a `now` datetime to use different default values.
 
-Use the `now` kwarg to use different default values for the parser.
-
-```
+```python
+>>> from timefhuman import timefhuman, tfhConfig
 >>> import datetime
->>> now = datetime.datetime(2018, 8, 4, 0, 0)
->>> timefhuman('upcoming Monday noon', now=now)
+>>> config = tfhConfig(now=datetime.datetime(2018, 8, 4, 0, 0))
+
+>>> timefhuman('upcoming Monday noon', config=config)
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
 
-Use a variety of different formats, even with days of the week, months, and times with everyday speech. These are structured formats. [`dateparser`](https://github.com/scrapinghub/dateparser) supports structured formats across languages, customs etc.
+Alternatively, you can completely disable date inference by setting `infer_datetimes=False`. Instead of always returning a datetime, `timefhuman` will be able to return date-like or time-like objects for only explicitly-written information.
 
-```
->>> from timefhuman import timefhuman
->>> now = datetime.datetime(year=2018, month=7, day=7)
->>> timefhuman('July 17, 2018 at 3p.m.')
-datetime.datetime(2018, 7, 17, 15, 0)
->>> timefhuman('July 17, 2018 3 p.m.')
-datetime.datetime(2018, 7, 17, 15, 0)
->>> timefhuman('3PM on July 17', now=now)
-datetime.datetime(2018, 7, 17, 15, 0)
->>> timefhuman('July 17 at 3')
-datetime.datetime(2018, 7, 17, 3, 0)
->>> timefhuman('7/17/18 3:00 p.m.')
-datetime.datetime(2018, 7, 17, 15, 0)
+```python
+>>> config = tfhConfig(infer_datetimes=False)
+
+>>> timefhuman('3 PM', config=config)
+datetime.time(15, 0)
+
+>>> timefhuman('12/18/18', config=config)
+datetime.date(2018, 12, 18)
 ```
 
-# Why
+Here is the full set of supported configuration options:
 
-[`dateparser`](https://github.com/scrapinghub/dateparser) is the current king of human-readable-date parsing--it supports most common structured dates by trying each one sequentially ([see code](https://github.com/scrapinghub/dateparser/blob/a01a4d2071a8f1d4b368543e5e09cde5eb880799/dateparser/date.py#L220)). However, this isn't optimal for understanding natural language:
-
-```
->>> import dateparser
->>> dateparser.parse("7/7/18 3 p.m.")  # yay!
-datetime.datetime(2018, 7, 7, 15, 0)
->>> dateparser.parse("7/7/18 at 3")  # :(
->>> dateparser.parse("7/17 12 PM")  # yay!
-datetime.datetime(2018, 7, 7, 12, 0)
->>> dateparser.parse("7/17/18 noon")  # :(
->>> dateparser.parse("7/18 3-4 p.m.")  # :((((( Parsed July 18 3-4 p.m. as July 3 4 p.m.
-datetime.datetime(2018, 7, 3, 16, 0)
+```python
+class tfhConfig:
+    direction: Direction = Direction.next  # next/previous/none
+    infer_datetimes: bool = True  # infer missing information using current datetime
+    now: datetime = datetime.now()  # current datetime, only used if infer_datetimes is True
 ```
 
-To remedy this, we can replace "noon" with "12 p.m.", "next Monday" with "7/17/18", "Tu" with "Tuesday" etc. and pass the cleaned string to `dateparser`. However, consider the number of ways we can say "next Monday at 12 p.m.". Ignoring synonyms, we have a number of different grammars to express this:
+## Development
 
-- 12 p.m. on Monday
-- first Monday of August 12 p.m.
-- next week Monday noon
+To run tests and simultaneously generate a coverage report, use the following commands:
 
-This issue compounds when you consider listing noontimes for several different days.
-
-- first half of next week at noon
-- 12 p.m. on Monday Tuesday or Wednesday
-- early next week midday
-
-The permutations--even the possible *combinations*--are endless. Instead of enumerating each permutation, `timefhuman` extracts tokens: "anytime" modifies the type from 'date' to 'range', "next week" shifts the range by 7 days, "p.m." means the string right before is a time or a time range etc. Each set of tokens is then combined to produce datetimes, datetime ranges, or datetime lists. This then allows `timefhuman` to handle any permutation of these modifiers. Said another way: `timefhuman` aims to parse *unstructured* dates, written in natural language.
+```shell
+$ py.test --cov
+$ coverage html
+$ open htmlcov/index.html
+```

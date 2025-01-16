@@ -2,8 +2,8 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-tests_require = ['pytest==3.7.1', 'pytest-cov==2.5.1', 'coverage==4.5.1', 'coveralls==1.3.0']
-install_requires = []
+tests_require = ['pytest==8.3.4', 'pytest-cov==6.0.0', 'coverage==7.6.10', 'coveralls==4.0.1']
+install_requires = ['lark==1.2.2']
 
 
 class PyTest(TestCommand):
@@ -24,7 +24,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-VERSION = '0.0.5'
+VERSION = '0.1.0'
 
 setup(
     name="timefhuman",
@@ -32,7 +32,9 @@ setup(
     author="Alvin Wan",
     author_email='hi@alvinwan.com',
     description=("Convert natural language date-like string to Python objects"),
-    license="BSD",
+    long_description=open('README.md', 'r', encoding='utf-8').read(),
+    long_description_content_type='text/markdown',
+    license="Apache 2.0",
     url="https://github.com/alvinwan/timefhuman",
     packages=['timefhuman'],
     tests_require=tests_require,
