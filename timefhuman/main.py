@@ -44,7 +44,7 @@ grammar = """
 MONTHNAME: /(?i)(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)/
 
 // For weekdays, also as a single regex token, case-insensitive
-WEEKDAY: /(?i)(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)/
+WEEKDAY: /(?i)(monday|mon|tuesday|tues|tue|tu|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)/
 
 // Meridiem token (am/pm, with optional dots)
 MERIDIEM: /(?i)([ap](\.?m\.?)?)/
@@ -563,8 +563,8 @@ class tfhTransformer(Transformer):
 
     
     def weekday(self, children):
-        weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-        weekday = children[0].value[:3].lower()
+        weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
+        weekday = children[0].value[:2].lower()
         target_weekday = weekdays.index(weekday)
         current_weekday = self.config.now.weekday()
         
