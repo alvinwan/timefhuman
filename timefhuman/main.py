@@ -569,13 +569,6 @@ class tfhTransformer(Transformer):
             meridiem = tfhTime.Meridiem.AM
         elif data.get("meridiem", '').lower().startswith("p"):
             meridiem = tfhTime.Meridiem.PM
-        
-        # 5) Apply am/pm logic
-        # TODO: move to infer / tfhTime?
-        if meridiem == tfhTime.Meridiem.PM and hour != 12:
-            hour += 12
-        elif meridiem == tfhTime.Meridiem.AM and hour == 12:
-            hour = 0
 
         return tfhTime(hour=hour, minute=minute, meridiem=meridiem)
 
