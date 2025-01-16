@@ -69,9 +69,10 @@ DAY_SUFFIX: /(?i)(th|rd|st|nd)/
 // ----------------------
 start: expression
 
-expression: single
+expression: (single
           | list
           | range
+          | unknown)+
 
 range: single ("to" | "-") single
 
@@ -131,6 +132,8 @@ meridiem: MERIDIEM
 houronly: INT
 
 ambiguous: INT
+
+unknown: /\S/
 """
 
 
@@ -416,7 +419,11 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     transformer = tfhTransformer(config=config)
     results = transformer.transform(tree)
     
-    results = [result.to_object(config) for result in results]
+    # TODO: add option to return with the original unknown tokens?
+    # helps the user understand which tokens were not matched
+    # NOTE: intentionally did not filter by hasattr(result, 'to_object') to 
+    # catch any other objects that might be returned
+    results = [result.to_object(config) for result in results if not isinstance(result, str)]
     if len(results) == 1:
         return results[0]
     return results
@@ -471,12 +478,10 @@ class tfhTransformer(Transformer):
 
     def start(self, children):
         """Strip the 'start' rule and return child(ren) directly."""
-        return children
+        return children[0]
 
     def expression(self, children):
         """The top-level expression could be a range, list, or single."""
-        if len(children) == 1:
-            return children[0]
         return children
 
     def single(self, children):
@@ -677,3 +682,6 @@ class tfhTransformer(Transformer):
 
     def houronly(self, children):
         return tfhTime(hour=int(children[0].value))
+    
+    def unknown(self, children):
+        return children[0].value
