@@ -132,7 +132,7 @@ def test_custom_config(now, config, test_input, expected):
 
 @pytest.mark.parametrize("test_input, expected", [
     ('September 30, 2019.', datetime.datetime(2019, 9, 30, 0, 0)), # gh#26
-    ('How does 5p mon sound?', datetime.datetime(2018, 8, 6, 17, 0)),
+    ('How does 5p mon sound? Or maybe 4p tu?', [datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]),
     # TODO: get matched characters
 ])
 def test_with_random_text(now, test_input, expected):

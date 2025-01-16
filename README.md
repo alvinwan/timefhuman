@@ -10,42 +10,42 @@ To start, describe days of the week or times of day in the vernacular.
 
 ```shell
 >>> from timefhuman import timefhuman
->>> timefhuman('upcoming Monday noon')
+>>> timefhuman('Monday noon')
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
 
-Use any human-readable format with a time range, choices of times, or choices of time ranges.
+Use any human-readable format to describe a datetime, datetime range, list of datetimes, or a duration. You can also use any combination of the above, such as a list of ranges.
 
 ```shell
->>> timefhuman('7/17 3-4 PM')
+>>> timefhuman('3p-4p')
 (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
->>> timefhuman('7/17 3 p.m. - 4 p.m.')  # range
-(datetime.datetime(2018, 7, 17, 15, 30), datetime.datetime(2018, 7, 17, 16, 0))
->>> timefhuman('Monday 3 pm or Tu noon')  # list
+>>> timefhuman('7/17 4PM to 7/17 5PM')
+(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0))
+>>> timefhuman('Monday 3 pm or Tu noon')
 [datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
->>> timefhuman('7/17 4 or 5 PM')
-[datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)]
->>> timefhuman('7/17 4-5 or 5-6 PM')  # list of ranges
+>>> timefhuman('30 minutes')
+datetime.timedelta(seconds=1800)
+>>> timefhuman('7/17 4-5 or 5-6 PM')  # list of ranges!
 [(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
  (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))]
 ```
 
-Parse lists of dates and times with more complex relationships.
+`timefhuman` will also infer any missing information, using context from other datetimes.
 
 ```shell
->>> timefhuman('7/17, 7/18, 7/19 at 2')
-[datetime.datetime(2018, 7, 17, 2, 0), datetime.datetime(2018, 7, 18, 2, 0), datetime.datetime(2018, 7, 19, 2, 0)]
->>> timefhuman('2 PM on 7/17 or 7/19')
-[datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]
+>>> timefhuman('3-4p')  # infer "PM" for "3"
+(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
+>>> timefhuman('7/17 4 or 5 PM')  # infer "PM" for "4" and infer "7/17" for "5 PM"
+[datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)]
+>>> timefhuman('7/17, 7/18, 7/19 at 9')  # infer "9a" for "7/17", "7/18"
+[datetime.datetime(2018, 7, 17, 9, 0), datetime.datetime(2018, 7, 18, 9, 0), datetime.datetime(2018, 7, 19, 9, 0)]
 ```
 
-Use the vernacular to describe ranges or days.
+You can even pass in a massive piece of text and `timefhuman` will return just the datetimes.
 
 ```shell
->>> timefhuman('noon next week')  # coming soon
-
->>> timefhuman('today or tomorrow noon')  # when run on August 4, 2018
-[datetime.datetime(2018, 8, 4, 12, 0), datetime.datetime(2018, 8, 5, 12, 0)]
+>>> timefhuman("How does 5p mon sound? Or maybe 4p tu?")
+[datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]
 ```
 
 # Installation
@@ -58,32 +58,26 @@ pip install timefhuman
 
 Optionally, clone the repository and run `python setup.py install`.
 
-# Usage
+# Advanced Usage
 
-Use the `now` kwarg to use different default values for the parser.
+Use the `tfhConfig` class to configure `timefhuman`. For example, you can pass a `now` datetime to use different default values.
 
 ```shell
+>>> from timefhuman import timefhuman, tfhConfig
 >>> import datetime
->>> now = datetime.datetime(2018, 8, 4, 0, 0)
->>> timefhuman('upcoming Monday noon', now=now)
+>>> config = tfhConfig(now=datetime.datetime(2018, 8, 4, 0, 0))
+>>> timefhuman('upcoming Monday noon', config=config)
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
 
-Use a variety of different formats, even with days of the week, months, and times with everyday speech. These are structured formats. [`dateparser`](https://github.com/scrapinghub/dateparser) supports structured formats across languages, customs etc.
+Alternatively, you can completely disable date inference by setting `infer_datetimes=False`. Instead of always returning a datetime, `timefhuman` will be able to return date-like or time-like objects for only explicitly-written information.
 
 ```shell
->>> from timefhuman import timefhuman
->>> now = datetime.datetime(year=2018, month=7, day=7)
->>> timefhuman('July 17, 2018 at 3p.m.')
-datetime.datetime(2018, 7, 17, 15, 0)
->>> timefhuman('July 17, 2018 3 p.m.')
-datetime.datetime(2018, 7, 17, 15, 0)
->>> timefhuman('3PM on July 17', now=now)
-datetime.datetime(2018, 7, 17, 15, 0)
->>> timefhuman('July 17 at 3')
-datetime.datetime(2018, 7, 17, 3, 0)
->>> timefhuman('7/17/18 3:00 p.m.')
-datetime.datetime(2018, 7, 17, 15, 0)
+>>> config = tfhConfig(infer_datetimes=False)
+>>> timefhuman('3 PM', config=config)
+datetime.time(15, 0)
+>>> timefhuman('12/18/18', config=config)
+datetime.date(2018, 12, 18)
 ```
 
 # Why
