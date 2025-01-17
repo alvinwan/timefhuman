@@ -19,7 +19,7 @@ from timefhuman.utils import generate_timezone_mapping
 
 
 DIRECTORY = Path(__file__).parent
-Direction = Enum('Direction', ['previous', 'next'])
+Direction = Enum('Direction', ['previous', 'next', 'nearest'])
 
 @dataclass
 class tfhConfig:
@@ -206,6 +206,29 @@ class tfhDate:
                 f"year={self.year}, month={self.month}, day={self.day})")
 
 
+class tfhWeekday:
+    def __init__(self, day: int):
+        self.day = day
+        
+    def to_object(self, config: tfhConfig = tfhConfig()):
+        current_weekday = config.now.weekday()
+        
+        days_until = (7 - (current_weekday - self.day)) % 7
+        if config.direction == Direction.previous:
+            days_until -= 7
+        elif config.direction == Direction.next:
+            days_until = days_until or 7
+        
+        return config.now.date() + timedelta(days=days_until)
+    
+    @classmethod
+    def from_object(cls, obj: int):
+        return cls(day=obj)
+
+    def __repr__(self):
+        return f"tfhWeekday({self.day})"
+
+
 class tfhTime:
     Meridiem = Enum('Meridiem', ['AM', 'PM'])
     
@@ -374,7 +397,7 @@ def get_parser():
 def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     parser = get_parser()
     tree = parser.parse(string)
-    
+    print(tree.pretty())
     if raw:
         return tree
 
@@ -506,7 +529,6 @@ class tfhTransformer(Transformer):
             'ninety': 90,
         }
         # TODO: write my own multidict?
-        print(children)
         data = {child.data.value: [_child.value for _child in child.children] for child in children}
         duration_number = float(data['duration_number'][0]) if 'duration_number' in data else sum([mapping[value] for value in data.get('duration_numbername', [])])
         duration_unit = data.get('duration_unit', data.get('duration_unit_letter', None))[0]
@@ -534,24 +556,12 @@ class tfhTransformer(Transformer):
         date_part = next((c for c in children if isinstance(c, tfhDate)), None)
         time_part = next((c for c in children if isinstance(c, tfhTime)), None)
         return tfhDatetime(date=date_part, time=time_part)
-
     
     def weekday(self, children):
         weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
         weekday = children[0].value[:2].lower()
         target_weekday = weekdays.index(weekday)
-        current_weekday = self.config.now.weekday()
-        
-        if self.config.direction == Direction.previous:
-            days_until = (target_weekday - current_weekday) % 7 - 7
-        elif self.config.direction == Direction.next:
-            days_until = (7 - (current_weekday - target_weekday)) % 7
-        else:
-            raise ValueError(f"Invalid direction: {self.config.direction}")
-        days_until = days_until or 7  # If today is the target day, go to the next week
-        
-        dt = self.config.now.date() + timedelta(days=days_until)
-        return tfhDate.from_object(dt)
+        return tfhWeekday(target_weekday)
     
     def datename(self, children):
         datename = children[0].value.lower()
@@ -589,7 +599,13 @@ class tfhTransformer(Transformer):
         if children and isinstance(children[0], tfhDate):
             return children[0]
         
+        weekday = next((c for c in children if isinstance(c, tfhWeekday)), None)
         data = {child.data.value: child.children[0].value for child in children if hasattr(child, 'children')}
+        
+        if weekday and not data:
+            # NOTE: arbitrarily decided that if there's a weekday AND a date, we trust the date.
+            # If there is ONLY a weekday, then we trust the weekday.
+            return tfhDate.from_object(weekday.to_object(self.config))
 
         if isinstance(data.get('day'), str) and data.get('day').isdigit():
             data['day'] = int(data['day'])
