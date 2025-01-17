@@ -23,6 +23,7 @@ class tfhConfig:
     direction: Direction = Direction.next
     infer_datetimes: bool = True
     now: datetime = datetime.now()
+    return_unmatched: bool = False
 
 
 class tfhDatelike:
@@ -311,6 +312,21 @@ class tfhAmbiguous:
         return f"tfhAmbiguous({self.value})"
 
 
+class tfhUnknown:
+    def __init__(self, value: str):
+        self.value = value
+        
+    def to_object(self, config: tfhConfig = tfhConfig()):
+        return self.value
+    
+    @classmethod
+    def from_object(cls, obj: str):
+        return cls(obj)
+
+    def __repr__(self):
+        return f"tfhUnknown({self.value})"
+
+
 parser = Lark.open(DIRECTORY / 'grammar.lark', start="start")
 
 
@@ -323,18 +339,18 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     transformer = tfhTransformer(config=config)
     results = transformer.transform(tree)
     
-    # TODO: add option to return with the original unknown tokens?
-    # helps the user understand which tokens were not matched
-    # TODO: better way to filter 
     # NOTE: intentionally did not filter by hasattr(result, 'to_object') to 
     # catch any other objects that might be returned
-    results = list(filter(
-        lambda s: not isinstance(s, str),
-        [result.to_object(config) for result in results if not isinstance(result, str)]
-    ))
+    results = [result.to_object(config) for result in results]
+    
+    if config.return_unmatched:
+        return results
+
+    results = list(filter(lambda s: not isinstance(s, str), results))
     
     if len(results) == 1:
         return results[0]
+
     return results
 
 
@@ -590,4 +606,4 @@ class tfhTransformer(Transformer):
         return tfhTime(hour=int(children[0].value))
     
     def unknown(self, children):
-        return children[0].value
+        return tfhUnknown(children[0].value)
