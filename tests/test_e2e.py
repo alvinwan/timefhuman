@@ -37,6 +37,7 @@ def now():
     
     # time-only ranges
     ('3p -4p', (datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))),
+    ('3p -4p PDT', (datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Pacific')), datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))),
     ('6:00 pm - 12:00 am', (datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 5, 0, 0))), # gh#8
     ('8/4 6:00 pm - 8/4 12:00 am', (datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))), # force date, do not infer
     

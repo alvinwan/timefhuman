@@ -41,6 +41,7 @@ class tfhDatelike:
     day: Optional[int] = None
     time: Optional['tfhTime'] = None
     meridiem: Optional['tfhTime.Meridiem'] = None
+    tz: Optional[pytz.timezone] = None
     
     def to_object(self, config: tfhConfig = tfhConfig()) -> Union[datetime, 'date', 'time', timedelta]:
         """Convert to real datetime, date, or time. Assumes partial fields are filled."""
@@ -127,6 +128,18 @@ class tfhCollection(tfhDatelike):
     def day(self, value):
         for item in self.items:
             item.day = value
+            
+    @property
+    def tz(self):
+        for item in self.items:
+            if item.tz:
+                return item.tz
+        return None
+    
+    @tz.setter
+    def tz(self, value):
+        for item in self.items:
+            item.tz = value
 
 
 class tfhRange(tfhCollection):
@@ -264,6 +277,15 @@ class tfhDatetime(tfhDatelike):
     def day(self, value):
         if self.date:
             self.date.day = value
+            
+    @property
+    def tz(self):
+        return self.time.tz if self.time else None
+    
+    @tz.setter
+    def tz(self, value):
+        if self.time:
+            self.time.tz = value
     
     def __init__(
         self, 
@@ -400,6 +422,8 @@ def infer_from(source: tfhDatelike, target: tfhDatelike):
             target.year = source.year
         if source.meridiem and not target.meridiem:
             target.meridiem = source.meridiem
+        if source.tz and not target.tz:
+            target.tz = source.tz
     if isinstance(source, tfhTimedelta) and isinstance(target, tfhAmbiguous):
         target = tfhTimedelta.from_object(timedelta(**{source.unit: target.value}), unit=source.unit)
     return target
