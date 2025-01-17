@@ -58,14 +58,17 @@ single: datetime
 // indicate this is an hour-only time.
 datetime: date ("at" (time | houronly))?
         | date (time | houronly)
+        | date "T" time  // ISO 8601
         | (time | houronly) date
         | (time | houronly) "on" date
         | date
         | time
 
 date: weekday? month "/" day "/" year
+    | weekday? year "/" month "/" day
     | weekday? month "/" dayoryear
     | weekday? month "-" day "-" year
+    | weekday? year "-" month "-" day
     | weekday? month "-" dayoryear
     | weekday? datename
     | weekday? monthname day DAY_SUFFIX? (",")? year
@@ -95,9 +98,9 @@ monthname: MONTHNAME
 datename: DATENAME
 dayoryear: INT
 
-day: INT
-month: INT
-year: INT
+day: /0[1-9]|[12][0-9]|3[01]|[1-9]/
+month: /0[1-9]|1[0-2]|[1-9]/
+year: /\d{4}|(?<!\d)\d{2}(?!\d)/
 
 timename: TIMENAME
 hour: INT
