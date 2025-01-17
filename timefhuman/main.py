@@ -236,11 +236,15 @@ class tfhTime:
         self, 
         hour: Optional[int] = None, 
         minute: Optional[int] = None, 
+        second: Optional[int] = None,
+        millisecond: Optional[int] = None,
         meridiem: Optional[Meridiem] = None,
         tz: Optional[pytz.timezone] = None,
     ):
         self.hour = hour
         self.minute = minute
+        self.second = second
+        self.millisecond = millisecond
         self.meridiem = meridiem
         self.tz = tz
 
@@ -250,16 +254,16 @@ class tfhTime:
             self.hour += 12
         elif self.meridiem == tfhTime.Meridiem.AM and self.hour == 12:
             self.hour = 0
-        object = time(self.hour, self.minute or 0, tzinfo=self.tz)
+        object = time(self.hour, self.minute or 0, self.second or 0, self.millisecond or 0, tzinfo=self.tz)
         return object
     
     @classmethod
     def from_object(cls, obj: time):
-        return cls(hour=obj.hour, minute=obj.minute, meridiem=obj.meridiem)
+        return cls(hour=obj.hour, minute=obj.minute, second=obj.second, millisecond=obj.millisecond, meridiem=obj.meridiem, tz=obj.tz)
 
     def __repr__(self):
         return (f"tfhTime("
-                f"hour={self.hour}, minute={self.minute}, meridiem={self.meridiem}, tz={self.tz})")
+                f"hour={self.hour}, minute={self.minute}, second={self.second}, millisecond={self.millisecond}, meridiem={self.meridiem}, tz={self.tz})")
 
 
 class tfhDatetime(tfhDatelike):
@@ -653,6 +657,8 @@ class tfhTransformer(Transformer):
 
         hour = int(data.get("hour", 0))
         minute = int(data.get("minute", 0))
+        second = int(data.get("second", 0))
+        millisecond = int(data.get("millisecond", 0))
         
         meridiem = None
         if data.get("meridiem", '').lower().startswith("a"):
@@ -664,7 +670,7 @@ class tfhTransformer(Transformer):
         if 'timezone' in data:
             tz = pytz.timezone(timezone_mapping[data['timezone']])
 
-        return tfhTime(hour=hour, minute=minute, meridiem=meridiem, tz=tz)
+        return tfhTime(hour=hour, minute=minute, second=second, millisecond=millisecond, meridiem=meridiem, tz=tz)
 
     def houronly(self, children):
         return tfhTime(hour=int(children[0].value))

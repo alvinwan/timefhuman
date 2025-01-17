@@ -72,7 +72,7 @@ def now():
     
     ('7/17, 7/18, 7/19 at 2', [datetime.datetime(2018, 7, 17, 2, 0), datetime.datetime(2018, 7, 18, 2, 0), datetime.datetime(2018, 7, 19, 2, 0)]), # distribute dates
     ('2 PM on 7/17 or 7/19', [datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]), # distribute time across dates
-    # ('2022-12-27T09:15:00.000', datetime.datetime(2022, 12, 27, 9, 15)),  # TODO: support ISO 8601 (YMD) gh#31
+    ('2022-12-27T09:15:01.002', datetime.datetime(2022, 12, 27, 9, 15, 1, 2)),  # TODO: support ISO 8601 (YMD) gh#31
 ])
 def test_default(now, test_input, expected):
     """Default behavior should be to infer datetimes and times."""

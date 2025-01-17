@@ -81,7 +81,7 @@ date: weekday? month "/" day "/" year
 // classified as an ambiguous token (in case it's a month, day, year, etc.)
 // However, that means to support single-integer (e.g., hour) times, we need
 // to manually add them to the `datetime` rule above.
-time: hour ":" minute meridiem? timezone?
+time: hour ":" minute (":" second ("." millisecond)?)? meridiem? timezone?
     | hour ("o'clock")? meridiem timezone?
     | timename timezone?
 
@@ -105,6 +105,8 @@ year: /\d{4}|(?<!\d)\d{2}(?!\d)/
 timename: TIMENAME
 hour: INT
 minute: INT
+second: INT
+millisecond: INT
 meridiem: MERIDIEM
 houronly: INT
 timezone: TIMEZONE  // `TIMEZONE` is generated dynamically
