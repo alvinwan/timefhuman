@@ -335,7 +335,10 @@ parser = None
 def get_parser():
     global parser
     if parser is None:
-        parser = Lark.open(DIRECTORY / 'grammar.lark', start="start")
+        with open(DIRECTORY / 'grammar.lark', 'r') as file:
+            grammar = file.read()
+        grammar = grammar.replace('(TIMEZONE_MAPPING)', '|'.join(generate_timezone_mapping().keys()))
+        parser = Lark(grammar, start="start")
     return parser
 
 
