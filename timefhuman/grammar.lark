@@ -84,7 +84,7 @@ duration: ("in"|"for")? duration_part (("and"|",")? duration_part)* ("ago")?
 duration_part: duration_number (duration_unit | duration_unit_letter)
              | duration_numbername " " duration_unit
 duration_number: FLOAT_NUMBER | INT
-duration_numbername: DURATION_NUMBER
+duration_numbername: DURATION_NUMBER+
 duration_unit: DURATION_UNIT
 duration_unit_letter: DURATION_UNIT_LETTER
 

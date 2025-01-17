@@ -393,7 +393,6 @@ class tfhTransformer(Transformer):
         return tfhTimedelta.from_object(sum(children, timedelta()))
     
     def duration_part(self, children):
-        data = {child.data.value: child.children[0].value for child in children}
         mapping = {
             'an': 1,
             'a': 1,
@@ -425,8 +424,11 @@ class tfhTransformer(Transformer):
             'eighty': 80,
             'ninety': 90,
         }
-        duration_number = mapping[data['duration_numbername']] if 'duration_numbername' in data else float(data['duration_number'])
-        duration_unit = data.get('duration_unit', data.get('duration_unit_letter', None))
+        # TODO: write my own multidict?
+        print(children)
+        data = {child.data.value: [_child.value for _child in child.children] for child in children}
+        duration_number = float(data['duration_number'][0]) if 'duration_number' in data else sum([mapping[value] for value in data.get('duration_numbername', [])])
+        duration_unit = data.get('duration_unit', data.get('duration_unit_letter', None))[0]
         for group in (
             ('minutes', 'minute', 'mins', 'min', 'm'),
             ('hours', 'hour', 'hrs', 'hr', 'h'),

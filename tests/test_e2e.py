@@ -104,7 +104,7 @@ def test_default(now, test_input, expected):
     ('in five minutes', datetime.timedelta(minutes=5)), # gh#25
     ('awk', []),  # should *not become 'a week'
     ('a wk', datetime.timedelta(days=7)),
-    # ('thirty two hours', datetime.timedelta(hours=32)), # TODO
+    ('thirty two hours', datetime.timedelta(hours=32)),
     # ('one and a half hour', datetime.timedelta(hours=1, minutes=30)), # TODO
     # ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))), # TODO: handle unidentifiable ints
     # ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]), # TODO: handle unidentifiable ints
