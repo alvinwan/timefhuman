@@ -68,6 +68,7 @@ def now():
     
     ('7/17, 7/18, 7/19 at 2', [datetime.datetime(2018, 7, 17, 2, 0), datetime.datetime(2018, 7, 18, 2, 0), datetime.datetime(2018, 7, 19, 2, 0)]), # distribute dates
     ('2 PM on 7/17 or 7/19', [datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]), # distribute time across dates
+    # ('2022-12-27T09:15:00.000', datetime.datetime(2022, 12, 27, 9, 15)),  # TODO: support ISO 8601 (YMD) gh#31
 ])
 def test_default(now, test_input, expected):
     """Default behavior should be to infer datetimes and times."""
@@ -78,9 +79,11 @@ def test_default(now, test_input, expected):
 @pytest.mark.parametrize("test_input, expected", [
     # time only
     ('5p', datetime.time(hour=17, minute=0)),
+    # ("3 o'clock", datetime.time(hour=3, minute=0)),
     
     # date only
     ('July 2019', datetime.date(2019, 7, 1)),
+    # ('Monday July 1, 2019', datetime.date(2019, 7, 1)),
     
     # date-only ranges
     ('7/17-7/18', (datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))),
@@ -99,13 +102,19 @@ def test_default(now, test_input, expected):
     ('2h30m', datetime.timedelta(hours=2, minutes=30)),
     ('1 day and an hour', datetime.timedelta(days=1, hours=1)),
     ('1.5 hours', datetime.timedelta(hours=1, minutes=30)),
+    ('1.5h', datetime.timedelta(hours=1, minutes=30)),
     ('in five minutes', datetime.timedelta(minutes=5)), # gh#25
-    # ('thirty two hours', datetime.timedelta(hours=32)), # TODO
-    # ('one and a half hour', datetime.timedelta(hours=1, minutes=30)), # TODO
-    # ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))), # TODO: handle unidentifiable ints
-    # ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]), # TODO: handle unidentifiable ints
-    # TODO: support duration ranges/lists
-    # TODO: support natural language times like "3 o'clock" or "quarter to 3"
+    ('awk', []),  # should *not become 'a week'
+    ('a wk', datetime.timedelta(days=7)),
+    ('thirty two hours', datetime.timedelta(hours=32)),
+    
+    # duration ranges and lists
+    ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))),
+    ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]),
+
+    # TODO: support "3 o'clock"
+    # TODO: support "quarter to 3"
+    # TODO: support "one and a half hours"
     
     # TODO ('noon next week') <- should be a list of options
     # TODO: support recurrences, like "5pm on thursdays" (see gh#33)
@@ -125,7 +134,7 @@ def test_no_inference(now, test_input, expected):
     # (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
 
     # TODO: add tests for 'next/last'
-])      
+])
 def test_custom_config(now, config, test_input, expected):
     config.now = now
     assert timefhuman(test_input, config=config) == expected
@@ -134,6 +143,7 @@ def test_custom_config(now, config, test_input, expected):
 @pytest.mark.parametrize("test_input, expected", [
     ('September 30, 2019.', datetime.datetime(2019, 9, 30, 0, 0)), # gh#26
     ('How does 5p mon sound? Or maybe 4p tu?', [datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]),
+    ('There are 3 ways to do it', []),  # '3' should remain ambiguous and then be ignored
     # TODO: get matched characters
 ])
 def test_with_random_text(now, test_input, expected):

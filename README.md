@@ -109,6 +109,13 @@ class tfhConfig:
 
 ## Development
 
+Install the development version.
+
+```shell
+$ pip install .e .[test]  # for bash
+$ pip install -e .\[test\]  # for zsh
+```
+
 To run tests and simultaneously generate a coverage report, use the following commands:
 
 ```shell

@@ -25,7 +25,7 @@ class tfhConfig:
     now: datetime = datetime.now()
 
 
-class tfhResult:
+class tfhDatelike:
     """
     A result is a single object that can be converted to a datetime, date, or time.
     
@@ -47,7 +47,7 @@ class tfhResult:
         raise NotImplementedError("Subclass must implement from_object()")
 
 
-class tfhCollection(tfhResult):
+class tfhCollection(tfhDatelike):
     def __init__(self, items):
         self.items = items
     
@@ -147,20 +147,21 @@ class tfhList(tfhCollection):
         return f"tfhList({self.items})"
 
 
-class tfhTimedelta(tfhResult):
-    def __init__(self, days: int = 0, seconds: int = 0):
+class tfhTimedelta:
+    def __init__(self, days: int = 0, seconds: int = 0, unit: Optional[str] = None):
         self.days = days
         self.seconds = seconds
+        self.unit = unit
 
     def to_object(self, config: tfhConfig = tfhConfig()):
         return timedelta(days=self.days, seconds=self.seconds)
     
     @classmethod
-    def from_object(cls, obj: timedelta):
-        return cls(days=obj.days, seconds=obj.seconds)
+    def from_object(cls, obj: timedelta, unit: Optional[str] = None):
+        return cls(days=obj.days, seconds=obj.seconds, unit=unit)
     
     def __repr__(self):
-        return f"tfhTimedelta(days={self.days}, seconds={self.seconds})"
+        return f"tfhTimedelta(days={self.days}, seconds={self.seconds}, unit='{self.unit}')"
 
 
 class tfhDate:
@@ -218,7 +219,7 @@ class tfhTime:
                 f"hour={self.hour}, minute={self.minute}, meridiem={self.meridiem})")
 
 
-class tfhDatetime(tfhResult):
+class tfhDatetime(tfhDatelike):
     """A combination of tfhDate + tfhTime."""
     
     @property
@@ -292,6 +293,14 @@ class tfhAmbiguous:
     
     def __init__(self, value: int):
         self.value = value
+        
+    def to_object(self, config: tfhConfig = tfhConfig()):
+        # NOTE: If the ambiguous token was never resolved, simply return the value as a str
+        return str(self.value)
+    
+    @classmethod
+    def from_object(cls, obj: int):
+        return cls(obj)
 
     def __repr__(self):
         return f"tfhAmbiguous({self.value})"
@@ -311,18 +320,24 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     
     # TODO: add option to return with the original unknown tokens?
     # helps the user understand which tokens were not matched
+    # TODO: better way to filter 
     # NOTE: intentionally did not filter by hasattr(result, 'to_object') to 
     # catch any other objects that might be returned
-    results = [result.to_object(config) for result in results if not isinstance(result, str)]
+    results = list(filter(
+        lambda s: not isinstance(s, str),
+        [result.to_object(config) for result in results if not isinstance(result, str)]
+    ))
+    
     if len(results) == 1:
         return results[0]
     return results
 
 
-def infer_from(source: tfhResult, target: tfhResult):
-    if isinstance(source, tfhAmbiguous) and not isinstance(target, tfhAmbiguous):
+def infer_from(source: tfhDatelike, target: tfhDatelike):
+    if isinstance(source, tfhAmbiguous):
+        # NOTE: Ambiguous tokens have no information to offer
         return target
-    if isinstance(target, tfhAmbiguous) and not isinstance(source, tfhAmbiguous):
+    if isinstance(target, tfhAmbiguous) and isinstance(source, tfhDatelike):
         if source.time:
             target = tfhDatetime(time=tfhTime(hour=target.value, meridiem=source.meridiem))
         elif source.year:
@@ -333,19 +348,19 @@ def infer_from(source: tfhResult, target: tfhResult):
             target = tfhDatetime(date=tfhDate(month=target.value))
         else:
             raise NotImplementedError(f"Not enough context to infer what {target} is")
-    if isinstance(source, tfhAmbiguous) and isinstance(target, tfhAmbiguous):
-        # NOTE: nothing we can do here. both are ambiguous.
-        return target
-    if source.date and not target.date:
-        target.date = source.date
-    if source.time and not target.time:
-        target.time = source.time
-    if source.month and not target.month:
-        target.month = source.month
-    if source.year and not target.year:
-        target.year = source.year
-    if source.meridiem and not target.meridiem:
-        target.meridiem = source.meridiem
+    if isinstance(source, tfhDatelike) and isinstance(target, tfhDatelike):
+        if source.date and not target.date:
+            target.date = source.date
+        if source.time and not target.time:
+            target.time = source.time
+        if source.month and not target.month:
+            target.month = source.month
+        if source.year and not target.year:
+            target.year = source.year
+        if source.meridiem and not target.meridiem:
+            target.meridiem = source.meridiem
+    if isinstance(source, tfhTimedelta) and isinstance(target, tfhAmbiguous):
+        target = tfhTimedelta.from_object(timedelta(**{source.unit: target.value}), unit=source.unit)
     return target
 
 
@@ -390,10 +405,10 @@ class tfhTransformer(Transformer):
         return tfhList(infer(children))
     
     def duration(self, children):
-        return tfhTimedelta.from_object(sum(children, timedelta()))
+        # TODO: just grabbing the first may cause problems later. how to do this more generically?
+        return tfhTimedelta.from_object(sum([child.to_object(self.config) for child in children], timedelta()), unit=children[0].unit)
     
     def duration_part(self, children):
-        data = {child.data.value: child.children[0].value for child in children}
         mapping = {
             'an': 1,
             'a': 1,
@@ -425,7 +440,11 @@ class tfhTransformer(Transformer):
             'eighty': 80,
             'ninety': 90,
         }
-        data['duration_number'] = mapping.get(data['duration_number'], data['duration_number'])
+        # TODO: write my own multidict?
+        print(children)
+        data = {child.data.value: [_child.value for _child in child.children] for child in children}
+        duration_number = float(data['duration_number'][0]) if 'duration_number' in data else sum([mapping[value] for value in data.get('duration_numbername', [])])
+        duration_unit = data.get('duration_unit', data.get('duration_unit_letter', None))[0]
         for group in (
             ('minutes', 'minute', 'mins', 'min', 'm'),
             ('hours', 'hour', 'hrs', 'hr', 'h'),
@@ -434,8 +453,8 @@ class tfhTransformer(Transformer):
             ('months', 'month', 'mos'),
             ('years', 'year', 'yrs', 'yr'),
         ):
-            if data['duration_unit'] in group:
-                return timedelta(**{group[0]: float(data['duration_number'])})
+            if duration_unit in group:
+                return tfhTimedelta.from_object(timedelta(**{group[0]: duration_number}), unit=group[0])
         raise NotImplementedError(f"Unknown duration unit: {data['duration_unit']}")
 
     def datetime(self, children):
