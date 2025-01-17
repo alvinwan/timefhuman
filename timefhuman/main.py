@@ -425,7 +425,8 @@ class tfhTransformer(Transformer):
             'eighty': 80,
             'ninety': 90,
         }
-        data['duration_number'] = mapping.get(data['duration_number'], data['duration_number'])
+        duration_number = mapping[data['duration_numbername']] if 'duration_numbername' in data else float(data['duration_number'])
+        duration_unit = data.get('duration_unit', data.get('duration_unit_letter', None))
         for group in (
             ('minutes', 'minute', 'mins', 'min', 'm'),
             ('hours', 'hour', 'hrs', 'hr', 'h'),
@@ -434,8 +435,8 @@ class tfhTransformer(Transformer):
             ('months', 'month', 'mos'),
             ('years', 'year', 'yrs', 'yr'),
         ):
-            if data['duration_unit'] in group:
-                return timedelta(**{group[0]: float(data['duration_number'])})
+            if duration_unit in group:
+                return timedelta(**{group[0]: duration_number})
         raise NotImplementedError(f"Unknown duration unit: {data['duration_unit']}")
 
     def datetime(self, children):
