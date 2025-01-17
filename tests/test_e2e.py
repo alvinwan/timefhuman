@@ -79,7 +79,7 @@ def test_default(now, test_input, expected):
 @pytest.mark.parametrize("test_input, expected", [
     # time only
     ('5p', datetime.time(hour=17, minute=0)),
-    # ("3 o'clock", datetime.time(hour=3, minute=0)),
+    ("3 o'clock pm", datetime.time(hour=15, minute=0)), # fixes gh#12
     
     # date only
     ('July 2019', datetime.date(2019, 7, 1)),
@@ -112,7 +112,6 @@ def test_default(now, test_input, expected):
     ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))),
     ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]),
 
-    # TODO: support "3 o'clock"
     # TODO: support "quarter to 3"
     # TODO: support "one and a half hours"
     
@@ -131,7 +130,7 @@ def test_no_inference(now, test_input, expected):
     
     (tfhConfig(infer_datetimes=True), '5p', datetime.datetime(2018, 8, 4, 17, 0)),
     (tfhConfig(infer_datetimes=False), '5p', datetime.time(hour=17, minute=0)),
-    # (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
+    (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
 
     # TODO: add tests for 'next/last'
 ])

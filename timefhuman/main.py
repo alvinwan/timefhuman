@@ -276,7 +276,12 @@ class tfhDatetime(tfhDatelike):
             return self.date.to_object(config)
         elif self.time:
             if config.infer_datetimes:
-                return datetime.combine(config.now.date(), self.time.to_object(config))
+                candidate = datetime.combine(config.now.date(), self.time.to_object(config))
+                if candidate < config.now and config.direction == Direction.next:
+                    candidate += timedelta(days=1)
+                elif candidate > config.now and config.direction == Direction.previous:
+                    candidate -= timedelta(days=1)
+                return candidate
             return self.time.to_object(config)
         raise ValueError("Datetime is missing both date and time")
         

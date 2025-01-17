@@ -77,7 +77,7 @@ date: month "/" day "/" year
 // However, that means to support single-integer (e.g., hour) times, we need
 // to manually add them to the `datetime` rule above.
 time: hour ":" minute meridiem?
-    | hour meridiem
+    | hour ("o'clock")? meridiem
     | timename
 
 duration: ("in"|"for")? duration_part (("and"|",")? duration_part)* ("ago")?
