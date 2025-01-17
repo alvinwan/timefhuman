@@ -2,6 +2,7 @@ from timefhuman import timefhuman
 import datetime
 import pytest
 from timefhuman.main import Direction, tfhConfig
+import pytz
 
 
 @pytest.fixture
@@ -12,6 +13,7 @@ def now():
 @pytest.mark.parametrize("test_input, expected", [
     # time only
     ('5p', datetime.datetime(2018, 8, 4, 17, 0)),
+    ('3p EST', datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Michigan'))),  # fixes gh#6
     
     # date only
     ('July 2019', datetime.datetime(2019, 7, 1, 0, 0)),
@@ -80,6 +82,7 @@ def test_default(now, test_input, expected):
     # time only
     ('5p', datetime.time(hour=17, minute=0)),
     ("3 o'clock pm", datetime.time(hour=15, minute=0)), # fixes gh#12
+    ('5p Eastern Time', datetime.time(hour=17, minute=0, tzinfo=pytz.timezone('US/Michigan'))),  # fixes gh#6
     
     # date only
     ('July 2019', datetime.date(2019, 7, 1)),

@@ -7,13 +7,14 @@ Convert human-readable date-like string to Python datetime object.
 
 __all__ = ('timefhuman',)
 
-from lark import Lark, Transformer, Tree, Token
 from datetime import datetime, date, time, timedelta
 from typing import Optional, Union
 from enum import Enum
 from dataclasses import dataclass
 from pathlib import Path
 
+from lark import Lark, Transformer, Tree, Token
+import pytz
 from timefhuman.utils import generate_timezone_mapping
 
 
@@ -200,10 +201,12 @@ class tfhTime:
         hour: Optional[int] = None, 
         minute: Optional[int] = None, 
         meridiem: Optional[Meridiem] = None,
+        tz: Optional[pytz.timezone] = None,
     ):
         self.hour = hour
         self.minute = minute
         self.meridiem = meridiem
+        self.tz = tz
 
     def to_object(self, config: tfhConfig = tfhConfig()) -> time:
         """Convert to a real time object. Assumes all fields are filled in."""
@@ -211,7 +214,8 @@ class tfhTime:
             self.hour += 12
         elif self.meridiem == tfhTime.Meridiem.AM and self.hour == 12:
             self.hour = 0
-        return time(self.hour, self.minute or 0)
+        object = time(self.hour, self.minute or 0, tzinfo=self.tz)
+        return object
     
     @classmethod
     def from_object(cls, obj: time):
@@ -219,7 +223,7 @@ class tfhTime:
 
     def __repr__(self):
         return (f"tfhTime("
-                f"hour={self.hour}, minute={self.minute}, meridiem={self.meridiem})")
+                f"hour={self.hour}, minute={self.minute}, meridiem={self.meridiem}, tz={self.tz})")
 
 
 class tfhDatetime(tfhDatelike):
@@ -272,17 +276,18 @@ class tfhDatetime(tfhDatelike):
     def to_object(self, config: tfhConfig = tfhConfig()) -> Union[datetime, date, time]:
         """Convert to real datetime, assumes partial fields are filled."""
         if self.date and self.time:
-            return datetime.combine(self.date.to_object(config), self.time.to_object(config))
+            return datetime.combine(self.date.to_object(config), self.time.to_object(config), tzinfo=self.time.tz)
         elif self.date:
             if config.infer_datetimes:
                 return datetime.combine(self.date.to_object(config), time(0, 0))
             return self.date.to_object(config)
         elif self.time:
             if config.infer_datetimes:
-                candidate = datetime.combine(config.now.date(), self.time.to_object(config))
-                if candidate < config.now and config.direction == Direction.next:
+                _now = config.now.replace(tzinfo=self.time.tz)
+                candidate = datetime.combine(_now.date(), self.time.to_object(config))
+                if candidate < _now and config.direction == Direction.next:
                     candidate += timedelta(days=1)
-                elif candidate > config.now and config.direction == Direction.previous:
+                elif candidate > _now and config.direction == Direction.previous:
                     candidate -= timedelta(days=1)
                 return candidate
             return self.time.to_object(config)
@@ -330,14 +335,16 @@ class tfhUnknown:
 
 
 parser = None
+timezone_mapping = None
 
 
 def get_parser():
-    global parser
+    global parser, timezone_mapping
     if parser is None:
+        timezone_mapping = generate_timezone_mapping()
         with open(DIRECTORY / 'grammar.lark', 'r') as file:
             grammar = file.read()
-        grammar = grammar.replace('(TIMEZONE_MAPPING)', '|'.join(generate_timezone_mapping().keys()))
+        grammar = grammar.replace('(TIMEZONE_MAPPING)', '|'.join(timezone_mapping.keys()))
         parser = Lark(grammar, start="start")
     return parser
 
@@ -612,8 +619,12 @@ class tfhTransformer(Transformer):
             meridiem = tfhTime.Meridiem.AM
         elif data.get("meridiem", '').lower().startswith("p"):
             meridiem = tfhTime.Meridiem.PM
+            
+        tz = None
+        if 'timezone' in data:
+            tz = pytz.timezone(timezone_mapping[data['timezone']])
 
-        return tfhTime(hour=hour, minute=minute, meridiem=meridiem)
+        return tfhTime(hour=hour, minute=minute, meridiem=meridiem, tz=tz)
 
     def houronly(self, children):
         return tfhTime(hour=int(children[0].value))
