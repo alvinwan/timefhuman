@@ -3,7 +3,7 @@
 [![PyPi Downloads per Month](https://img.shields.io/pypi/dm/timefhuman.svg)](https://pypi.python.org/pypi/timefhuman/)
 [![Coverage Status](https://coveralls.io/repos/github/alvinwan/timefhuman/badge.svg?branch=master)](https://coveralls.io/github/alvinwan/timefhuman?branch=master)
 
-Convert human-readable, date-like strings written in natural language to Python objects. Find datetimes, ranges of datetimes, lists of datetimes, and durations in text. Supports Python3+[^1]
+Extract datetimes, datetime ranges, and datetime lists from natural language text. Supports Python3+[^1]
 
 [^1]: https://github.com/alvinwan/timefhuman/issues/3
 
@@ -11,36 +11,46 @@ Convert human-readable, date-like strings written in natural language to Python 
 
 ## Getting Started
 
-To start, describe days of the week or times of day in the vernacular.
+Use any text that contains natural language descriptions of dates and times.
 
 ```python
 >>> from timefhuman import timefhuman
 
->>> timefhuman('Monday noon')
-datetime.datetime(2018, 8, 6, 12, 0)
+>>> timefhuman("How does 5p mon sound? Or maybe 4p tu?")
+[datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]
 ```
 
-Use any human-readable format to describe a datetime, datetime range, list of datetimes, or a duration. You can also use any combination of the above, such as a list of ranges.
+The text can contain not only datetimes but also ranges of datetimes, lists of datetimes, or lists of ranges of datetimes! 
 
 ```python
 >>> timefhuman('3p-4p')  # time range
 (datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))
 
->>> timefhuman('7/17 4PM to 7/17 5PM')  # datetime range
+>>> timefhuman('7/17 4PM to 7/17 5PM')  # range of datetimes
 (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0))
 
 >>> timefhuman('Monday 3 pm or Tu noon')  # list of datetimes
 [datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
 
->>> timefhuman('30 minutes')  # duration
-datetime.timedelta(seconds=1800)
-
->>> timefhuman('7/17 4-5 or 5-6 PM')  # list of datetime ranges
+>>> timefhuman('7/17 4-5 or 5-6 PM')  # list of ranges of datetimes
 [(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
  (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))]
 ```
 
-`timefhuman` will also infer any missing information, using context from other datetimes.
+You can also parse durations.
+
+```python
+>>> timefhuman('30 minutes')  # duration
+datetime.timedelta(seconds=1800)
+
+>>> timefhuman('30-40 mins')  # range of durations
+(datetime.timedelta(seconds=1800), datetime.timedelta(seconds=2400))
+
+>>> timefhuman('30 or 40m')  # list of durations
+[datetime.timedelta(seconds=1800), datetime.timedelta(seconds=2400)]
+```
+
+To support natural language, `timefhuman` will infer any missing information, using context from other datetimes.
 
 ```python
 >>> timefhuman('3-4p')  # infer "PM" for "3"
@@ -54,14 +64,8 @@ datetime.timedelta(seconds=1800)
  datetime.datetime(2018, 7, 19, 9, 0)]
 
 >>> timefhuman('3p -4p PDT')  # infer timezone "PDT" for "3p"
-(datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Pacific')), datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))
-```
-
-You can also pass in irrelevant text, and `timefhuman` will return all datetime-like objects in the text. You could use this to extract datetimes from an email for example.
-
-```python
->>> timefhuman("How does 5p mon sound? Or maybe 4p tu?")
-[datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]
+(datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Pacific')),
+ datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))
 ```
 
 See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
