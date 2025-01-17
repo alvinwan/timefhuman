@@ -320,11 +320,12 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     
     # TODO: add option to return with the original unknown tokens?
     # helps the user understand which tokens were not matched
+    # TODO: better way to filter 
     # NOTE: intentionally did not filter by hasattr(result, 'to_object') to 
     # catch any other objects that might be returned
     results = list(filter(
-        lambda s: isinstance(s, (datetime, date, time, timedelta)),
-        [result.to_object(config) for result in results]
+        lambda s: not isinstance(s, str),
+        [result.to_object(config) for result in results if not isinstance(result, str)]
     ))
     
     if len(results) == 1:

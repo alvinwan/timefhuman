@@ -79,9 +79,11 @@ def test_default(now, test_input, expected):
 @pytest.mark.parametrize("test_input, expected", [
     # time only
     ('5p', datetime.time(hour=17, minute=0)),
+    # ("3 o'clock", datetime.time(hour=3, minute=0)),
     
     # date only
     ('July 2019', datetime.date(2019, 7, 1)),
+    # ('Monday July 1, 2019', datetime.date(2019, 7, 1)),
     
     # date-only ranges
     ('7/17-7/18', (datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))),
@@ -132,7 +134,7 @@ def test_no_inference(now, test_input, expected):
     # (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
 
     # TODO: add tests for 'next/last'
-])      
+])
 def test_custom_config(now, config, test_input, expected):
     config.now = now
     assert timefhuman(test_input, config=config) == expected
