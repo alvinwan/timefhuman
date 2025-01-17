@@ -87,7 +87,7 @@ def test_default(now, test_input, expected):
     
     # date only
     ('July 2019', datetime.date(2019, 7, 1)),
-    # ('Monday July 1, 2019', datetime.date(2019, 7, 1)),
+    ('Sunday 7/7/2019', datetime.date(2019, 7, 7)),  # fixes gh#27
     
     # date-only ranges
     ('7/17-7/18', (datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))),
