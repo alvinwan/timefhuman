@@ -11,7 +11,13 @@ Extract datetimes, datetime ranges, and datetime lists from natural language tex
 
 ## Getting Started
 
-Use any text that contains natural language descriptions of dates and times.
+Install with pip using
+
+```python
+pip install timefhuman
+```
+
+Then, find natural language dates and times in any text.
 
 ```python
 >>> from timefhuman import timefhuman
@@ -20,7 +26,7 @@ Use any text that contains natural language descriptions of dates and times.
 [datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]
 ```
 
-The text can contain not only datetimes but also ranges of datetimes, lists of datetimes, or lists of ranges of datetimes! 
+The text can contain not only datetimes but also ranges of datetimes or lists of datetimes.
 
 ```python
 >>> timefhuman('3p-4p')  # time range
@@ -32,12 +38,12 @@ The text can contain not only datetimes but also ranges of datetimes, lists of d
 >>> timefhuman('Monday 3 pm or Tu noon')  # list of datetimes
 [datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]
 
->>> timefhuman('7/17 4-5 or 5-6 PM')  # list of ranges of datetimes
+>>> timefhuman('7/17 4-5 or 5-6 PM')  # list of ranges of datetimes!
 [(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
  (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))]
 ```
 
-You can also parse durations.
+Durations are also supported.
 
 ```python
 >>> timefhuman('30 minutes')  # duration
@@ -50,7 +56,7 @@ datetime.timedelta(seconds=1800)
 [datetime.timedelta(seconds=1800), datetime.timedelta(seconds=2400)]
 ```
 
-To support natural language, `timefhuman` will infer any missing information, using context from other datetimes.
+When possible, timefhuman will infer any missing information, using context from other datetimes.
 
 ```python
 >>> timefhuman('3-4p')  # infer "PM" for "3"
@@ -70,19 +76,9 @@ To support natural language, `timefhuman` will infer any missing information, us
 
 See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
-## Installation
-
-Install with pip using
-
-```python
-pip install timefhuman
-```
-
-Optionally, clone the repository and run `pip install -e .`.
-
 ## Advanced Usage
 
-Use the `tfhConfig` class to configure `timefhuman`. For example, you can pass a `now` datetime to use different default values.
+You can configure the default date that timefhuman uses to fill in missing information. This would be useful if you're extracting relative dates like `next Monday` from an email sent a year ago.
 
 ```python
 >>> from timefhuman import timefhuman, tfhConfig
@@ -93,7 +89,7 @@ Use the `tfhConfig` class to configure `timefhuman`. For example, you can pass a
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
 
-Alternatively, you can completely disable date inference by setting `infer_datetimes=False`. Instead of always returning a datetime, `timefhuman` will be able to return date-like or time-like objects for only explicitly-written information.
+Alternatively, say you want to extract only the time from a text -- perhaps it's a festival's schedule. You can disable date inference by setting `infer_datetimes=False`. Instead of always returning a datetime, timefhuman will be able to return time-like objects for only explicitly-written information.
 
 ```python
 >>> config = tfhConfig(infer_datetimes=False)
@@ -108,10 +104,12 @@ datetime.date(2018, 12, 18)
 Here is the full set of supported configuration options:
 
 ```python
+@dataclass
 class tfhConfig:
-    direction: Direction = Direction.next  # next/previous/none
+    direction: Direction = Direction.next  # next/previous/nearest
     infer_datetimes: bool = True  # infer missing information using current datetime
     now: datetime = datetime.now()  # current datetime, only used if infer_datetimes is True
+    return_unmatched: bool = False  # return unmatched texts as strings
 ```
 
 ## Development
