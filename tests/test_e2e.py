@@ -130,7 +130,7 @@ def test_no_inference(now, test_input, expected):
     
     (tfhConfig(infer_datetimes=True), '5p', datetime.datetime(2018, 8, 4, 17, 0)),
     (tfhConfig(infer_datetimes=False), '5p', datetime.time(hour=17, minute=0)),
-    # (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
+    (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
 
     # TODO: add tests for 'next/last'
 ])
