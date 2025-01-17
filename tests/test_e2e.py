@@ -105,11 +105,14 @@ def test_default(now, test_input, expected):
     ('awk', []),  # should *not become 'a week'
     ('a wk', datetime.timedelta(days=7)),
     ('thirty two hours', datetime.timedelta(hours=32)),
-    # ('one and a half hour', datetime.timedelta(hours=1, minutes=30)), # TODO
+    
+    # duration ranges and lists
     ('30-40 mins', (datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))),
     ('1 or 2 days', [datetime.timedelta(days=1), datetime.timedelta(days=2)]),
-    # TODO: support duration ranges/lists
-    # TODO: support natural language times like "3 o'clock" or "quarter to 3"
+
+    # TODO: support "3 o'clock"
+    # TODO: support "quarter to 3"
+    # TODO: support "one and a half hours"
     
     # TODO ('noon next week') <- should be a list of options
     # TODO: support recurrences, like "5pm on thursdays" (see gh#33)
@@ -138,6 +141,7 @@ def test_custom_config(now, config, test_input, expected):
 @pytest.mark.parametrize("test_input, expected", [
     ('September 30, 2019.', datetime.datetime(2019, 9, 30, 0, 0)), # gh#26
     ('How does 5p mon sound? Or maybe 4p tu?', [datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]),
+    ('There are 3 ways to do it', []),  # '3' should remain ambiguous and then be ignored
     # TODO: get matched characters
 ])
 def test_with_random_text(now, test_input, expected):

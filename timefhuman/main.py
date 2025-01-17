@@ -293,6 +293,14 @@ class tfhAmbiguous:
     
     def __init__(self, value: int):
         self.value = value
+        
+    def to_object(self, config: tfhConfig = tfhConfig()):
+        # NOTE: If the ambiguous token was never resolved, simply return the value as a str
+        return str(self.value)
+    
+    @classmethod
+    def from_object(cls, obj: int):
+        return cls(obj)
 
     def __repr__(self):
         return f"tfhAmbiguous({self.value})"
@@ -314,7 +322,11 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     # helps the user understand which tokens were not matched
     # NOTE: intentionally did not filter by hasattr(result, 'to_object') to 
     # catch any other objects that might be returned
-    results = [result.to_object(config) for result in results if not isinstance(result, str)]
+    results = list(filter(
+        lambda s: isinstance(s, (datetime, date, time, timedelta)),
+        [result.to_object(config) for result in results]
+    ))
+    
     if len(results) == 1:
         return results[0]
     return results

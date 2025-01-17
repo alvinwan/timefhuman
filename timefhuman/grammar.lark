@@ -23,7 +23,7 @@ TIMENAME: /(?i)(noon|midday|midnight)/
 
 // Duration unit (minutes, hours, days, etc.)
 DURATION_UNIT: /(?i)(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)/
-DURATION_UNIT_LETTER: /(?i)(s|m|h|d|w|mo|y)/
+DURATION_UNIT_LETTER: /(?i)(s|m|h|d|w|mo|y)(?![a-z])/
 
 // Duration number (digits like "1", or words like "an", "a", "one", "two", etc.)
 DURATION_NUMBER: /(?i)(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)/
