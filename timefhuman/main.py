@@ -148,19 +148,20 @@ class tfhList(tfhCollection):
 
 
 class tfhTimedelta:
-    def __init__(self, days: int = 0, seconds: int = 0):
+    def __init__(self, days: int = 0, seconds: int = 0, unit: Optional[str] = None):
         self.days = days
         self.seconds = seconds
+        self.unit = unit
 
     def to_object(self, config: tfhConfig = tfhConfig()):
         return timedelta(days=self.days, seconds=self.seconds)
     
     @classmethod
-    def from_object(cls, obj: timedelta):
-        return cls(days=obj.days, seconds=obj.seconds)
+    def from_object(cls, obj: timedelta, unit: Optional[str] = None):
+        return cls(days=obj.days, seconds=obj.seconds, unit=unit)
     
     def __repr__(self):
-        return f"tfhTimedelta(days={self.days}, seconds={self.seconds})"
+        return f"tfhTimedelta(days={self.days}, seconds={self.seconds}, unit='{self.unit}')"
 
 
 class tfhDate:
@@ -345,6 +346,8 @@ def infer_from(source: tfhDatelike, target: tfhDatelike):
             target.year = source.year
         if source.meridiem and not target.meridiem:
             target.meridiem = source.meridiem
+    if isinstance(source, tfhTimedelta) and isinstance(target, tfhAmbiguous):
+        target = tfhTimedelta.from_object(timedelta(**{source.unit: target.value}), unit=source.unit)
     return target
 
 
@@ -389,7 +392,8 @@ class tfhTransformer(Transformer):
         return tfhList(infer(children))
     
     def duration(self, children):
-        return tfhTimedelta.from_object(sum(children, timedelta()))
+        # TODO: just grabbing the first may cause problems later. how to do this more generically?
+        return tfhTimedelta.from_object(sum([child.to_object(self.config) for child in children], timedelta()), unit=children[0].unit)
     
     def duration_part(self, children):
         mapping = {
@@ -437,7 +441,7 @@ class tfhTransformer(Transformer):
             ('years', 'year', 'yrs', 'yr'),
         ):
             if duration_unit in group:
-                return timedelta(**{group[0]: duration_number})
+                return tfhTimedelta.from_object(timedelta(**{group[0]: duration_number}), unit=group[0])
         raise NotImplementedError(f"Unknown duration unit: {data['duration_unit']}")
 
     def datetime(self, children):
