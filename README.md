@@ -52,6 +52,9 @@ datetime.timedelta(seconds=1800)
 >>> timefhuman('7/17, 7/18, 7/19 at 9')  # infer "9a" for "7/17", "7/18"
 [datetime.datetime(2018, 7, 17, 9, 0), datetime.datetime(2018, 7, 18, 9, 0),
  datetime.datetime(2018, 7, 19, 9, 0)]
+
+>>> timefhuman('3p -4p PDT')  # infer timezone "PDT" for "3p"
+(datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Pacific')), datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))
 ```
 
 You can also pass in irrelevant text, and `timefhuman` will return all datetime-like objects in the text. You could use this to extract datetimes from an email for example.
