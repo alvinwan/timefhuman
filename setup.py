@@ -3,7 +3,7 @@ from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
 tests_require = ['pytest==8.3.4', 'pytest-cov==6.0.0', 'coverage==7.6.10', 'coveralls==4.0.1']
-install_requires = ['lark==1.2.2']
+install_requires = ['lark==1.2.2', 'babel==2.16.0', 'pytz==2024.2']
 
 
 class PyTest(TestCommand):

@@ -33,6 +33,8 @@ DAY_SUFFIX: /(?i)(th|rd|st|nd)/
 
 FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/i  // from lark
 
+TIMEZONE: /(?i)((TIMEZONE_MAPPING))/
+
 // ----------------------
 // PARSER RULES
 // ----------------------
@@ -76,9 +78,9 @@ date: month "/" day "/" year
 // classified as an ambiguous token (in case it's a month, day, year, etc.)
 // However, that means to support single-integer (e.g., hour) times, we need
 // to manually add them to the `datetime` rule above.
-time: hour ":" minute meridiem?
-    | hour ("o'clock")? meridiem
-    | timename
+time: hour ":" minute meridiem? timezone?
+    | hour ("o'clock")? meridiem timezone?
+    | timename timezone?
 
 duration: ("in"|"for")? duration_part (("and"|",")? duration_part)* ("ago")?
 duration_part: duration_number (duration_unit | duration_unit_letter)
@@ -102,6 +104,7 @@ hour: INT
 minute: INT
 meridiem: MERIDIEM
 houronly: INT
+timezone: TIMEZONE  // `TIMEZONE` is generated dynamically
 
 ambiguous: INT
 
