@@ -122,6 +122,9 @@ def test_default(now, test_input, expected):
     
     # TODO ('noon next week') <- should be a list of options
     # TODO: support recurrences, like "5pm on thursdays" (see gh#33)
+    
+    # TODO: support natural language date ranges e.g., this week, next weekend, any weekday gh#18
+    # TODO: support natural language time ranges e.g., afternoon, morning, evening, tonight, today night gh#30
 ])
 def test_no_inference(now, test_input, expected):
     """Return exactly the date or time, without inferring the other."""
@@ -137,7 +140,7 @@ def test_no_inference(now, test_input, expected):
     (tfhConfig(infer_datetimes=False), '5p', datetime.time(hour=17, minute=0)),
     (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
 
-    # TODO: add tests for 'next/last'
+    # TODO: support for 'next/last' (for both meanings of last) gh#4
 ])
 def test_custom_config(now, config, test_input, expected):
     config.now = now
@@ -148,7 +151,7 @@ def test_custom_config(now, config, test_input, expected):
     ('September 30, 2019.', datetime.datetime(2019, 9, 30, 0, 0)), # gh#26
     ('How does 5p mon sound? Or maybe 4p tu?', [datetime.datetime(2018, 8, 6, 17, 0), datetime.datetime(2018, 8, 7, 16, 0)]),
     ('There are 3 ways to do it', []),  # '3' should remain ambiguous and then be ignored
-    # TODO: get matched characters
+    # TODO: get matched characters gh#9
 ])
 def test_with_random_text(now, test_input, expected):
     assert timefhuman(test_input, tfhConfig(now=now)) == expected
