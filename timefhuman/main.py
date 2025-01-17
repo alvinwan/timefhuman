@@ -14,6 +14,8 @@ from enum import Enum
 from dataclasses import dataclass
 from pathlib import Path
 
+from timefhuman.utils import generate_timezone_mapping
+
 
 DIRECTORY = Path(__file__).parent
 Direction = Enum('Direction', ['previous', 'next'])
@@ -327,10 +329,18 @@ class tfhUnknown:
         return f"tfhUnknown({self.value})"
 
 
-parser = Lark.open(DIRECTORY / 'grammar.lark', start="start")
+parser = None
+
+
+def get_parser():
+    global parser
+    if parser is None:
+        parser = Lark.open(DIRECTORY / 'grammar.lark', start="start")
+    return parser
 
 
 def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
+    parser = get_parser()
     tree = parser.parse(string)
     
     if raw:
