@@ -1,6 +1,7 @@
 from datetime import datetime
 import pytz
 from babel.dates import get_timezone_name
+from lark.tree import Tree
 
 
 def generate_timezone_mapping():
@@ -19,3 +20,12 @@ def generate_timezone_mapping():
         key: value for key, value in text_to_timezone.items()
         if key[0] not in ('+', '-') and not key.startswith('Unknown')
     }
+    
+
+def nodes_to_dict(nodes: list[Tree]) -> dict:
+    result = {}
+    for node in nodes:
+        assert isinstance(node, Tree), f"Expected a Tree, got {type(node)}"
+        assert len(node.children) == 1, f"Expected 1 child for {node.data.value}, got {len(node.children)}"
+        result[node.data.value] = node.children[0].value
+    return result

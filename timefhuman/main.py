@@ -15,7 +15,7 @@ from pathlib import Path
 
 from lark import Lark, Transformer, Tree, Token
 import pytz
-from timefhuman.utils import generate_timezone_mapping
+from timefhuman.utils import generate_timezone_mapping, nodes_to_dict
 
 
 DIRECTORY = Path(__file__).parent
@@ -593,13 +593,6 @@ class tfhTransformer(Transformer):
         raise NotImplementedError(f"Unknown day or year: {children[0]}")
 
     def date(self, children):
-        """
-        A 'date' node can match:
-          1) month/day/year (numeric)
-          2) 'tomorrow', 'today', or a weekday
-          3) monthname day, optional year
-        We iterate through tokens, collect info, then build a datetime.
-        """
         if children and isinstance(children[0], tfhDate):
             return children[0]
         
@@ -642,18 +635,10 @@ class tfhTransformer(Transformer):
         return tfhDate(year=data.get("year"), month=data.get("month"), day=data.get("day"))
 
     def time(self, children):
-        """
-        A 'time' node might contain:
-        - hour, minute, optional am/pm (captured by the MERIDIEM token)
-        - just hour + am/pm
-        - the literal string 'noon'
-        We produce a timedelta, which is easier to add to a date.
-        """
         if children and isinstance(children[0], tfhTime):
             return children[0]
         
-        # TODO: guard against random other objects
-        data = {child.data.value: child.children[0].value for child in children}
+        data = nodes_to_dict(children)
 
         hour = int(data.get("hour", 0))
         minute = int(data.get("minute", 0))
