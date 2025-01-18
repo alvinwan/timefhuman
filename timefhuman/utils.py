@@ -16,10 +16,19 @@ Direction = Enum('Direction', ['previous', 'next', 'nearest'])
 
 @dataclass
 class tfhConfig:
+    # Default to the next valid datetime or the previous one
     direction: Direction = Direction.next
+    
+    # Always produce datetime objects. If no date, use the current date. If no time, use midnight.
     infer_datetimes: bool = True
+    
+    # The 'current' datetime, used if infer_datetimes is True
     now: datetime = datetime.now()    
+    
+    # Return the matched text from the input string
     return_matched_text: bool = False
+    
+    # Return a single object instead of a list when there's only one match
     return_single_object: bool = True
 
 

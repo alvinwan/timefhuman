@@ -29,7 +29,7 @@ def get_parser():
 def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
     parser = get_parser()
     tree = parser.parse(string)
-    print(tree.pretty())
+
     if raw:
         return tree
 

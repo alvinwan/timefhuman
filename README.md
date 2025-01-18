@@ -120,10 +120,20 @@ Here is the full set of supported configuration options:
 ```python
 @dataclass
 class tfhConfig:
-    direction: Direction = Direction.next  # next/previous/nearest
-    infer_datetimes: bool = True  # infer missing information using current datetime
-    now: datetime = datetime.now()  # current datetime, only used if infer_datetimes is True
-    return_unmatched: bool = False  # return unmatched texts as strings
+    # Default to the next valid datetime or the previous one
+    direction: Direction = Direction.next
+    
+    # Always produce datetime objects. If no date, use the current date. If no time, use midnight.
+    infer_datetimes: bool = True
+    
+    # The 'current' datetime, used if infer_datetimes is True
+    now: datetime = datetime.now()    
+    
+    # Return the matched text from the input string
+    return_matched_text: bool = False
+    
+    # Return a single object instead of a list when there's only one match
+    return_single_object: bool = True
 ```
 
 ## Development
