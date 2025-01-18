@@ -5,6 +5,12 @@ from lark.tree import Tree
 from lark.lexer import Token
 
 
+MONTHS = [
+    "january", "february", "march", "april", "may", "june",
+    "july", "august", "september", "october", "november", "december",
+]
+
+
 def generate_timezone_mapping():
     text_to_timezone = {}
 
@@ -21,6 +27,16 @@ def generate_timezone_mapping():
         key: value for key, value in text_to_timezone.items()
         if key[0] not in ('+', '-') and not key.startswith('Unknown')
     }
+    
+    
+def get_month_mapping():
+    mapping = {
+        month: i + 1 for i, month in enumerate(MONTHS)
+    }
+    mapping.update({
+        month[:3]: i + 1 for i, month in enumerate(MONTHS)
+    })
+    return mapping
     
 
 def nodes_to_dict(nodes: list[Tree]) -> dict:

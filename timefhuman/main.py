@@ -15,7 +15,7 @@ from pathlib import Path
 
 from lark import Lark, Transformer, Tree, Token
 import pytz
-from timefhuman.utils import generate_timezone_mapping, nodes_to_dict
+from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, get_month_mapping
 
 
 DIRECTORY = Path(__file__).parent
@@ -580,6 +580,8 @@ class tfhTransformer(Transformer):
         return tfhDatetime(date=data.get('date'), time=data.get('time'))
     
     def date(self, children):
+        # The pops here are a hack, because we want to check if any data is left
+        # after we've popped other detected dates.
         data = nodes_to_dict(children)
         date = data.pop('date', None)
         weekday = data.pop('weekday', None)
@@ -587,40 +589,27 @@ class tfhTransformer(Transformer):
         if date:
             return {'date': date}
         
+        # If there's a weekday and no other date info, use the weekday
         if weekday and not data:
-            # NOTE: arbitrarily decided that if there's a weekday AND a date, we trust the date.
-            # If there is ONLY a weekday, then we trust the weekday.
             return {'date': tfhDate.from_object(weekday.to_object(self.config))}
 
-        if isinstance(data.get('day'), str) and data.get('day').isdigit():
-            data['day'] = int(data['day'])
-        
-        if isinstance(data.get('year'), str) and data.get('year').isdigit():
-            data['year'] = int(data['year'])
-        if isinstance(data.get('month'), str) and data.get('month').isdigit():
-            data['month'] = int(data['month'])
+        # According to our grammar, day, month, and year must be stringified ints
+        day = int(data['day']) if 'day' in data else None
+        year = int(data['year']) if 'year' in data else None
+        month = int(data['month']) if 'month' in data else None
 
-        # If we have a named month, map it to a numeric month
-        month_mapping = {
-            "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
-            "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
-            "jan": 1, "feb": 2, "mar": 3, "apr": 4, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12
-        }
+        month_mapping = get_month_mapping()
+        if "monthname" in data:
+            assert "month" not in data
+            key = data['monthname'].lower()
+            month = month_mapping.get(key, self.config.now.month) # TODO: move to infer_now?
 
-        if "monthname" in data and "month" not in data:
-            key = data.pop("monthname").lower().replace(".", "")
-            data["month"] = month_mapping.get(key, self.config.now.month) # TODO: move to infer_now?
-            
-        if data.get("day", -1) > 31 and "year" not in data:
-            data["year"] = data.pop("day")
-        
-        year = data.get('year', -1)
-        if 50 < year < 100:
-            data["year"] = 1900 + year
-        elif 0 < year < 50:
-            data["year"] = 2000 + year
+        if year and 50 < year < 100:
+            year = 1900 + year
+        elif year and 0 < year < 50:
+            year = 2000 + year
 
-        return {'date': tfhDate(year=data.get("year"), month=data.get("month"), day=data.get("day"))}
+        return {'date': tfhDate(year=year, month=month, day=day)}
     
     def weekday(self, children):
         weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
