@@ -26,6 +26,10 @@ class tfhConfig:
     direction: Direction = Direction.next
     infer_datetimes: bool = True
     now: datetime = datetime.now()
+    
+    # NOTE: Right now, unmatched text is returned character by character.
+    # And it doesn't retain whitespace. So it's generally useless, except
+    # for debugging.
     return_unmatched: bool = False
 
 
@@ -557,9 +561,8 @@ class tfhTransformer(Transformer):
           - just time
         We combine them here into a single datetime if both parts are present.
         """
-        date_part = next((c for c in children if isinstance(c, tfhDate)), None)
-        time_part = next((c for c in children if isinstance(c, tfhTime)), None)
-        return tfhDatetime(date=date_part, time=time_part)
+        data = nodes_to_dict(children)
+        return tfhDatetime(date=data.get('date'), time=data.get('time'))
     
     def weekday(self, children):
         weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
@@ -570,39 +573,45 @@ class tfhTransformer(Transformer):
     def datename(self, children):
         datename = children[0].value.lower()
         if datename == 'today':
-            return tfhDate.from_object(self.config.now.date())
+            _date = tfhDate.from_object(self.config.now.date())
         elif datename == 'tomorrow':
-            return tfhDate.from_object(self.config.now.date() + timedelta(days=1))
+            _date = tfhDate.from_object(self.config.now.date() + timedelta(days=1))
         elif datename == 'yesterday':
-            return tfhDate.from_object(self.config.now.date() - timedelta(days=1))
+            _date = tfhDate.from_object(self.config.now.date() - timedelta(days=1))
+        else:
+            raise NotImplementedError(f"Unknown datename: {datename}")
+        return {'date': _date}
         
     def timename(self, children):
         timename = children[0].value.lower()
         if timename == 'noon':
-            return tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
+            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'midday':
-            return tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
+            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'midnight':
-            return tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM)
+                _time = tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM)
+        else:
+            raise NotImplementedError(f"Unknown timename: {timename}")
+        return {'time': _time}
         
     def dayoryear(self, children):
         if children[0].value.isdigit():
             value = int(children[0].value)
-            rule = 'day' if value < 32 else 'year'
-            return Tree(Token('RULE', rule), [Token('INT', value)])
+            return {'day': value} if value < 32 else {'year': value}
         raise NotImplementedError(f"Unknown day or year: {children[0]}")
 
     def date(self, children):
-        if children and isinstance(children[0], tfhDate):
-            return children[0]
-        
         data = nodes_to_dict(children)
+        date = data.pop('date', None)
         weekday = data.pop('weekday', None)
+        
+        if date:
+            return {'date': date}
         
         if weekday and not data:
             # NOTE: arbitrarily decided that if there's a weekday AND a date, we trust the date.
             # If there is ONLY a weekday, then we trust the weekday.
-            return tfhDate.from_object(weekday.to_object(self.config))
+            return {'date': tfhDate.from_object(weekday.to_object(self.config))}
 
         if isinstance(data.get('day'), str) and data.get('day').isdigit():
             data['day'] = int(data['day'])
@@ -632,14 +641,15 @@ class tfhTransformer(Transformer):
         elif 0 < year < 50:
             data["year"] = 2000 + year
 
-        return tfhDate(year=data.get("year"), month=data.get("month"), day=data.get("day"))
+        return {'date': tfhDate(year=data.get("year"), month=data.get("month"), day=data.get("day"))}
 
     def time(self, children):
-        if children and isinstance(children[0], tfhTime):
-            return children[0]
-        
         data = nodes_to_dict(children)
-
+        time = data.pop('time', None)
+        
+        if time:
+            return {'time': time}
+        
         hour = int(data.get("hour", 0))
         minute = int(data.get("minute", 0))
         second = int(data.get("second", 0))
@@ -655,10 +665,10 @@ class tfhTransformer(Transformer):
         if 'timezone' in data:
             tz = pytz.timezone(timezone_mapping[data['timezone']])
 
-        return tfhTime(hour=hour, minute=minute, second=second, millisecond=millisecond, meridiem=meridiem, tz=tz)
+        return {'time': tfhTime(hour=hour, minute=minute, second=second, millisecond=millisecond, meridiem=meridiem, tz=tz)}
 
     def houronly(self, children):
-        return tfhTime(hour=int(children[0].value))
+        return {'time': tfhTime(hour=int(children[0].value))}
     
     def unknown(self, children):
         return tfhUnknown(children[0].value)
