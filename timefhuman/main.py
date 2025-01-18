@@ -15,7 +15,7 @@ from pathlib import Path
 
 from lark import Lark, Transformer, Tree, Token
 import pytz
-from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, get_month_mapping
+from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, get_month_mapping, getter
 
 
 DIRECTORY = Path(__file__).parent
@@ -57,93 +57,36 @@ class tfhDatelike:
 
 
 class tfhCollection(tfhDatelike):
+    """
+    A collection of tfhDatelike objects. Provides direct getters and setters for each
+    tfhDatelike property.
+    """
     def __init__(self, items):
         self.items = items
+        
+    @staticmethod
+    def getter(key):
+        def get(self):
+            for item in self.items:
+                if getattr(item, key):
+                    return getattr(item, key)
+            return None
+        return get
+
+    @staticmethod
+    def setter(key):
+        def set(self, value):
+            for item in self.items:
+                setattr(item, key, value)
+        return set
     
-    # TODO: simplify these properties. they're all the same
-    @property
-    def date(self):
-        for item in self.items:
-            if item.date:
-                return item.date
-        return None
-    
-    @date.setter
-    def date(self, value):
-        for item in self.items:
-            item.date = value
-    
-    @property
-    def time(self):
-        for item in self.items:
-            if item.time:
-                return item.time
-        return None
-    
-    @time.setter
-    def time(self, value):
-        for item in self.items:
-            item.time = value
-    
-    @property
-    def meridiem(self):
-        for item in self.items:
-            if item.meridiem:
-                return item.meridiem
-        return None
-    
-    @meridiem.setter
-    def meridiem(self, value):
-        for item in self.items:
-            item.meridiem = value
-            
-    @property
-    def year(self):
-        for item in self.items:
-            if item.year:
-                return item.year
-        return None
-    
-    @year.setter
-    def year(self, value):
-        for item in self.items:
-            item.year = value
-            
-    @property
-    def month(self):
-        for item in self.items:
-            if item.month:
-                return item.month
-        return None
-    
-    @month.setter
-    def month(self, value):
-        for item in self.items:
-            item.month = value
-            
-    @property
-    def day(self):
-        for item in self.items:
-            if item.day:
-                return item.day
-        return None
-    
-    @day.setter
-    def day(self, value):
-        for item in self.items:
-            item.day = value
-            
-    @property
-    def tz(self):
-        for item in self.items:
-            if item.tz:
-                return item.tz
-        return None
-    
-    @tz.setter
-    def tz(self, value):
-        for item in self.items:
-            item.tz = value
+    date = property(getter('date'), setter('date'))
+    time = property(getter('time'), setter('time'))
+    meridiem = property(getter('meridiem'), setter('meridiem'))
+    year = property(getter('year'), setter('year'))
+    month = property(getter('month'), setter('month'))
+    day = property(getter('day'), setter('day'))
+    tz = property(getter('tz'), setter('tz'))
 
 
 class tfhRange(tfhCollection):

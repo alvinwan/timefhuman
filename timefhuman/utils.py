@@ -49,3 +49,19 @@ def nodes_to_dict(nodes: list[Tree]) -> dict:
             assert len(node.children) == 1, f"Expected 1 child for {node.data.value}, got {len(node.children)}"
             result[node.data.value] = node.children[0].value
     return result
+
+
+def getter(key):
+    def get(self):
+        for item in self.items:
+            if getattr(item, key):
+                return getattr(item, key)
+        return None
+    return get
+
+
+def setter(key):
+    def set(self, value):
+        for item in self.items:
+            setattr(item, key, value)
+    return set
