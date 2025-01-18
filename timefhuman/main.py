@@ -502,17 +502,27 @@ class tfhTransformer(Transformer):
         if weekday and not data:
             return {'date': tfhDate.from_object(weekday.to_object(self.config))}
 
-        # According to our grammar, day, month, and year must be stringified ints
-        day = int(data['day']) if 'day' in data else None
-        year = int(data['year']) if 'year' in data else None
-        month = int(data['month']) if 'month' in data else None
-
-        if year and 50 < year < 100:
-            year = 1900 + year
-        elif year and 0 < year < 50:
-            year = 2000 + year
-
-        return {'date': tfhDate(year=year, month=month, day=day)}
+        return {'date': tfhDate(
+            year=data.get('year'),
+            month=data.get('month'),
+            day=data.get('day'),
+        )}
+        
+    def day(self, children):
+        return {'day': int(children[0].value)}
+    
+    def month(self, children):
+        return {'month': int(children[0].value)}
+    
+    def year(self, children):
+        value = int(children[0].value)
+        
+        if 50 < value < 100:
+            value = 1900 + value
+        elif 0 < value < 50:
+            value = 2000 + value
+        
+        return {'year': value}
     
     def monthname(self, children):
         monthname = children[0].value.lower()
