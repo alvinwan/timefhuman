@@ -484,13 +484,20 @@ class tfhTransformer(Transformer):
     def expression(self, children):
         """The top-level expression could be a range, list, or single."""
         return children
+    
+    def unknown(self, children):
+        return tfhUnknown(children[0].value)
 
     def single(self, children):
         """A single object can be a datetime, a date, or a time."""
         if len(children) == 1 and hasattr(children[0], 'data') and children[0].data.value == 'ambiguous':
             return tfhAmbiguous(int(children[0].children[0].value))
         return children[0]
-
+    
+    ###############
+    # Collections #
+    ###############
+    
     def range(self, children):
         """Handles expressions like '7/17 3 PM - 7/18 4 PM'."""
         assert len(children) == 2
@@ -499,6 +506,10 @@ class tfhTransformer(Transformer):
     def list(self, children):
         """Handles comma/or lists like '7/17, 7/18, 7/19' or '7/17 or 7/18'."""
         return tfhList(infer(children))
+    
+    ############
+    # Duration #
+    ############
     
     def duration(self, children):
         # TODO: just grabbing the first may cause problems later. how to do this more generically?
@@ -552,6 +563,10 @@ class tfhTransformer(Transformer):
                 return tfhTimedelta.from_object(timedelta(**{group[0]: duration_number}), unit=group[0])
         raise NotImplementedError(f"Unknown duration unit: {data['duration_unit']}")
 
+    ############
+    # Datetime #
+    ############
+
     def datetime(self, children):
         """
         A 'datetime' node can contain:
@@ -564,42 +579,6 @@ class tfhTransformer(Transformer):
         data = nodes_to_dict(children)
         return tfhDatetime(date=data.get('date'), time=data.get('time'))
     
-    def weekday(self, children):
-        weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
-        weekday = children[0].value[:2].lower()
-        target_weekday = weekdays.index(weekday)
-        return {'weekday': tfhWeekday(target_weekday)}
-    
-    def datename(self, children):
-        datename = children[0].value.lower()
-        if datename == 'today':
-            _date = tfhDate.from_object(self.config.now.date())
-        elif datename == 'tomorrow':
-            _date = tfhDate.from_object(self.config.now.date() + timedelta(days=1))
-        elif datename == 'yesterday':
-            _date = tfhDate.from_object(self.config.now.date() - timedelta(days=1))
-        else:
-            raise NotImplementedError(f"Unknown datename: {datename}")
-        return {'date': _date}
-        
-    def timename(self, children):
-        timename = children[0].value.lower()
-        if timename == 'noon':
-            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
-        elif timename == 'midday':
-            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
-        elif timename == 'midnight':
-                _time = tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM)
-        else:
-            raise NotImplementedError(f"Unknown timename: {timename}")
-        return {'time': _time}
-        
-    def dayoryear(self, children):
-        if children[0].value.isdigit():
-            value = int(children[0].value)
-            return {'day': value} if value < 32 else {'year': value}
-        raise NotImplementedError(f"Unknown day or year: {children[0]}")
-
     def date(self, children):
         data = nodes_to_dict(children)
         date = data.pop('date', None)
@@ -642,6 +621,30 @@ class tfhTransformer(Transformer):
             data["year"] = 2000 + year
 
         return {'date': tfhDate(year=data.get("year"), month=data.get("month"), day=data.get("day"))}
+    
+    def weekday(self, children):
+        weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
+        weekday = children[0].value[:2].lower()
+        target_weekday = weekdays.index(weekday)
+        return {'weekday': tfhWeekday(target_weekday)}
+    
+    def datename(self, children):
+        datename = children[0].value.lower()
+        if datename == 'today':
+            _date = tfhDate.from_object(self.config.now.date())
+        elif datename == 'tomorrow':
+            _date = tfhDate.from_object(self.config.now.date() + timedelta(days=1))
+        elif datename == 'yesterday':
+            _date = tfhDate.from_object(self.config.now.date() - timedelta(days=1))
+        else:
+            raise NotImplementedError(f"Unknown datename: {datename}")
+        return {'date': _date}
+    
+    def dayoryear(self, children):
+        if children[0].value.isdigit():
+            value = int(children[0].value)
+            return {'day': value} if value < 32 else {'year': value}
+        raise NotImplementedError(f"Unknown day or year: {children[0]}")
 
     def time(self, children):
         data = nodes_to_dict(children)
@@ -667,8 +670,17 @@ class tfhTransformer(Transformer):
 
         return {'time': tfhTime(hour=hour, minute=minute, second=second, millisecond=millisecond, meridiem=meridiem, tz=tz)}
 
+    def timename(self, children):
+        timename = children[0].value.lower()
+        if timename == 'noon':
+            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
+        elif timename == 'midday':
+            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
+        elif timename == 'midnight':
+                _time = tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM)
+        else:
+            raise NotImplementedError(f"Unknown timename: {timename}")
+        return {'time': _time}
+    
     def houronly(self, children):
         return {'time': tfhTime(hour=int(children[0].value))}
-    
-    def unknown(self, children):
-        return tfhUnknown(children[0].value)
