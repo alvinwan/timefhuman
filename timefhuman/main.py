@@ -15,7 +15,7 @@ from pathlib import Path
 
 from lark import Lark, Transformer, Tree, Token
 import pytz
-from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, get_month_mapping, getter
+from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, get_month_mapping
 
 
 DIRECTORY = Path(__file__).parent
@@ -545,27 +545,30 @@ class tfhTransformer(Transformer):
 
     def time(self, children):
         data = nodes_to_dict(children)
-        time = data.pop('time', None)
         
-        if time:
-            return {'time': time}
+        if 'time' in data:
+            return {'time': data['time']}
         
-        hour = int(data.get("hour", 0))
-        minute = int(data.get("minute", 0))
-        second = int(data.get("second", 0))
-        millisecond = int(data.get("millisecond", 0))
-        
-        meridiem = None
-        if data.get("meridiem", '').lower().startswith("a"):
-            meridiem = tfhTime.Meridiem.AM
-        elif data.get("meridiem", '').lower().startswith("p"):
-            meridiem = tfhTime.Meridiem.PM
-            
-        tz = None
-        if 'timezone' in data:
-            tz = pytz.timezone(timezone_mapping[data['timezone']])
-
-        return {'time': tfhTime(hour=hour, minute=minute, second=second, millisecond=millisecond, meridiem=meridiem, tz=tz)}
+        return {'time': tfhTime(
+            hour=int(data.get("hour", 0)),
+            minute=int(data.get("minute", 0)),
+            second=int(data.get("second", 0)),
+            millisecond=int(data.get("millisecond", 0)),
+            meridiem=data.get("meridiem", None),
+            tz=data.get("timezone", None),
+        )}
+    
+    def meridiem(self, children):
+        meridiem = children[0].value.lower()
+        if meridiem.startswith('a'):
+            return {'meridiem': tfhTime.Meridiem.AM}
+        elif meridiem.startswith('p'):
+            return {'meridiem': tfhTime.Meridiem.PM}
+        raise NotImplementedError(f"Unknown meridiem: {meridiem}")
+    
+    def timezone(self, children):
+        timezone = children[0].value.lower()
+        return {'timezone': pytz.timezone(timezone_mapping[timezone])}
 
     def timename(self, children):
         timename = children[0].value.lower()
