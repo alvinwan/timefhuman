@@ -78,18 +78,32 @@ See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
 ## Advanced Usage
 
-You can configure the default date that timefhuman uses to fill in missing information. This would be useful if you're extracting relative dates like `next Monday` from an email sent a year ago.
+For more configuration options, simply create a `tfhConfig` object.
 
 ```python
->>> from timefhuman import timefhuman, tfhConfig
->>> import datetime
+from timefhuman import tfhConfig
+config = tfhConfig()
+```
+
+**Return matched text**: You can additionally grab the matched text from the input string. This is useful for modifying the input string, for example.
+
+```python
+>>> config = tfhConfig(return_matched_text=True)
+
+>>> timefhuman('We could maybe do 3 PM, if you still have time', config=config)
+[('3 PM', datetime.datetime(2018, 8, 4, 15, 0))]
+```
+
+**Change 'Now'**: You can configure the default date that timefhuman uses to fill in missing information. This would be useful if you're extracting dates from an email sent a year ago.
+
+```python
 >>> config = tfhConfig(now=datetime.datetime(2018, 8, 4, 0, 0))
 
 >>> timefhuman('upcoming Monday noon', config=config)
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
 
-Alternatively, say you want to extract only the time from a text -- perhaps it's a festival's schedule. You can disable date inference by setting `infer_datetimes=False`. Instead of always returning a datetime, timefhuman will be able to return time-like objects for only explicitly-written information.
+**Don't infer**: Alternatively, say you want to extract only the time from a text -- perhaps it's a festival's schedule. You can disable date inference by setting `infer_datetimes=False`. Instead of always returning a datetime, timefhuman will be able to return time-like objects for only explicitly-written information.
 
 ```python
 >>> config = tfhConfig(infer_datetimes=False)
