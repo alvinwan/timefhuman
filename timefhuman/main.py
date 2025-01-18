@@ -568,14 +568,6 @@ class tfhTransformer(Transformer):
     ############
 
     def datetime(self, children):
-        """
-        A 'datetime' node can contain:
-          - date + time
-          - date + 'at' + time
-          - just date
-          - just time
-        We combine them here into a single datetime if both parts are present.
-        """
         data = nodes_to_dict(children)
         return tfhDatetime(date=data.get('date'), time=data.get('time'))
     
@@ -598,18 +590,17 @@ class tfhTransformer(Transformer):
         year = int(data['year']) if 'year' in data else None
         month = int(data['month']) if 'month' in data else None
 
-        month_mapping = get_month_mapping()
-        if "monthname" in data:
-            assert "month" not in data
-            key = data['monthname'].lower()
-            month = month_mapping.get(key, self.config.now.month) # TODO: move to infer_now?
-
         if year and 50 < year < 100:
             year = 1900 + year
         elif year and 0 < year < 50:
             year = 2000 + year
 
         return {'date': tfhDate(year=year, month=month, day=day)}
+    
+    def monthname(self, children):
+        monthname = children[0].value.lower()
+        month = get_month_mapping().get(monthname, self.config.now.month)
+        return {'month': month}
     
     def weekday(self, children):
         weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
