@@ -4,14 +4,18 @@ into native Python objects, such as datetime, date, time, and timedelta.
 """
 
 
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 from datetime import datetime, date, time, timedelta
 from enum import Enum
 import pytz
 from timefhuman.utils import tfhConfig, Direction
 
 
-class tfhDatelike:
+class tfhMatchable:
+    matched_text_pos: Optional[Tuple[int, int]] = None
+
+
+class tfhDatelike(tfhMatchable):
     """
     A result is a single object that can be converted to a datetime, date, or time.
     
@@ -89,7 +93,7 @@ class tfhList(tfhCollection):
         return f"tfhList({self.items})"
 
 
-class tfhTimedelta:
+class tfhTimedelta(tfhMatchable):
     def __init__(self, days: int = 0, seconds: int = 0, unit: Optional[str] = None):
         self.days = days
         self.seconds = seconds
@@ -249,7 +253,7 @@ class tfhDatetime(tfhDatelike):
         return f"tfhDatetime({self.date}, {self.time})"
     
 
-class tfhAmbiguous:
+class tfhAmbiguous(tfhMatchable):
     """Can represent an hour, a day, month, or year."""
     
     def __init__(self, value: int):
@@ -267,7 +271,7 @@ class tfhAmbiguous:
         return f"tfhAmbiguous({self.value})"
 
 
-class tfhUnknown:
+class tfhUnknown(tfhMatchable):
     def __init__(self, value: str):
         self.value = value
         

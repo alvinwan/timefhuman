@@ -38,12 +38,11 @@ TIMEZONE: /(?i)((TIMEZONE_MAPPING))/
 // ----------------------
 // PARSER RULES
 // ----------------------
-start: expression
+start: (expression | unknown)+
 
-expression: (single
+expression: single
           | list
           | range
-          | unknown)+
 
 range: single ("to" | "-") single
 

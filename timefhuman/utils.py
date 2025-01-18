@@ -18,12 +18,9 @@ Direction = Enum('Direction', ['previous', 'next', 'nearest'])
 class tfhConfig:
     direction: Direction = Direction.next
     infer_datetimes: bool = True
-    now: datetime = datetime.now()
-    
-    # NOTE: Right now, unmatched text is returned character by character.
-    # And it doesn't retain whitespace. So it's generally useless, except
-    # for debugging.
-    return_unmatched: bool = False
+    now: datetime = datetime.now()    
+    return_matched_text: bool = False
+    return_single_object: bool = True
 
 
 def generate_timezone_mapping():

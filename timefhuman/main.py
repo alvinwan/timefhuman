@@ -1,10 +1,10 @@
 from datetime import timedelta
 from pathlib import Path
 
-from lark import Lark, Transformer
+from lark import Lark, Transformer, v_args
 import pytz
 from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, get_month_mapping, tfhConfig, Direction
-from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhWeekday, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhUnknown, tfhDatelike
+from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhWeekday, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhUnknown, tfhDatelike, tfhMatchable
 
 
 __all__ = ('timefhuman',)
@@ -22,7 +22,7 @@ def get_parser():
         with open(DIRECTORY / 'grammar.lark', 'r') as file:
             grammar = file.read()
         grammar = grammar.replace('(TIMEZONE_MAPPING)', '|'.join(timezone_mapping.keys()))
-        parser = Lark(grammar, start="start")
+        parser = Lark(grammar, start="start", propagate_positions=True)
     return parser
 
 
@@ -34,21 +34,17 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
         return tree
 
     transformer = tfhTransformer(config=config)
-    results = transformer.transform(tree)
+    renderers = transformer.transform(tree)
+    renderers = list(filter(lambda r: not isinstance(r, (tfhUnknown, tfhAmbiguous)), renderers))
+    datetimes = [renderer.to_object(config) for renderer in renderers]
     
-    # NOTE: intentionally did not filter by hasattr(result, 'to_object') to 
-    # catch any other objects that might be returned
-    results = [result.to_object(config) for result in results]
+    if config.return_matched_text:
+        matched_texts = [string[renderer.matched_text_pos[0]:renderer.matched_text_pos[1]] for renderer in renderers]
+        return list(zip(matched_texts, datetimes))
     
-    if config.return_unmatched:
-        return results
-
-    results = list(filter(lambda s: not isinstance(s, str), results))
-    
-    if len(results) == 1:
-        return results[0]
-
-    return results
+    if config.return_single_object and len(datetimes) == 1:
+        return datetimes[0]
+    return datetimes
 
 
 def infer_from(source: tfhDatelike, target: tfhDatelike):
@@ -103,11 +99,16 @@ class tfhTransformer(Transformer):
 
     def start(self, children):
         """Strip the 'start' rule and return child(ren) directly."""
-        return children[0]
-
-    def expression(self, children):
-        """The top-level expression could be a range, list, or single."""
         return children
+
+    @v_args(tree=True)
+    def expression(self, tree):
+        """The top-level expression could be a range, list, or single."""
+        expr = tree.children[0]
+        if self.config.return_matched_text:
+            assert isinstance(expr, tfhMatchable), f"Expected tfhDatelike or tfhAmbiguous, got {type(expr)}"
+            expr.matched_text_pos = (tree.meta.start_pos, tree.meta.end_pos)
+        return expr
     
     def unknown(self, children):
         return tfhUnknown(children[0].value)
