@@ -3,12 +3,27 @@ import pytz
 from babel.dates import get_timezone_name
 from lark.tree import Tree
 from lark.lexer import Token
+from dataclasses import dataclass
+from enum import Enum
 
 
 MONTHS = [
     "january", "february", "march", "april", "may", "june",
     "july", "august", "september", "october", "november", "december",
 ]
+Direction = Enum('Direction', ['previous', 'next', 'nearest'])
+
+
+@dataclass
+class tfhConfig:
+    direction: Direction = Direction.next
+    infer_datetimes: bool = True
+    now: datetime = datetime.now()
+    
+    # NOTE: Right now, unmatched text is returned character by character.
+    # And it doesn't retain whitespace. So it's generally useless, except
+    # for debugging.
+    return_unmatched: bool = False
 
 
 def generate_timezone_mapping():
