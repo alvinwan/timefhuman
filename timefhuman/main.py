@@ -40,10 +40,10 @@ class tfhDatelike:
     It must provide settable properties for date, time, and meridiem.
     """
     date: Optional['tfhDate'] = None
-    month: Optional[int] = None
-    year: Optional[int] = None
-    day: Optional[int] = None
     time: Optional['tfhTime'] = None
+    year: Optional[int] = None
+    month: Optional[int] = None
+    day: Optional[int] = None
     meridiem: Optional['tfhTime.Meridiem'] = None
     tz: Optional[pytz.timezone] = None
     
@@ -82,10 +82,10 @@ class tfhCollection(tfhDatelike):
     
     date = property(getter('date'), setter('date'))
     time = property(getter('time'), setter('time'))
-    meridiem = property(getter('meridiem'), setter('meridiem'))
     year = property(getter('year'), setter('year'))
     month = property(getter('month'), setter('month'))
     day = property(getter('day'), setter('day'))
+    meridiem = property(getter('meridiem'), setter('meridiem'))
     tz = property(getter('tz'), setter('tz'))
 
 
@@ -216,51 +216,25 @@ class tfhTime:
 class tfhDatetime(tfhDatelike):
     """A combination of tfhDate + tfhTime."""
     
-    @property
-    def meridiem(self):
-        return self.time.meridiem if self.time else None
+    def getter(attr, key):
+        def get(self):
+            obj = getattr(self, attr)
+            return getattr(obj, key) if obj else None
+        return get
     
-    @meridiem.setter
-    def meridiem(self, value):
-        if self.time:
-            self.time.meridiem = value
-            
-    @property
-    def year(self):
-        return self.date.year if self.date else None
+    def setter(attr, key):
+        def set(self, value):
+            obj = getattr(self, attr)
+            if obj:
+                setattr(obj, key, value)
+        return set
     
-    @year.setter
-    def year(self, value):
-        if self.date:
-            self.date.year = value
-            
-    @property
-    def month(self):
-        return self.date.month if self.date else None
-    
-    @month.setter
-    def month(self, value):
-        if self.date:
-            self.date.month = value
-            
-    @property
-    def day(self):
-        return self.date.day if self.date else None
-    
-    @day.setter
-    def day(self, value):
-        if self.date:
-            self.date.day = value
-            
-    @property
-    def tz(self):
-        return self.time.tz if self.time else None
-    
-    @tz.setter
-    def tz(self, value):
-        if self.time:
-            self.time.tz = value
-    
+    year = property(getter('date', 'year'), setter('date', 'year'))
+    month = property(getter('date', 'month'), setter('date', 'month'))
+    day = property(getter('date', 'day'), setter('date', 'day'))
+    meridiem = property(getter('time', 'meridiem'), setter('time', 'meridiem'))
+    tz = property(getter('time', 'tz'), setter('time', 'tz'))
+
     def __init__(
         self, 
         date: Optional[tfhDate] = None, 
