@@ -565,7 +565,7 @@ class tfhTransformer(Transformer):
         weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
         weekday = children[0].value[:2].lower()
         target_weekday = weekdays.index(weekday)
-        return tfhWeekday(target_weekday)
+        return {'weekday': tfhWeekday(target_weekday)}
     
     def datename(self, children):
         datename = children[0].value.lower()
@@ -596,8 +596,8 @@ class tfhTransformer(Transformer):
         if children and isinstance(children[0], tfhDate):
             return children[0]
         
-        weekday = next((c for c in children if isinstance(c, tfhWeekday)), None)
-        data = {child.data.value: child.children[0].value for child in children if hasattr(child, 'children')}
+        data = nodes_to_dict(children)
+        weekday = data.pop('weekday', None)
         
         if weekday and not data:
             # NOTE: arbitrarily decided that if there's a weekday AND a date, we trust the date.
