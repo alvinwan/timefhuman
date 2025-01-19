@@ -135,29 +135,6 @@ class tfhDate:
                 f"year={self.year}, month={self.month}, day={self.day})")
 
 
-class tfhWeekday:
-    def __init__(self, day: int):
-        self.day = day
-        
-    def to_object(self, config: tfhConfig = tfhConfig()):
-        current_weekday = config.now.weekday()
-        
-        days_until = (7 - (current_weekday - self.day)) % 7
-        if config.direction == Direction.previous:
-            days_until -= 7
-        elif config.direction == Direction.next:
-            days_until = days_until or 7
-        
-        return config.now.date() + timedelta(days=days_until)
-    
-    @classmethod
-    def from_object(cls, obj: int):
-        return cls(day=obj)
-
-    def __repr__(self):
-        return f"tfhWeekday({self.day})"
-
-
 class tfhTime:
     Meridiem = Enum('Meridiem', ['AM', 'PM'])
     

@@ -125,6 +125,16 @@ def test_default(now, test_input, expected):
     
     # TODO: support natural language date ranges e.g., this week, next weekend, any weekday gh#18
     # TODO: support natural language time ranges e.g., afternoon, morning, evening, tonight, today night gh#30
+    
+    # TODO: support 'last wed of dec', 'last week of dec' (gh#4)
+    
+    # support for date modifiers
+    # TODO: support next next
+    ('next Monday', datetime.date(2018, 8, 6)),
+    ('upcoming Monday', datetime.date(2018, 8, 6)),
+    ('this upcoming Monday', datetime.date(2018, 8, 6)),
+    ('last Monday', datetime.date(2018, 7, 30)),
+    ('this past Monday', datetime.date(2018, 7, 30)),
 ])
 def test_no_inference(now, test_input, expected):
     """Return exactly the date or time, without inferring the other."""
@@ -138,9 +148,7 @@ def test_no_inference(now, test_input, expected):
     
     (tfhConfig(infer_datetimes=True), '5p', datetime.datetime(2018, 8, 4, 17, 0)),
     (tfhConfig(infer_datetimes=False), '5p', datetime.time(hour=17, minute=0)),
-    (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # TODO tomorrow, since passed today (gh#12)
-
-    # TODO: support for 'next/last' (for both meanings of last) gh#4
+    (tfhConfig(infer_datetimes=True), '1p', datetime.datetime(2018, 8, 5, 13, 0)), # gh#12
 ])
 def test_custom_config(now, config, test_input, expected):
     config.now = now

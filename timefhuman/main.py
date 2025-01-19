@@ -1,10 +1,10 @@
 from datetime import timedelta
 from pathlib import Path
 
-from lark import Lark, Transformer, v_args
+from lark import Lark, Transformer, v_args, Token, Discard
 import pytz
 from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, get_month_mapping, tfhConfig, Direction
-from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhWeekday, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhUnknown, tfhDatelike, tfhMatchable
+from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhUnknown, tfhDatelike, tfhMatchable
 
 
 __all__ = ('timefhuman',)
@@ -205,7 +205,7 @@ class tfhTransformer(Transformer):
         
         # If there's a weekday and no other date info, use the weekday
         if 'weekday' in data and all(key not in data for key in ('day', 'month', 'year')):
-            return {'date': tfhDate.from_object(data['weekday'].to_object(self.config))}
+            return {'date': data['weekday']}
 
         return {'date': tfhDate(
             year=data.get('year'),
@@ -235,10 +235,33 @@ class tfhTransformer(Transformer):
         return {'month': month}
     
     def weekday(self, children):
+        data = {token.type: token.value for token in children}
+        
         weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
-        weekday = children[0].value[:2].lower()
+        weekday = data['WEEKDAY'][:2].lower()
         target_weekday = weekdays.index(weekday)
-        return {'weekday': tfhWeekday(target_weekday)}
+        
+        current_weekday = self.config.now.weekday()
+        direction = data.get('direction', self.config.direction)
+    
+        days_until = (7 - (current_weekday - target_weekday)) % 7
+        if direction == Direction.previous:
+            days_until -= 7
+        elif direction == Direction.next:
+            days_until = days_until or 7
+        
+        date = self.config.now.date() + timedelta(days=days_until)
+        return {'weekday': tfhDate.from_object(date)}
+    
+    def modifier(self, children):
+        value = children[0].value
+        if value in ('next', 'upcoming', 'following'):
+            return Token('direction', Direction.next)
+        elif value in ('previous', 'last', 'past', 'preceding'):  # TODO: support 'last' for both meanings
+            return Token('direction', Direction.previous)
+        elif value == 'this':
+            return Discard  # TODO: use this somehow?
+        raise NotImplementedError(f"Unknown modifier: {value}")
     
     def datename(self, children):
         datename = children[0].value.lower()

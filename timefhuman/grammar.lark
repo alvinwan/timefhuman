@@ -35,6 +35,8 @@ FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/i  // from lark
 
 TIMEZONE: /(?i)((TIMEZONE_MAPPING))/
 
+MODIFIER: /(?i)(next|last|this|upcoming|previous|past)/
+
 // ----------------------
 // PARSER RULES
 // ----------------------
@@ -92,7 +94,7 @@ duration_numbername: DURATION_NUMBER+
 duration_unit: DURATION_UNIT
 duration_unit_letter: DURATION_UNIT_LETTER
 
-weekday: WEEKDAY
+weekday: (modifier+)? WEEKDAY
 monthname: MONTHNAME
 datename: DATENAME
 dayoryear: INT
@@ -109,6 +111,7 @@ millisecond: INT
 meridiem: MERIDIEM
 houronly: INT
 timezone: TIMEZONE  // `TIMEZONE` is generated dynamically
+modifier: MODIFIER
 
 ambiguous: INT
 
