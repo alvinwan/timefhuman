@@ -94,6 +94,7 @@ duration_numbername: DURATION_NUMBER+
 duration_unit: DURATION_UNIT
 duration_unit_letter: DURATION_UNIT_LETTER
 
+// process date modifiers here since the weekday processor fully determines the date
 weekday: (modifier+)? WEEKDAY
 monthname: MONTHNAME
 datename: DATENAME

@@ -206,6 +206,9 @@ class tfhTransformer(Transformer):
         # If there's a weekday and no other date info, use the weekday
         if 'weekday' in data and all(key not in data for key in ('day', 'month', 'year')):
             return {'date': data['weekday']}
+        
+        if 'direction' in data:
+            breakpoint()
 
         return {'date': tfhDate(
             year=data.get('year'),
@@ -245,6 +248,9 @@ class tfhTransformer(Transformer):
         direction = data.get('direction', self.config.direction)
     
         days_until = (7 - (current_weekday - target_weekday)) % 7
+        if direction == Direction.this:
+            direction = Direction.next if current_weekday < target_weekday else Direction.previous
+            
         if direction == Direction.previous:
             days_until -= 7
         elif direction == Direction.next:
@@ -260,7 +266,7 @@ class tfhTransformer(Transformer):
         elif value in ('previous', 'last', 'past', 'preceding'):  # TODO: support 'last' for both meanings
             return Token('direction', Direction.previous)
         elif value == 'this':
-            return Discard  # TODO: use this somehow?
+            return Token('direction', Direction.this)
         raise NotImplementedError(f"Unknown modifier: {value}")
     
     def datename(self, children):

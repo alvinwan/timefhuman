@@ -11,7 +11,7 @@ MONTHS = [
     "january", "february", "march", "april", "may", "june",
     "july", "august", "september", "october", "november", "december",
 ]
-Direction = Enum('Direction', ['previous', 'next', 'nearest'])
+Direction = Enum('Direction', ['previous', 'next', 'this'])
 
 
 @dataclass

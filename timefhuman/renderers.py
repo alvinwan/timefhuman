@@ -218,6 +218,8 @@ class tfhDatetime(tfhDatelike):
                     candidate += timedelta(days=1)
                 elif candidate > _now and config.direction == Direction.previous:
                     candidate -= timedelta(days=1)
+                elif config.direction == Direction.this:
+                    pass
                 return candidate
             return self.time.to_object(config)
         raise ValueError("Datetime is missing both date and time")
