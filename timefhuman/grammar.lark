@@ -15,11 +15,14 @@ WEEKDAY: /(?i)(monday|mon|tuesday|tues|tue|tu|wednesday|wed|thursday|thurs|thur|
 // Meridiem token (am/pm, with optional dots)
 MERIDIEM: /(?i)([ap](\.?m\.?)?)/
 
-// Datename token (today, tomorrow, yesterday)
+// Datename token specifies only day
 DATENAME: /(?i)(today|tomorrow|tmw|yesterday)/
 
-// Timename token (noon)
-TIMENAME: /(?i)(noon|midday|midnight)/
+// Timename token specifies only time
+TIMENAME: /(?i)(noon|midday|midnight|morning|afternoon|evening|night)/
+
+// Datetimename token specifies date and time
+DATETIMENAME: /(?i)(tonight)/
 
 // Duration unit (minutes, hours, days, etc.)
 DURATION_UNIT: /(?i)(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)/
@@ -64,6 +67,7 @@ datetime: date ("at" (time | houronly))?
         | (time | houronly) "on" date
         | date
         | time
+        | datetimename
 
 // NOTE: process month modifiers here since the modifier affects the year, which
 // won't be processed until the date rule. If additional modifiers are added,
@@ -98,6 +102,8 @@ duration_number: FLOAT_NUMBER | INT
 duration_numbername: DURATION_NUMBER+
 duration_unit: DURATION_UNIT
 duration_unit_letter: DURATION_UNIT_LETTER
+
+datetimename: DATETIMENAME
 
 // process date modifiers here since the weekday processor fully determines the date
 weekday: (modifier+)? WEEKDAY

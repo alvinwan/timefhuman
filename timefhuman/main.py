@@ -195,6 +195,8 @@ class tfhTransformer(Transformer):
 
     def datetime(self, children):
         data = nodes_to_dict(children)
+        if 'datetime' in data:
+            return data['datetime']
         return tfhDatetime(date=data.get('date'), time=data.get('time'))
     
     def date(self, children):
@@ -342,10 +344,27 @@ class tfhTransformer(Transformer):
         elif timename == 'midday':
             _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'midnight':
-                _time = tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM)
+            _time = tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM)
+        elif timename == 'morning':
+            _time = tfhTime(hour=6, minute=0, meridiem=tfhTime.Meridiem.AM)
+        elif timename == 'afternoon':
+            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
+        elif timename == 'evening':
+            _time = tfhTime(hour=18, minute=0, meridiem=tfhTime.Meridiem.PM)
+        elif timename == 'night':
+            _time = tfhTime(hour=20, minute=0, meridiem=tfhTime.Meridiem.PM)
         else:
             raise NotImplementedError(f"Unknown timename: {timename}")
         return {'time': _time}
     
     def houronly(self, children):
         return {'time': tfhTime(hour=int(children[0].value))}
+
+    def datetimename(self, children):
+        datetimename = children[0].value.lower()
+        if datetimename == 'tonight':
+            _datetime = tfhDatetime(date=tfhDate.from_object(self.config.now.date()), time=tfhTime(hour=20, minute=0, meridiem=tfhTime.Meridiem.PM))
+        else:
+            raise NotImplementedError(f"Unknown datetimename: {datetimename}")
+        return {'datetime': _datetime}
+

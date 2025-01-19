@@ -127,8 +127,9 @@ def test_default(now, test_input, expected):
     # TODO: support natural language time ranges e.g., afternoon, morning, evening, tonight, today night gh#30
     
     # TODO: support 'last wed of dec', 'last week of dec' (gh#4)
+    # TODO: christmas? new years? eve?
     
-    # support for date modifiers
+    # support for date and month modifiers
     # TODO: support next next and 'this past July' (e.g., reduce to 'this')
     ('next Monday', datetime.date(2018, 8, 6)),
     ('following Monday', datetime.date(2018, 8, 6)),
@@ -136,6 +137,14 @@ def test_default(now, test_input, expected):
     ('last Monday', datetime.date(2018, 7, 30)),
     ('next July', datetime.date(2019, 7, 1)),
     ('past July', datetime.date(2018, 7, 1)),
+    
+    # support for vernacular datetimes
+    ('afternoon', datetime.time(hour=12, minute=0)),
+    ('morning', datetime.time(hour=6, minute=0)),
+    ('evening', datetime.time(hour=18, minute=0)),
+    ('night', datetime.time(hour=20, minute=0)),
+    ('today night', datetime.datetime(2018, 8, 4, 20, 0)),
+    ('tonight', datetime.datetime(2018, 8, 4, 20, 0)), # gh#30
 ])
 def test_no_inference(now, test_input, expected):
     """Return exactly the date or time, without inferring the other."""
