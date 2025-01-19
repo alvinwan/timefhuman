@@ -197,18 +197,15 @@ class tfhTransformer(Transformer):
         return tfhDatetime(date=data.get('date'), time=data.get('time'))
     
     def date(self, children):
-        # The pops here are a hack, because we want to check if any data is left
-        # after we've popped other detected dates.
         data = nodes_to_dict(children)
-        date = data.pop('date', None)
-        weekday = data.pop('weekday', None)
         
-        if date:
-            return {'date': date}
+        if 'date' in data:
+            # TODO: simply return data?
+            return {'date': data['date']}
         
         # If there's a weekday and no other date info, use the weekday
-        if weekday and not data:
-            return {'date': tfhDate.from_object(weekday.to_object(self.config))}
+        if 'weekday' in data and all(key not in data for key in ('day', 'month', 'year')):
+            return {'date': tfhDate.from_object(data['weekday'].to_object(self.config))}
 
         return {'date': tfhDate(
             year=data.get('year'),
@@ -265,6 +262,7 @@ class tfhTransformer(Transformer):
         data = nodes_to_dict(children)
         
         if 'time' in data:
+            # TODO: simply return data?
             return {'time': data['time']}
         
         return {'time': tfhTime(
