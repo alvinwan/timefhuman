@@ -19,7 +19,7 @@ MERIDIEM: /(?i)([ap](\.?m\.?)?)/
 DATENAME: /(?i)(today|tomorrow|tmw|yesterday)/
 
 // Timename token (noon)
-TIMENAME: /(?i)(noon|midday|midnight)/
+TIMENAME: /(?i)(noon|midday|midnight|morning|afternoon|evening|night)/
 
 // Duration unit (minutes, hours, days, etc.)
 DURATION_UNIT: /(?i)(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)/

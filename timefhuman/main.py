@@ -342,7 +342,15 @@ class tfhTransformer(Transformer):
         elif timename == 'midday':
             _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'midnight':
-                _time = tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM)
+            _time = tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM)
+        elif timename == 'morning':
+            _time = tfhTime(hour=6, minute=0, meridiem=tfhTime.Meridiem.AM)
+        elif timename == 'afternoon':
+            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
+        elif timename == 'evening':
+            _time = tfhTime(hour=18, minute=0, meridiem=tfhTime.Meridiem.PM)
+        elif timename == 'night':
+            _time = tfhTime(hour=20, minute=0, meridiem=tfhTime.Meridiem.PM)
         else:
             raise NotImplementedError(f"Unknown timename: {timename}")
         return {'time': _time}
