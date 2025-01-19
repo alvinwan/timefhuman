@@ -1,4 +1,5 @@
 from datetime import timedelta
+import datetime
 from pathlib import Path
 
 from lark import Lark, Transformer, v_args, Token, Discard
@@ -208,13 +209,32 @@ class tfhTransformer(Transformer):
             return {'date': data['weekday']}
         
         if 'direction' in data:
-            breakpoint()
+            # TODO: I don't like that this infers using current datetime. Somehow encode
+            # delta to use later? I like dateutil.relativedate, better than timedelta
+            assert set(data.keys()) == {'direction', 'month'}, f"Expected 'direction' and 'month', got {data.keys()}"
+            direction = data['direction']
+            candidate = datetime.date(year=self.config.now.year, month=data['month'], day=1)
+            
+            if candidate < self.config.now.date() and direction == Direction.next:
+                # TODO: this is already inferring using current year
+                candidate = datetime.date(year=self.config.now.year + 1, month=data['month'], day=1)
+            elif candidate > self.config.now.date() and direction == Direction.previous:
+                candidate = tfhDate(year=self.config.now.year - 1, month=data['month'], day=1)
+            elif direction == Direction.this:
+                pass
+            
+            return {'date': tfhDate(
+                year=candidate.year,
+                month=candidate.month,
+                day=candidate.day,
+            )}
 
         return {'date': tfhDate(
             year=data.get('year'),
             month=data.get('month'),
             day=data.get('day'),
         )}
+        
         
     def day(self, children):
         return {'day': int(children[0].value)}

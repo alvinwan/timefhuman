@@ -69,4 +69,6 @@ def nodes_to_dict(nodes: list[Tree]) -> dict:
         elif isinstance(node, Tree):
             assert len(node.children) == 1, f"Expected 1 child for {node.data.value}, got {len(node.children)}"
             result[node.data.value] = node.children[0].value
+        elif isinstance(node, Token):
+            result[node.type] = node.value
     return result

@@ -65,6 +65,10 @@ datetime: date ("at" (time | houronly))?
         | date
         | time
 
+// NOTE: process month modifiers here since the modifier affects the year, which
+// won't be processed until the date rule. If additional modifiers are added,
+// update the date rule processor to handle them. It currently assumes that only
+// the month can be modified.
 date: weekday? month "/" day "/" year
     | weekday? year "/" month "/" day
     | weekday? month "/" dayoryear
@@ -76,6 +80,7 @@ date: weekday? month "/" day "/" year
     | weekday? monthname day DAY_SUFFIX
     | weekday? day DAY_SUFFIX
     | weekday? monthname dayoryear
+    | modifier+ monthname 
     | weekday
 
 // intentionally not allowing int-only time, so that single-integers can be
