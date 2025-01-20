@@ -87,3 +87,12 @@ def nodes_to_multidict(nodes: list[Tree]) -> dict:
                 result[key] = []
             result[key].append(value)
     return result
+
+
+def direction_to_offset(direction: Direction) -> int:
+    if direction == Direction.next:
+        return +1
+    elif direction == Direction.previous:
+        return -1
+    else:
+        return 0

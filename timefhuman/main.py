@@ -4,15 +4,14 @@ from pathlib import Path
 
 from lark import Lark, Transformer, v_args, Token, Discard
 import pytz
-from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, get_month_mapping, tfhConfig, Direction
+from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, get_month_mapping, tfhConfig, Direction, direction_to_offset
 from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhUnknown, tfhDatelike, tfhMatchable
-from dateutil.relativedelta import relativedelta, MO, TU, WE, TH, FR, SA, SU
+from dateutil.relativedelta import relativedelta, weekdays
 
 
 __all__ = ('timefhuman',)
 
 
-WEEKDAYS = [MO, TU, WE, TH, FR, SA, SU]
 DIRECTORY = Path(__file__).parent
 parser = None
 timezone_mapping = None
@@ -264,21 +263,14 @@ class tfhTransformer(Transformer):
     def weekday(self, children):
         data = nodes_to_multidict(children)
         
-        weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
         weekday = data['WEEKDAY'][0][:2].lower()
-        target_weekday = weekdays.index(weekday)
+        target_weekday = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su'].index(weekday)
         
-        if 'offset' not in data:
-            if self.config.direction == Direction.next:
-                offset = +1
-            elif self.config.direction == Direction.previous:
-                offset = -1
-            else:
-                offset = 0
-        else:
-            offset = sum(data['offset'])
+        offset = direction_to_offset(self.config.direction)
+        if 'offset' in data:
+            offset = sum(data['offset'])  # sum offsets, such as 'next next'
 
-        date = self.config.now.date() + relativedelta(weekday=WEEKDAYS[target_weekday](offset))
+        date = self.config.now.date() + relativedelta(weekday=weekdays[target_weekday](offset))
         return {'weekday': tfhDate.from_object(date)}
     
     def modifier(self, children):
