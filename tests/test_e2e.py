@@ -126,11 +126,11 @@ def test_default(now, test_input, expected):
     # TODO: support natural language date ranges e.g., this week, next weekend, any weekday gh#18
     # TODO: support natural language time ranges e.g., afternoon, morning, evening, tonight, today night gh#30
     
-    # TODO: support 'last week of dec' (gh#4)
     # TODO: christmas? new years? eve?
+    # TODO: support 'this past July' (e.g., reduce to 'this')
+    # TODO: support 'last week of dec'
     
     # support for date and month modifiers
-    # TODO: support 'this past July' (e.g., reduce to 'this')
     ('next Monday', datetime.date(2018, 8, 6)),
     ('next next Monday', datetime.date(2018, 8, 13)),
     ('last Monday', datetime.date(2018, 7, 30)),

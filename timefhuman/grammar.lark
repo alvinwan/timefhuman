@@ -110,7 +110,7 @@ datetimename: DATETIMENAME
 
 // process date modifiers here since the weekday processor fully determines the date
 weekday: (modifier+)? WEEKDAY
-monthname: MONTHNAME
+monthname: (modifier+)? MONTHNAME
 datename: DATENAME
 dayoryear: INT
 
