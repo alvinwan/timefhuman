@@ -24,14 +24,14 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
 setup(
     name="timefhuman",
     version=VERSION,
     author="Alvin Wan",
     author_email='hi@alvinwan.com',
-    description=("Convert natural language date-like string to Python objects"),
+    description=("Extract datetimes, datetime ranges, and datetime lists from natural language text"),
     long_description=open('README.md', 'r', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     license="Apache 2.0",
