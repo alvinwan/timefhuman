@@ -271,6 +271,7 @@ class tfhTransformer(Transformer):
         if 'offset' in data:
             offset = sum(data['offset'])  # sum offsets, such as 'next next'
 
+        # TODO: store as delta and let renderer infer date?
         date = self.config.now.date() + relativedelta(weekday=weekdays[target_weekday](offset))
         return {'weekday': tfhDate.from_object(date)}
     
