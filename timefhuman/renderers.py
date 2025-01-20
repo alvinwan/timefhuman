@@ -9,6 +9,7 @@ from datetime import datetime, date, time, timedelta
 from enum import Enum
 import pytz
 from timefhuman.utils import tfhConfig, Direction
+from dateutil.relativedelta import relativedelta
 
 
 class tfhMatchable:
@@ -116,15 +117,19 @@ class tfhDate:
         year: Optional[int] = None, 
         month: Optional[int] = None, 
         day: Optional[int] = None,
+        delta: Optional[relativedelta] = None,
     ):
         self.year = year
         self.month = month
         self.day = day
-
+        self.delta = delta
     def to_object(self, config: tfhConfig = tfhConfig()) -> date:
         """Convert to a real date. Assumes all fields are filled in."""
         # NOTE: This must be here, because we need values for each field
-        return date(self.year or config.now.year, self.month or config.now.month, self.day or 1)
+        value = date(self.year or config.now.year, self.month or config.now.month, self.day or 1)
+        if self.delta:
+            value += self.delta
+        return value
     
     @classmethod
     def from_object(cls, obj: date):

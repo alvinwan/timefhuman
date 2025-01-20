@@ -4,8 +4,9 @@ from pathlib import Path
 
 from lark import Lark, Transformer, v_args, Token, Discard
 import pytz
-from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, get_month_mapping, tfhConfig, Direction
+from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, get_month_mapping, tfhConfig, Direction, direction_to_offset
 from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhUnknown, tfhDatelike, tfhMatchable
+from dateutil.relativedelta import relativedelta, weekdays
 
 
 __all__ = ('timefhuman',)
@@ -210,31 +211,32 @@ class tfhTransformer(Transformer):
         if 'weekday' in data and all(key not in data for key in ('day', 'month', 'year')):
             return {'date': data['weekday']}
         
-        if 'direction' in data:
-            # TODO: I don't like that this infers using current datetime. Somehow encode
-            # delta to use later? I like dateutil.relativedate, better than timedelta
-            assert set(data.keys()) == {'direction', 'month'}, f"Expected 'direction' and 'month', got {data.keys()}"
-            direction = data['direction']
-            candidate = datetime.date(year=self.config.now.year, month=data['month'], day=1)
-            
-            if candidate < self.config.now.date() and direction == Direction.next:
-                # TODO: this is already inferring using current year
-                candidate = datetime.date(year=self.config.now.year + 1, month=data['month'], day=1)
-            elif candidate > self.config.now.date() and direction == Direction.previous:
-                candidate = tfhDate(year=self.config.now.year - 1, month=data['month'], day=1)
-            elif direction == Direction.this:
-                pass
-            
-            return {'date': tfhDate(
-                year=candidate.year,
-                month=candidate.month,
-                day=candidate.day,
-            )}
+        delta = None
+        if 'offset' in data:
+            _data = nodes_to_multidict(children)
+            delta = relativedelta(years=sum(_data['offset']))  # sum offsets, such as 'next next'  
+        elif 'position' in data:
+            assert 'month' in data and 'weekday' in data
+            weekday = weekdays[data['weekday'].to_object(self.config).weekday()]
+            position = data['position']
+            if position == 'first':
+                delta = relativedelta(day=1, weekday=weekday(+1))
+            elif position == 'second':
+                delta = relativedelta(day=8, weekday=weekday(+1))
+            elif position == 'third':
+                delta = relativedelta(day=15, weekday=weekday(+1))
+            elif position == 'fourth':
+                delta = relativedelta(day=22, weekday=weekday(+1))
+            elif position == 'last':
+                delta = relativedelta(day=31, weekday=weekday(-1))
+            else:
+                raise NotImplementedError(f"Unknown position: {position}")
 
         return {'date': tfhDate(
             year=data.get('year'),
             month=data.get('month'),
             day=data.get('day'),
+            delta=delta,
         )}
         
         
@@ -260,35 +262,27 @@ class tfhTransformer(Transformer):
         return {'month': month}
     
     def weekday(self, children):
-        data = {token.type: token.value for token in children}
+        data = nodes_to_multidict(children)
         
-        weekdays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
-        weekday = data['WEEKDAY'][:2].lower()
-        target_weekday = weekdays.index(weekday)
+        weekday = data['WEEKDAY'][0][:2].lower()
+        target_weekday = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su'].index(weekday)
         
-        current_weekday = self.config.now.weekday()
-        direction = data.get('direction', self.config.direction)
-    
-        days_until = (7 - (current_weekday - target_weekday)) % 7
-        if direction == Direction.this:
-            direction = Direction.next if current_weekday < target_weekday else Direction.previous
-            
-        if direction == Direction.previous:
-            days_until -= 7
-        elif direction == Direction.next:
-            days_until = days_until or 7
-        
-        date = self.config.now.date() + timedelta(days=days_until)
+        offset = direction_to_offset(self.config.direction)
+        if 'offset' in data:
+            offset = sum(data['offset'])  # sum offsets, such as 'next next'
+
+        # TODO: store as delta and let renderer infer date?
+        date = self.config.now.date() + relativedelta(weekday=weekdays[target_weekday](offset))
         return {'weekday': tfhDate.from_object(date)}
     
     def modifier(self, children):
         value = children[0].value
         if value in ('next', 'upcoming', 'following'):
-            return Token('direction', Direction.next)
+            return {'offset': +1}
         elif value in ('previous', 'last', 'past', 'preceding'):  # TODO: support 'last' for both meanings
-            return Token('direction', Direction.previous)
+            return {'offset': -1}
         elif value == 'this':
-            return Token('direction', Direction.this)
+            return {'offset': 0}
         raise NotImplementedError(f"Unknown modifier: {value}")
     
     def datename(self, children):
@@ -348,7 +342,7 @@ class tfhTransformer(Transformer):
         elif timename == 'morning':
             _time = tfhTime(hour=6, minute=0, meridiem=tfhTime.Meridiem.AM)
         elif timename == 'afternoon':
-            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
+            _time = tfhTime(hour=15, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'evening':
             _time = tfhTime(hour=18, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'night':

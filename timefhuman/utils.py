@@ -58,17 +58,41 @@ def get_month_mapping():
         month[:3]: i + 1 for i, month in enumerate(MONTHS)
     })
     return mapping
-    
+
+
+def node_to_dict(node: Tree) -> dict:
+    assert isinstance(node, (Tree, dict, Token)), f"Expected a Tree or dict, got {type(node)} ({node})"
+    if isinstance(node, dict):
+        return node
+    elif isinstance(node, Tree):
+        assert len(node.children) == 1, f"Expected 1 child for {node.data.value}, got {len(node.children)}"
+        return {node.data.value: node.children[0].value}
+    elif isinstance(node, Token):
+        return {node.type: node.value}
+    raise ValueError(f"Unknown node type: {type(node)} ({node})")
+
 
 def nodes_to_dict(nodes: list[Tree]) -> dict:
     result = {}
     for node in nodes:
-        assert isinstance(node, (Tree, dict, Token)), f"Expected a Tree or dict, got {type(node)} ({node})"
-        if isinstance(node, dict):
-            result.update(node)
-        elif isinstance(node, Tree):
-            assert len(node.children) == 1, f"Expected 1 child for {node.data.value}, got {len(node.children)}"
-            result[node.data.value] = node.children[0].value
-        elif isinstance(node, Token):
-            result[node.type] = node.value
+        result.update(node_to_dict(node))
     return result
+
+
+def nodes_to_multidict(nodes: list[Tree]) -> dict:
+    result = {}
+    for node in nodes:
+        for key, value in node_to_dict(node).items():
+            if key not in result:
+                result[key] = []
+            result[key].append(value)
+    return result
+
+
+def direction_to_offset(direction: Direction) -> int:
+    if direction == Direction.next:
+        return +1
+    elif direction == Direction.previous:
+        return -1
+    else:
+        return 0
