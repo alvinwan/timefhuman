@@ -5,6 +5,7 @@ from lark.tree import Tree
 from lark.lexer import Token
 from dataclasses import dataclass
 from enum import Enum
+from typing import List
 
 
 MONTHS = [
@@ -72,14 +73,14 @@ def node_to_dict(node: Tree) -> dict:
     raise ValueError(f"Unknown node type: {type(node)} ({node})")
 
 
-def nodes_to_dict(nodes: list[Tree]) -> dict:
+def nodes_to_dict(nodes: List[Tree]) -> dict:
     result = {}
     for node in nodes:
         result.update(node_to_dict(node))
     return result
 
 
-def nodes_to_multidict(nodes: list[Tree]) -> dict:
+def nodes_to_multidict(nodes: List[Tree]) -> dict:
     result = {}
     for node in nodes:
         for key, value in node_to_dict(node).items():

@@ -47,7 +47,6 @@ class tfhCollection(tfhDatelike):
     def __init__(self, items):
         self.items = items
         
-    @staticmethod
     def getter(key):
         def get(self):
             for item in self.items:
@@ -56,7 +55,6 @@ class tfhCollection(tfhDatelike):
             return None
         return get
 
-    @staticmethod
     def setter(key):
         def set(self, value):
             for item in self.items:
