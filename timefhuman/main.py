@@ -342,7 +342,7 @@ class tfhTransformer(Transformer):
         elif timename == 'morning':
             _time = tfhTime(hour=6, minute=0, meridiem=tfhTime.Meridiem.AM)
         elif timename == 'afternoon':
-            _time = tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM)
+            _time = tfhTime(hour=15, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'evening':
             _time = tfhTime(hour=18, minute=0, meridiem=tfhTime.Meridiem.PM)
         elif timename == 'night':

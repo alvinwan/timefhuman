@@ -74,6 +74,22 @@ When possible, timefhuman will infer any missing information, using context from
  datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))
 ```
 
+You can also use natural language descriptions of dates and times.
+
+```python
+>>> timefhuman('next Monday')
+datetime.datetime(2018, 8, 6, 0, 0)
+
+>>> timefhuman('next next Monday')
+datetime.datetime(2018, 8, 13, 0, 0)
+
+>>> timefhuman('last Wednesday of December')
+datetime.datetime(2018, 12, 26, 0, 0)
+
+>>> timefhuman('afternoon')
+datetime.datetime(2018, 8, 4, 15, 0)
+```
+
 See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
 ## Advanced Usage

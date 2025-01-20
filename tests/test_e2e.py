@@ -136,7 +136,7 @@ def test_default(now, test_input, expected):
     ('last Monday', datetime.date(2018, 7, 30)),
     ('next July', datetime.date(2019, 7, 1)),
     ('last July', datetime.date(2017, 7, 1)),
-    ('last wed of dec', datetime.date(2018, 12, 26)), # gh#4
+    ('last Wednesday of December', datetime.date(2018, 12, 26)), # gh#4
     
     # support for vernacular datetimes
     ('afternoon', datetime.time(hour=12, minute=0)),
