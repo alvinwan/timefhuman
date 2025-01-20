@@ -126,7 +126,7 @@ def test_default(now, test_input, expected):
     # TODO: support natural language date ranges e.g., this week, next weekend, any weekday gh#18
     # TODO: support natural language time ranges e.g., afternoon, morning, evening, tonight, today night gh#30
     
-    # TODO: support 'last wed of dec', 'last week of dec' (gh#4)
+    # TODO: support 'last week of dec' (gh#4)
     # TODO: christmas? new years? eve?
     
     # support for date and month modifiers
@@ -135,7 +135,8 @@ def test_default(now, test_input, expected):
     ('next next Monday', datetime.date(2018, 8, 13)),
     ('last Monday', datetime.date(2018, 7, 30)),
     ('next July', datetime.date(2019, 7, 1)),
-    ('past July', datetime.date(2018, 7, 1)),
+    ('last July', datetime.date(2017, 7, 1)),
+    ('last wed of dec', datetime.date(2018, 12, 26)), # gh#4
     
     # support for vernacular datetimes
     ('afternoon', datetime.time(hour=12, minute=0)),

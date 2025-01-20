@@ -211,31 +211,32 @@ class tfhTransformer(Transformer):
         if 'weekday' in data and all(key not in data for key in ('day', 'month', 'year')):
             return {'date': data['weekday']}
         
-        if 'direction' in data:
-            # TODO: I don't like that this infers using current datetime. Somehow encode
-            # delta to use later? I like dateutil.relativedate, better than timedelta
-            assert set(data.keys()) == {'direction', 'month'}, f"Expected 'direction' and 'month', got {data.keys()}"
-            direction = data['direction']
-            candidate = datetime.date(year=self.config.now.year, month=data['month'], day=1)
-            
-            if candidate < self.config.now.date() and direction == Direction.next:
-                # TODO: this is already inferring using current year
-                candidate = datetime.date(year=self.config.now.year + 1, month=data['month'], day=1)
-            elif candidate > self.config.now.date() and direction == Direction.previous:
-                candidate = tfhDate(year=self.config.now.year - 1, month=data['month'], day=1)
-            elif direction == Direction.this:
-                pass
-            
-            return {'date': tfhDate(
-                year=candidate.year,
-                month=candidate.month,
-                day=candidate.day,
-            )}
+        delta = None
+        if 'offset' in data:
+            _data = nodes_to_multidict(children)
+            delta = relativedelta(years=sum(_data['offset']))  # sum offsets, such as 'next next'  
+        elif 'position' in data:
+            assert 'month' in data and 'weekday' in data
+            weekday = weekdays[data['weekday'].to_object(self.config).weekday()]
+            position = data['position']
+            if position == 'first':
+                delta = relativedelta(day=1, weekday=weekday(+1))
+            elif position == 'second':
+                delta = relativedelta(day=8, weekday=weekday(+1))
+            elif position == 'third':
+                delta = relativedelta(day=15, weekday=weekday(+1))
+            elif position == 'fourth':
+                delta = relativedelta(day=22, weekday=weekday(+1))
+            elif position == 'last':
+                delta = relativedelta(day=31, weekday=weekday(-1))
+            else:
+                raise NotImplementedError(f"Unknown position: {position}")
 
         return {'date': tfhDate(
             year=data.get('year'),
             month=data.get('month'),
             day=data.get('day'),
+            delta=delta,
         )}
         
         
