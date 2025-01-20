@@ -130,10 +130,9 @@ def test_default(now, test_input, expected):
     # TODO: christmas? new years? eve?
     
     # support for date and month modifiers
-    # TODO: support next next and 'this past July' (e.g., reduce to 'this')
+    # TODO: support 'this past July' (e.g., reduce to 'this')
     ('next Monday', datetime.date(2018, 8, 6)),
-    ('following Monday', datetime.date(2018, 8, 6)),
-    ('this Monday', datetime.date(2018, 7, 30)),
+    ('next next Monday', datetime.date(2018, 8, 13)),
     ('last Monday', datetime.date(2018, 7, 30)),
     ('next July', datetime.date(2019, 7, 1)),
     ('past July', datetime.date(2018, 7, 1)),
