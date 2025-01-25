@@ -1,1 +1,1 @@
-from .main import timefhuman
+from .main import timefhuman, tfhConfig, Direction
