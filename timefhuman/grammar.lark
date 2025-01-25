@@ -7,40 +7,40 @@
 // ----------------------
 
 // Month names as a regex token, case-insensitive
-MONTHNAME: /(?i)(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)/
+MONTHNAME: /(?i)(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)(?![a-z])/
 
 // For weekdays, also as a single regex token, case-insensitive
-WEEKDAY: /(?i)(monday|mon|tuesday|tues|tue|tu|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)/
+WEEKDAY: /(?i)(monday|mon|tuesday|tues|tue|tu|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)(?![a-z])/
 
 // Meridiem token (am/pm, with optional dots)
-MERIDIEM: /(?i)([ap](\.?m\.?)?)/
+MERIDIEM: /(?i)([ap](\.?m\.?)?)(?![a-z])/
 
 // Datename token specifies only day
-DATENAME: /(?i)(today|tomorrow|tmw|yesterday)/
+DATENAME: /(?i)(today|tomorrow|tmw|yesterday)(?![a-z])/
 
 // Timename token specifies only time
-TIMENAME: /(?i)(noon|midday|midnight|morning|afternoon|evening|night)/
+TIMENAME: /(?i)(noon|midday|midnight|morning|afternoon|evening|night)(?![a-z])/
 
 // Datetimename token specifies date and time
-DATETIMENAME: /(?i)(tonight)/
+DATETIMENAME: /(?i)(tonight)(?![a-z])/
 
 // Duration unit (minutes, hours, days, etc.)
-DURATION_UNIT: /(?i)(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)/
+DURATION_UNIT: /(?i)(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)(?![a-z])/
 DURATION_UNIT_LETTER: /(?i)(s|m|h|d|w|mo|y)(?![a-z])/
 
 // Duration number (digits like "1", or words like "an", "a", "one", "two", etc.)
-DURATION_NUMBER: /(?i)(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)/
+DURATION_NUMBER: /(?i)(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?![a-z])/
 
 // Day suffix (th, rd, st, nd)
-DAY_SUFFIX: /(?i)(th|rd|st|nd)/
+DAY_SUFFIX: /(?i)(th|rd|st|nd)(?![a-z])/
 
 FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/i  // from lark
 
-TIMEZONE: /(?i)((TIMEZONE_MAPPING))/
+TIMEZONE: /(?i)((TIMEZONE_MAPPING))(?![a-z])/
 
-MODIFIER: /(?i)(next|last|this|upcoming|previous|past)/
+MODIFIER: /(?i)(next|last|this|upcoming|previous|past)(?![a-z])/
 
-POSITION: /(?i)(first|second|third|fourth|last)/
+POSITION: /(?i)(first|second|third|fourth|last)(?![a-z])/
 
 // ----------------------
 // PARSER RULES
