@@ -139,7 +139,7 @@ def test_default(now, test_input, expected):
     ('last Wednesday of December', datetime.date(2018, 12, 26)), # gh#4
     
     # support for vernacular datetimes
-    ('afternoon', datetime.time(hour=12, minute=0)),
+    ('afternoon', datetime.time(hour=15, minute=0)),
     ('morning', datetime.time(hour=6, minute=0)),
     ('evening', datetime.time(hour=18, minute=0)),
     ('night', datetime.time(hour=20, minute=0)),
