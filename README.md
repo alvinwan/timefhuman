@@ -119,7 +119,7 @@ config = tfhConfig()
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
 
-**Don't infer**: Alternatively, say you want to extract only the time from a text -- perhaps it's a festival's schedule. You can disable date inference by setting `infer_datetimes=False`. Instead of always returning a datetime, timefhuman will be able to return time-like objects for only explicitly-written information.
+**Use explicit information only**: Say you only want to extract *dates* OR *times*. You don't want the library to infer information. You can disable most inference by setting `infer_datetimes=False`. Instead of always returning a datetime, timefhuman will be able to return date or time objects, depending on what's provided.
 
 ```python
 >>> config = tfhConfig(infer_datetimes=False)
@@ -129,6 +129,19 @@ datetime.time(15, 0)
 
 >>> timefhuman('12/18/18', config=config)
 datetime.date(2018, 12, 18)
+```
+
+**Past datetimes**: By default, datetimes are assumed to occur in the future, so if "3pm" today has already passed, the returned datetime will be for *tomorrow*. However, if datetimes are assumed to have occurred in the past (e.g., from an old letter, talking about past events), you can configure the direction.
+
+```python
+>>> from timefhuman import Direction
+>>> config = tfhConfig(direction=Direction.previous)
+
+>>> timefhuman('3PM')  # the default
+datetime.datetime(2018, 8, 5, 15, 0)
+
+>>> timefhuman('3PM', config=config)  # changing direction
+datetime.datetime(2018, 8, 4, 15, 0)
 ```
 
 Here is the full set of supported configuration options:
