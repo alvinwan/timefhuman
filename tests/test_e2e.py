@@ -139,7 +139,7 @@ def test_default(now, test_input, expected):
     ('last Wednesday of December', datetime.date(2018, 12, 26)), # gh#4
     
     # support for vernacular datetimes
-    ('afternoon', datetime.time(hour=12, minute=0)),
+    ('afternoon', datetime.time(hour=15, minute=0)),
     ('morning', datetime.time(hour=6, minute=0)),
     ('evening', datetime.time(hour=18, minute=0)),
     ('night', datetime.time(hour=20, minute=0)),
@@ -169,7 +169,7 @@ def test_custom_config(now, config, test_input, expected):
     ('September 30, 2019.', [('September 30, 2019', datetime.datetime(2019, 9, 30, 0, 0))]), # gh#26
     ('How does 5p mon sound? Or maybe 4p tu?', [('5p mon', datetime.datetime(2018, 8, 6, 17, 0)), ('4p tu', datetime.datetime(2018, 8, 7, 16, 0))]),
     ('There are 3 ways to do it', []),  # '3' should remain ambiguous and then be ignored
-    # TODO: get matched characters gh#9
+    ('salmon for 9 amnesty tickets', []),  # no date or time (contains 'mon' and '9 am')
 ])
-def test_with_random_text(now, test_input, expected):
+def test_matched_text(now, test_input, expected):  # gh#9
     assert timefhuman(test_input, tfhConfig(now=now, return_matched_text=True)) == expected
