@@ -171,7 +171,6 @@ def test_custom_config(now, config, test_input, expected):
     ('There are 3 ways to do it', []),  # '3' should remain ambiguous and then be ignored
     ('salmon', []),  # no date or time (contains 'mon' but suffixes another word)
     ('9 amtrak tickets', []),  # no date or time (contains '9 am')
-    # TODO: get matched characters gh#9
 ])
-def test_with_random_text(now, test_input, expected):
+def test_matched_text(now, test_input, expected):  # gh#9
     assert timefhuman(test_input, tfhConfig(now=now, return_matched_text=True)) == expected
