@@ -178,3 +178,24 @@ def test_custom_config(now, config, test_input, expected):
 ])
 def test_matched_text(now, test_input, expected):  # gh#9
     assert timefhuman(test_input, tfhConfig(now=now, return_matched_text=True)) == expected
+
+
+def test_now_changes(now): # gh#53
+    """
+    The 'now' attribute should not be modified by the function, and if not specified, the
+    notion of 'now' should change each time we call the function.
+    """
+    
+    # 'now' should not be modified
+    config = tfhConfig(now=now)
+    timefhuman('5p', config=config)
+    assert config.now == now
+    
+    # even if not specified, 'now' should not be modified
+    config = tfhConfig()
+    timefhuman('5p', config=config)
+    assert config.now is None
+    
+    # 'now' should change each time we call the function
+    config = tfhConfig()
+    assert timefhuman('5p', now=True) != timefhuman('5p', now=True)
