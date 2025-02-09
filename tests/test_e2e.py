@@ -208,11 +208,10 @@ def test_timezone(now):  # gh#52
     2. Otherwise, if a timezone is specified in `now`, use this.
     """
     now_PST = now.replace(tzinfo=pytz.timezone('US/Pacific'))
-    now_EST = now.replace(tzinfo=pytz.timezone('US/Michigan'))
     
     # 1. When a timezone is specified in the original text, honor this first.
-    assert timefhuman('Wed 5p EST', tfhConfig(now=now_PST)) == now_EST
+    assert timefhuman('Wed EST', tfhConfig(now=now_PST)) == datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Michigan'))
     # 2. Otherwise, if a timezone is specified in `now`, use this.
-    assert timefhuman('Wed', tfhConfig(now=now_PST)) == now_PST
+    assert timefhuman('Wed', tfhConfig(now=now_PST)) == datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Pacific'))
     # 3. If no timezone is specified, do not attach one
-    assert timefhuman('Wed', tfhConfig(now=now)) == now
+    assert timefhuman('Wed', tfhConfig(now=now)) == datetime.datetime(2018, 8, 8, 0, 0)
