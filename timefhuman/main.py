@@ -1,8 +1,8 @@
-from datetime import timedelta
-import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
-from lark import Lark, Transformer, v_args, Token, Discard
+from dataclasses import replace
+from lark import Lark, Transformer, v_args
 import pytz
 from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, get_month_mapping, tfhConfig, Direction, direction_to_offset
 from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhUnknown, tfhDatelike, tfhMatchable
@@ -28,12 +28,16 @@ def get_parser():
     return parser
 
 
-def timefhuman(string, config: tfhConfig = tfhConfig(), raw=None):
+def timefhuman(string, config: tfhConfig = tfhConfig(), raw: bool=False, now: bool=False):
     parser = get_parser()
     tree = parser.parse(string)
 
     if raw:
         return tree
+    
+    config = replace(config, now=config.now or datetime.now())
+    if now:
+        return config.now
 
     transformer = tfhTransformer(config=config)
     renderers = transformer.transform(tree)
