@@ -119,6 +119,18 @@ config = tfhConfig()
 datetime.datetime(2018, 8, 6, 12, 0)
 ```
 
+You can also set a default timezone, by again using the config's `now`.
+
+```python
+>>> config = tfhConfig(now=datetime.datetime(2018, 8, 4, 0, 0), tzinfo=pytz.timezone('US/Pacific'))
+
+>>> timefhuman('Wed', config=config)
+datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Pacific'))
+
+>>> timefhuman('Wed EST', config=config)  # timezone specified in the input takes precedence
+datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Michigan'))
+```
+
 **Use explicit information only**: Say you only want to extract *dates* OR *times*. You don't want the library to infer information. You can disable most inference by setting `infer_datetimes=False`. Instead of always returning a datetime, timefhuman will be able to return date or time objects, depending on what's provided.
 
 ```python
