@@ -199,3 +199,20 @@ def test_now_changes(now): # gh#53
     # 'now' should change each time we call the function
     config = tfhConfig()
     assert timefhuman('5p', now=True) != timefhuman('5p', now=True)
+
+
+def test_timezone(now):  # gh#52
+    """
+    Support timezones specifications without a specific time.
+    1. When a timezone is specified in the original text, honor this first.
+    2. Otherwise, if a timezone is specified in `now`, use this.
+    """
+    now_PST = now.replace(tzinfo=pytz.timezone('US/Pacific'))
+    now_EST = now.replace(tzinfo=pytz.timezone('US/Michigan'))
+    
+    # 1. When a timezone is specified in the original text, honor this first.
+    assert timefhuman('Wed 5p EST', tfhConfig(now=now_PST)) == now_EST
+    # 2. Otherwise, if a timezone is specified in `now`, use this.
+    assert timefhuman('Wed', tfhConfig(now=now_PST)) == now_PST
+    # 3. If no timezone is specified, do not attach one
+    assert timefhuman('Wed', tfhConfig(now=now)) == now
