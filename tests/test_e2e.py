@@ -145,6 +145,8 @@ def test_default(now, test_input, expected):
     ('night', datetime.time(hour=20, minute=0)),
     ('today night', datetime.datetime(2018, 8, 4, 20, 0)),
     ('tonight', datetime.datetime(2018, 8, 4, 20, 0)), # gh#30
+    
+    ('e 6:50PM', datetime.time(hour=18, minute=50)), # gh#51
 ])
 def test_no_inference(now, test_input, expected):
     """Return exactly the date or time, without inferring the other."""
