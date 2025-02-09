@@ -148,14 +148,12 @@ class tfhTime:
         second: Optional[int] = None,
         millisecond: Optional[int] = None,
         meridiem: Optional[Meridiem] = None,
-        tz: Optional[pytz.timezone] = None,
     ):
         self.hour = hour
         self.minute = minute
         self.second = second
         self.millisecond = millisecond
         self.meridiem = meridiem
-        self.tz = tz
 
     def to_object(self, config: tfhConfig = tfhConfig()) -> time:
         """Convert to a real time object. Assumes all fields are filled in."""
@@ -163,7 +161,7 @@ class tfhTime:
             self.hour += 12
         elif self.meridiem == tfhTime.Meridiem.AM and self.hour == 12:
             self.hour = 0
-        object = time(self.hour, self.minute or 0, self.second or 0, self.millisecond or 0, tzinfo=self.tz)
+        object = time(self.hour, self.minute or 0, self.second or 0, self.millisecond or 0)
         return object
     
     @classmethod
@@ -176,7 +174,13 @@ class tfhTime:
 
 
 class tfhDatetime(tfhDatelike):
-    """A combination of tfhDate + tfhTime."""
+    """
+    A combination of tfhDate + tfhTime.
+    
+    Note that only this datetime has a notion of timezone, so we cannot directly return a
+    date or time object. Even those singleton objects *must* pass through this object to
+    be timezone aware.
+    """
     
     def getter(attr, key):
         def get(self):
@@ -195,28 +199,33 @@ class tfhDatetime(tfhDatelike):
     month = property(getter('date', 'month'), setter('date', 'month'))
     day = property(getter('date', 'day'), setter('date', 'day'))
     meridiem = property(getter('time', 'meridiem'), setter('time', 'meridiem'))
-    tz = property(getter('time', 'tz'), setter('time', 'tz'))
 
     def __init__(
         self, 
         date: Optional[tfhDate] = None, 
-        time: Optional[tfhTime] = None
+        time: Optional[tfhTime] = None,
+        tz: Optional[pytz.timezone] = None,
     ):
         self.date = date
         self.time = time
+        self.tz = tz
 
     def to_object(self, config: tfhConfig = tfhConfig()) -> Union[datetime, date, time]:
         """Convert to real datetime, assumes partial fields are filled."""
+        _time = self.time.to_object(config) if self.time else None
+        _date = self.date.to_object(config) if self.date else None
+        tzinfo = self.tz or config.now.tzinfo
+        
         if self.date and self.time:
-            return datetime.combine(self.date.to_object(config), self.time.to_object(config), tzinfo=self.time.tz)
+            return datetime.combine(_date, _time, tzinfo=tzinfo)
         elif self.date:
             if config.infer_datetimes:
-                return datetime.combine(self.date.to_object(config), time(0, 0))
-            return self.date.to_object(config)
+                return datetime.combine(_date, time(0, 0), tzinfo=tzinfo)
+            return _date  # NOTE: a date object cannot hold a timezone
         elif self.time:
             if config.infer_datetimes:
-                _now = config.now.replace(tzinfo=self.time.tz)
-                candidate = datetime.combine(_now.date(), self.time.to_object(config))
+                _now = config.now.replace(tzinfo=tzinfo)
+                candidate = datetime.combine(_now.date(), _time, tzinfo=tzinfo)
                 if candidate < _now and config.direction == Direction.next:
                     candidate += timedelta(days=1)
                 elif candidate > _now and config.direction == Direction.previous:
@@ -224,7 +233,7 @@ class tfhDatetime(tfhDatelike):
                 elif config.direction == Direction.this:
                     pass
                 return candidate
-            return self.time.to_object(config)
+            return _time.replace(tzinfo=tzinfo)
         raise ValueError("Datetime is missing both date and time")
         
     @classmethod

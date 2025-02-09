@@ -62,14 +62,14 @@ single: datetime
 
 // Only add houronly to specific formats that immediately
 // indicate this is an hour-only time.
-datetime: date ("at" (time | houronly))?
-        | date (time | houronly)
-        | date "T" time  // ISO 8601
-        | (time | houronly) date
-        | (time | houronly) "on" date
-        | date
-        | time
-        | datetimename
+datetime: date ("at" (time | houronly))? timezone?
+        | date (time | houronly) timezone?
+        | date "T" time timezone?  // ISO 8601
+        | (time | houronly) date timezone?
+        | (time | houronly) "on" date timezone?
+        | date timezone?
+        | time timezone?
+        | datetimename timezone?
 
 // NOTE: process month modifiers here since the modifier affects the year, which
 // won't be processed until the date rule. If additional modifiers are added,
@@ -95,8 +95,8 @@ date: weekday? month "/" day "/" year
 // However, that means to support single-integer (e.g., hour) times, we need
 // to manually add them to the `datetime` rule above.
 time: hour ":" minute (":" second ("." millisecond)?)? meridiem? timezone?
-    | hour ("o'clock")? meridiem timezone?
-    | timename timezone?
+    | hour ("o'clock" meridiem|"o'clock"|meridiem)
+    | timename
 
 duration: ("in"|"for")? duration_part (("and"|",")? duration_part)* ("ago")?
 duration_part: duration_number (duration_unit | duration_unit_letter)
