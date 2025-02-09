@@ -24,7 +24,7 @@ class tfhConfig:
     infer_datetimes: bool = True
     
     # The 'current' datetime, used if infer_datetimes is True
-    now: datetime = datetime.now()    
+    now: datetime | None = None
     
     # Return the matched text from the input string
     return_matched_text: bool = False
