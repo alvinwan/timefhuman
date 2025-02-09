@@ -203,7 +203,7 @@ class tfhTransformer(Transformer):
         data = nodes_to_dict(children)
         if 'datetime' in data:
             return data['datetime']
-        return tfhDatetime(date=data.get('date'), time=data.get('time'))
+        return tfhDatetime(date=data.get('date'), time=data.get('time'), tz=data.get('timezone'))
     
     def date(self, children):
         data = nodes_to_dict(children)
@@ -320,8 +320,7 @@ class tfhTransformer(Transformer):
             minute=int(data.get("minute", 0)),
             second=int(data.get("second", 0)),
             millisecond=int(data.get("millisecond", 0)),
-            meridiem=data.get("meridiem", None),
-            tz=data.get("timezone", None),
+            meridiem=data.get("meridiem", None)
         )}
     
     def meridiem(self, children):
