@@ -122,12 +122,13 @@ datetime.datetime(2018, 8, 6, 12, 0)
 You can also set a default timezone, by again using the config's `now`.
 
 ```python
->>> config = tfhConfig(now=datetime.datetime(2018, 8, 4, 0, 0), tzinfo=pytz.timezone('US/Pacific'))
+>>> config = tfhConfig(
+...     now=datetime.datetime(2018, 8, 4), tzinfo=pytz.timezone('US/Pacific'))
 
 >>> timefhuman('Wed', config=config)
 datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Pacific'))
 
->>> timefhuman('Wed EST', config=config)  # timezone specified in the input takes precedence
+>>> timefhuman('Wed EST', config=config)  # EST timezone in the input takes precedence
 datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Michigan'))
 ```
 
@@ -164,11 +165,11 @@ class tfhConfig:
     # Default to the next valid datetime or the previous one
     direction: Direction = Direction.next
     
-    # Always produce datetime objects. If no date, use the current date. If no time, use midnight.
+    # Always return datetime objects. If no date, use now.date(). If no time, use midnight.
     infer_datetimes: bool = True
     
-    # The 'current' datetime, used if infer_datetimes is True
-    now: datetime = datetime.now()    
+    # The 'current' datetime, used if infer_datetimes is True. Defaults to datetime.now().
+    now: datetime | None = None
     
     # Return the matched text from the input string
     return_matched_text: bool = False
