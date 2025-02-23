@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "timefhuman"
+version = "0.1.2"
+description = "Extract datetimes, datetime ranges, and datetime lists from natural language text"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Alvin Wan", email = "hi@alvinwan.com" }
+]
+requires-python = ">=3.6"
+dependencies = [
+    "lark==1.2.2",
+    "babel==2.16.0",
+    "pytz==2024.2",
+    "python-dateutil==2.9.0.post0"
+]
+
+[project.urls]
+Homepage = "https://github.com/alvinwan/timefhuman"
+Download = "https://github.com/alvinwan/timefhuman/archive/0.1.2.zip"
+
+[project.optional-dependencies]
+test = [
+    "pytest==8.3.4",
+    "pytest-cov==6.0.0",
+    "coverage==7.6.10",
+    "coveralls==4.0.1"
+]
+
+[tool.setuptools]
+packages = ["timefhuman"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+timefhuman = ["*.txt", "*.md"]
+
+[tool.pytest.ini_options]
+addopts = "--cov=timefhuman"
+testpaths = ["tests"]
