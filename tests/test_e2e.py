@@ -60,6 +60,11 @@ def now():
         (datetime.datetime(2018, 8, 4, 17, 0), datetime.datetime(2018, 8, 4, 18, 0))
     ]),
     
+    # timedeltas converted properly
+    ('30 minutes', datetime.datetime(2018, 8, 4, 14, 30)),
+    ('30-40 mins', (datetime.datetime(2018, 8, 4, 14, 30), datetime.datetime(2018, 8, 4, 14, 40))),
+    ('1 or 2 days', [datetime.datetime(2018, 8, 5, 14, 0), datetime.datetime(2018, 8, 6, 14, 0)]),
+    
     # readme
     ('Monday noon', datetime.datetime(2018, 8, 6, 12, 0)),
     ('3-4p', (datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))), # infer meridiem

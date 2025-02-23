@@ -99,6 +99,8 @@ class tfhTimedelta(tfhMatchable):
         self.unit = unit
 
     def to_object(self, config: tfhConfig = tfhConfig()):
+        if config.infer_datetimes:
+            return config.now + timedelta(days=self.days, seconds=self.seconds)
         return timedelta(days=self.days, seconds=self.seconds)
     
     @classmethod

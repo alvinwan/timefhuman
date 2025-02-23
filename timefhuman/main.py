@@ -145,7 +145,8 @@ class tfhTransformer(Transformer):
     
     def duration(self, children):
         # TODO: just grabbing the first may cause problems later. how to do this more generically?
-        return tfhTimedelta.from_object(sum([child.to_object(self.config) for child in children], timedelta()), unit=children[0].unit)
+        config = replace(self.config, infer_datetimes=False)  # Don't infer datetimes while we're summing durations
+        return tfhTimedelta.from_object(sum([child.to_object(config) for child in children], timedelta()), unit=children[0].unit)
     
     def duration_part(self, children):
         mapping = {

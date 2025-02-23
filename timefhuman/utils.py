@@ -21,6 +21,7 @@ class tfhConfig:
     direction: Direction = Direction.next
     
     # Always produce datetime objects. If no date, use the current date. If no time, use midnight.
+    # If timedelta, add it to the current datetime.
     infer_datetimes: bool = True
     
     # The 'current' datetime, used if infer_datetimes is True
