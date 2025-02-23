@@ -1,7 +1,7 @@
 from timefhuman import timefhuman
 import datetime
 import pytest
-from timefhuman.main import Direction, tfhConfig
+from timefhuman.main import Direction, tfhConfig, DEFAULT_CONFIG
 import pytz
 
 

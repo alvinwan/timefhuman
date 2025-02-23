@@ -20,6 +20,7 @@ pip install timefhuman
 Then, find natural language dates and times in any text.
 
 ```python
+# All these tests assume the current date is August 4, 2018 at 2 PM
 >>> from timefhuman import timefhuman
 
 >>> timefhuman("How does 5p mon sound? Or maybe 4p tu?")
@@ -30,7 +31,7 @@ The text can contain not only datetimes but also ranges of datetimes or lists of
 
 ```python
 >>> timefhuman('3p-4p')  # time range
-[(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))]
+[(datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))]
 
 >>> timefhuman('7/17 4PM to 7/17 5PM')  # range of datetimes
 [(datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0))]
@@ -60,7 +61,7 @@ When possible, timefhuman will infer any missing information, using context from
 
 ```python
 >>> timefhuman('3-4p')  # infer "PM" for "3"
-[(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 17, 16, 0))]
+[(datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))]
 
 >>> timefhuman('7/17 4 or 5 PM')  # infer "PM" for "4" and infer "7/17" for "5 PM"
 [[datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)]]
@@ -70,8 +71,8 @@ When possible, timefhuman will infer any missing information, using context from
   datetime.datetime(2018, 7, 19, 9, 0)]]
 
 >>> timefhuman('3p -4p PDT')  # infer timezone "PDT" for "3p"
-[(datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Pacific')),
-  datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))]
+[(datetime.datetime(2018, 8, 4, 15, 0, tzinfo=<DstTzInfo 'US/Pacific' ...>),
+  datetime.datetime(2018, 8, 4, 16, 0, tzinfo=<DstTzInfo 'US/Pacific' ...>))]
 ```
 
 You can also use natural language descriptions of dates and times.
@@ -101,13 +102,13 @@ from timefhuman import tfhConfig
 config = tfhConfig()
 ```
 
-**Return matched text**: You can additionally grab the matched text from the input string. This is useful for modifying the input string, for example.
+**Return matched text**: You can additionally grab the matched text from the input string, as well as the string indices of the matched substring. This is useful for modifying the input string, for example. 
 
 ```python
 >>> config = tfhConfig(return_matched_text=True)
 
 >>> timefhuman('We could maybe do 3 PM, if you still have time', config=config)
-[('3 PM', datetime.datetime(2018, 8, 4, 15, 0))]
+[('3 PM', (18, 22), datetime.datetime(2025, 2, 23, 15, 0))]
 ```
 
 **Change 'Now'**: You can configure the default date that timefhuman uses to fill in missing information. This would be useful if you're extracting dates from an email sent a year ago.
@@ -127,10 +128,10 @@ You can also set a default timezone, by again using the config's `now`.
 ... )
 
 >>> timefhuman('Wed', config=config)
-[datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Pacific'))]
+[datetime.datetime(2018, 8, 8, 0, 0, tzinfo=<DstTzInfo 'US/Pacific' ...>)]
 
 >>> timefhuman('Wed EST', config=config)  # EST timezone in the input takes precedence
-[datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Michigan'))]
+[datetime.datetime(2018, 8, 8, 0, 0, tzinfo=<DstTzInfo 'US/Michigan' ...>)]
 ```
 
 **Use explicit information only**: Say you only want to extract *dates* OR *times* OR *timedeltas*. You don't want the library to infer information. You can disable most inference by setting `infer_datetimes=False`. Instead of always returning a datetime, timefhuman will be able to return date, time, or timedelta objects depending on what's provided.
@@ -144,7 +145,7 @@ You can also set a default timezone, by again using the config's `now`.
 >>> timefhuman('12/18/18', config=config)  # date
 [datetime.date(2018, 12, 18)]
 
->>> timefhuman('30 minutes')  # duration
+>>> timefhuman('30 minutes', config=config)  # duration
 [datetime.timedelta(seconds=1800)]
 ```
 
@@ -152,13 +153,13 @@ You can also set a default timezone, by again using the config's `now`.
 
 ```python
 >>> from timefhuman import Direction
->>> config = tfhConfig(direction=Direction.previous)
+>>> config = tfhConfig(direction=Direction.previous, now=datetime.datetime(2018, 8, 4, 14))
 
 >>> timefhuman('3PM')  # the default
-[datetime.datetime(2018, 8, 5, 15, 0)]
+[datetime.datetime(2018, 8, 4, 15, 0)]
 
 >>> timefhuman('3PM', config=config)  # changing direction
-[datetime.datetime(2018, 8, 4, 15, 0)]
+[datetime.datetime(2018, 8, 3, 15, 0)]
 ```
 
 **Change global defaults**: You can also modify the default configuration used by timefhuman, if you don't want to manually pass in configs everywhere.
