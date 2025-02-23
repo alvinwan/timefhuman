@@ -21,7 +21,8 @@ class tfhConfig:
     direction: Direction = Direction.next
     
     # Always produce datetime objects. If no date, use the current date. If no time, use midnight.
-    # If timedelta, add it to the current datetime.
+    # If timedelta, add it to the current datetime. Still allows ranges (tuples) of datetimes and
+    # lists of datetimes.
     infer_datetimes: bool = True
     
     # The 'current' datetime, used if infer_datetimes is True
@@ -29,9 +30,6 @@ class tfhConfig:
     
     # Return the matched text from the input string
     return_matched_text: bool = False
-    
-    # Return a single object instead of a list when there's only one match
-    return_single_object: bool = True
 
 
 def generate_timezone_mapping():
