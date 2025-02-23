@@ -47,13 +47,13 @@ Durations are also supported.
 
 ```python
 >>> timefhuman('30 minutes')  # duration
-datetime.timedelta(seconds=1800)
+datetime.datetime(2018, 8, 4, 14, 30)
 
 >>> timefhuman('30-40 mins')  # range of durations
-(datetime.timedelta(seconds=1800), datetime.timedelta(seconds=2400))
+(datetime.datetime(2018, 8, 4, 14, 30), datetime.datetime(2018, 8, 4, 14, 40))
 
 >>> timefhuman('30 or 40m')  # list of durations
-[datetime.timedelta(seconds=1800), datetime.timedelta(seconds=2400)]
+[datetime.datetime(2018, 8, 4, 14, 30), datetime.datetime(2018, 8, 4, 14, 40)]
 ```
 
 When possible, timefhuman will infer any missing information, using context from other datetimes.
@@ -132,16 +132,19 @@ datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Pacific'))
 datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Michigan'))
 ```
 
-**Use explicit information only**: Say you only want to extract *dates* OR *times*. You don't want the library to infer information. You can disable most inference by setting `infer_datetimes=False`. Instead of always returning a datetime, timefhuman will be able to return date or time objects, depending on what's provided.
+**Use explicit information only**: Say you only want to extract *dates* OR *times* OR *timedeltas*. You don't want the library to infer information. You can disable most inference by setting `infer_datetimes=False`. Instead of always returning a datetime, timefhuman will be able to return date, time, or timedelta objects depending on what's provided.
 
 ```python
 >>> config = tfhConfig(infer_datetimes=False)
 
->>> timefhuman('3 PM', config=config)
+>>> timefhuman('3 PM', config=config)  # time
 datetime.time(15, 0)
 
->>> timefhuman('12/18/18', config=config)
+>>> timefhuman('12/18/18', config=config)  # date
 datetime.date(2018, 12, 18)
+
+>>> timefhuman('30 minutes')  # duration
+datetime.timedelta(seconds=1800)
 ```
 
 **Past datetimes**: By default, datetimes are assumed to occur in the future, so if "3pm" today has already passed, the returned datetime will be for *tomorrow*. However, if datetimes are assumed to have occurred in the past (e.g., from an old letter, talking about past events), you can configure the direction.
@@ -166,6 +169,7 @@ class tfhConfig:
     direction: Direction = Direction.next
     
     # Always return datetime objects. If no date, use now.date(). If no time, use midnight.
+    # If timedelta, add it to the current datetime.
     infer_datetimes: bool = True
     
     # The 'current' datetime, used if infer_datetimes is True. Defaults to datetime.now().
@@ -175,7 +179,7 @@ class tfhConfig:
     return_matched_text: bool = False
     
     # Return a single object instead of a list when there's only one match
-    return_single_object: bool = True
+    return_single_object: bool = False
 ```
 
 ## Development
