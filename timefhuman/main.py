@@ -12,6 +12,7 @@ from dateutil.relativedelta import relativedelta, weekdays
 __all__ = ('timefhuman',)
 
 
+DEFAULT_CONFIG = tfhConfig()
 DIRECTORY = Path(__file__).parent
 parser = None
 timezone_mapping = None
@@ -28,7 +29,7 @@ def get_parser():
     return parser
 
 
-def timefhuman(string, config: tfhConfig = tfhConfig(), raw: bool=False, now: bool=False):
+def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now: bool=False):
     parser = get_parser()
     tree = parser.parse(string)
 
