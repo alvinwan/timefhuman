@@ -13,6 +13,27 @@ from pathlib import Path
 import datetime
 
 
+# Global list to track temporary files
+TEMP_FILES: list[Path] = []
+
+
+MODULE_IMPORTS = """
+from timefhuman import timefhuman, tfhConfig
+import datetime
+import pytz
+import pytest
+"""
+
+
+TEST_TEMPLATE = """
+def test_readme_example_{i}():
+    \"\"\"
+{example}
+    \"\"\"
+    pass
+"""
+
+
 @pytest.fixture(autouse=True)
 def conditional_setup_teardown(request):
     """Specifically for the doctests only, which currently only exist in the README,
@@ -32,10 +53,6 @@ def conditional_setup_teardown(request):
         yield
 
 
-# Global list to track temporary files
-TEMP_FILES: list[Path] = []
-
-
 class ReadmeDoctestModule(pytest.Module):
     @staticmethod
     def create_doctest_file(readme_path: Path) -> Path | None:
@@ -47,21 +64,10 @@ class ReadmeDoctestModule(pytest.Module):
         if not matches:
             return None
 
-        module_code = """
-from timefhuman import timefhuman, tfhConfig
-import datetime
-import pytz
-import pytest
-
-        """
+        # Assemble the Python code into a module
+        module_code = MODULE_IMPORTS
         for i, match in enumerate(matches):
-            module_code += f'''
-def test_readme_example_{i}():
-    """
-{match}
-    """
-    pass
-'''
+            module_code += TEST_TEMPLATE.format(i=i, example=match)
 
         # Create a temporary file in the 'tests/' directory
         temp_fd, temp_path = tempfile.mkstemp(dir="tests/", suffix=".py", prefix="test_readme_")
@@ -79,8 +85,7 @@ def pytest_collect_file(file_path: Path, parent):
     if file_path.name == "README.md":
         doctest_file = ReadmeDoctestModule.create_doctest_file(file_path)
         if doctest_file:
-            # Track the temporary file for cleanup later
-            TEMP_FILES.append(doctest_file)
+            TEMP_FILES.append(doctest_file)  # Track the temporary file for cleanup later
             return ReadmeDoctestModule.from_parent(parent=parent, path=doctest_file)
     return None
 
