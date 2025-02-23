@@ -34,8 +34,13 @@ def test_readme_example_{i}():
 """
 
 
+@pytest.fixture
+def now():
+    return datetime.datetime(year=2018, month=8, day=4, hour=14)
+
+
 @pytest.fixture(autouse=True)
-def conditional_setup_teardown(request):
+def conditional_setup_teardown(now, request):
     """Specifically for the doctests only, which currently only exist in the README,
     set the 'now' attribute to a fixed date for consistent results.
     
@@ -46,7 +51,7 @@ def conditional_setup_teardown(request):
     if isinstance(request.node, pytest.DoctestItem):
         from timefhuman import DEFAULT_CONFIG
         old_now = DEFAULT_CONFIG.now
-        DEFAULT_CONFIG.now = datetime.datetime(year=2018, month=8, day=4, hour=14)
+        DEFAULT_CONFIG.now = now
         yield    
         DEFAULT_CONFIG.now = old_now
     else:

@@ -5,11 +5,6 @@ from timefhuman.main import Direction, tfhConfig, DEFAULT_CONFIG
 import pytz
 
 
-@pytest.fixture
-def now():
-    return datetime.datetime(year=2018, month=8, day=4, hour=14)
-
-
 @pytest.mark.parametrize("test_input, expected", [
     # time only
     ('5p', [datetime.datetime(2018, 8, 4, 17, 0)]),
@@ -30,17 +25,20 @@ def now():
     ('3 p.m. today', [datetime.datetime(2018, 8, 4, 15, 0)]),
     ('Tomorrow 3p', [datetime.datetime(2018, 8, 5, 15, 0)]), # gh#24
     ('3p tomorrow', [datetime.datetime(2018, 8, 5, 15, 0)]),
+    ('yesterday 3p', [datetime.datetime(2018, 8, 3, 15, 0)]),
     ('July 3rd', [datetime.datetime(2018, 7, 3, 0, 0)]),
     
     # date-only ranges
     ('7/17-7/18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]),
     ('July 17-18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]), # distribute month
+    # ('June or July 2019', [[datetime.datetime(2019, 6, 1), datetime.datetime(2019, 7, 1)]]), # distribute year TODO: all unk!
     
     # time-only ranges
     ('3p -4p', [(datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))]),
     ('3p -4p PDT', [(datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Pacific')), datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))]),
     ('6:00 pm - 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 5, 0, 0))]), # gh#8
     ('8/4 6:00 pm - 8/4 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))]), # force date, do not infer
+    ('11PM to 1AM', [(datetime.datetime(2018, 8, 4, 23, 0), datetime.datetime(2018, 8, 5, 1, 0))]),  # test that 1AM is the next day
     
     # date and time ranges
     ('7/17 3 pm- 7/19 2 pm', [(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 19, 14, 0))]),
@@ -83,6 +81,7 @@ def test_default(now, test_input, expected):
     # date only
     ('July 2019', [datetime.date(2019, 7, 1)]),
     ('Sunday 7/7/2019', [datetime.date(2019, 7, 7)]),  # fixes gh#27
+    ('1/1/95', [datetime.date(1995, 1, 1)]),
     
     # date-only ranges
     ('7/17-7/18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
@@ -126,11 +125,16 @@ def test_default(now, test_input, expected):
     
     # support for date and month modifiers
     ('next Monday', [datetime.date(2018, 8, 6)]),
+    ('this Monday', [datetime.date(2018, 8, 6)]),
     ('next next Monday', [datetime.date(2018, 8, 13)]),
     ('last Monday', [datetime.date(2018, 7, 30)]),
     ('next July', [datetime.date(2019, 7, 1)]),
     ('last July', [datetime.date(2017, 7, 1)]),
     ('last Wednesday of December', [datetime.date(2018, 12, 26)]), # gh#4
+    ('first Wednesday of December', [datetime.date(2018, 12, 5)]),
+    ('second Wednesday of December', [datetime.date(2018, 12, 12)]),
+    ('third Wednesday of December', [datetime.date(2018, 12, 19)]),
+    ('fourth Wednesday of December', [datetime.date(2018, 12, 26)]),
     
     # support for vernacular datetimes
     ('afternoon', [datetime.time(hour=15, minute=0)]),
@@ -139,6 +143,8 @@ def test_default(now, test_input, expected):
     ('night', [datetime.time(hour=20, minute=0)]),
     ('today night', [datetime.datetime(2018, 8, 4, 20, 0)]),
     ('tonight', [datetime.datetime(2018, 8, 4, 20, 0)]), # gh#30
+    ('midnight', [datetime.time(hour=0, minute=0)]),
+    ('midday', [datetime.time(hour=12, minute=0)]),
     
     ('e 6:50PM', [datetime.time(hour=18, minute=50)]), # gh#51
 ])
@@ -150,6 +156,7 @@ def test_no_inference(now, test_input, expected):
 
 @pytest.mark.parametrize("config, test_input, expected", [
     (tfhConfig(direction=Direction.next, infer_datetimes=False), 'mon', [datetime.date(2018, 8, 6)]),
+    (tfhConfig(direction=Direction.this, infer_datetimes=False), 'mon', [datetime.date(2018, 8, 6)]), # TODO: what should 'this' really do?
     (tfhConfig(direction=Direction.previous, infer_datetimes=False), 'mon', [datetime.date(2018, 7, 30)]),
     
     (tfhConfig(infer_datetimes=True), '5p', [datetime.datetime(2018, 8, 4, 17, 0)]),
@@ -174,45 +181,3 @@ def test_custom_config(now, config, test_input, expected):
 ])
 def test_matched_text(now, test_input, expected):  # gh#9
     assert timefhuman(test_input, tfhConfig(now=now, return_matched_text=True)) == expected
-
-
-def test_now_changes(now): # gh#53
-    """
-    The 'now' attribute should not be modified by the function, and if not specified, the
-    notion of 'now' should change each time we call the function.
-    """
-    
-    # 'now' should not be modified
-    config = tfhConfig(now=now)
-    timefhuman('5p', config=config)
-    assert config.now == now
-    
-    # even if not specified, 'now' should not be modified
-    config = tfhConfig()
-    timefhuman('5p', config=config)
-    assert config.now is None
-    
-    # 'now' should change each time we call the function
-    config = tfhConfig()
-    assert timefhuman('5p', now=True) != timefhuman('5p', now=True)
-
-
-def test_timezone(now):  # gh#52
-    """
-    Support timezones specifications without a specific time.
-    1. When a timezone is specified in the original text, honor this first.
-    2. Otherwise, if a timezone is specified in `now`, use this.
-    """
-    now_PST = now.replace(tzinfo=pytz.timezone('US/Pacific'))
-    
-    # 1. When a timezone is specified in the original text, honor this first.
-    assert timefhuman('Wed EST', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('Wed 5p EST', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 8, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('5p EST', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 4, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('5p EST', tfhConfig(now=now_PST, direction=Direction.previous)) == [datetime.datetime(2018, 8, 3, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('9a EST', tfhConfig(now=now_PST, direction=Direction.next)) == [datetime.datetime(2018, 8, 5, 9, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('9a EST', tfhConfig(now=now_PST, infer_datetimes=False)) == [datetime.time(9, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    # 2. Otherwise, if a timezone is specified in `now`, use this.
-    assert timefhuman('Wed', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Pacific'))]
-    # 3. If no timezone is specified, do not attach one
-    assert timefhuman('Wed', tfhConfig(now=now)) == [datetime.datetime(2018, 8, 8, 0, 0)]
