@@ -13,7 +13,7 @@ Extract datetimes, datetime ranges, and datetime lists from natural language tex
 
 Install with pip using
 
-```python
+```shell
 pip install timefhuman
 ```
 
@@ -123,7 +123,8 @@ You can also set a default timezone, by again using the config's `now`.
 
 ```python
 >>> config = tfhConfig(
-...     now=datetime.datetime(2018, 8, 4), tzinfo=pytz.timezone('US/Pacific'))
+...     now=datetime.datetime(2018, 8, 4, tzinfo=pytz.timezone('US/Pacific'))
+... )
 
 >>> timefhuman('Wed', config=config)
 [datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Pacific'))]

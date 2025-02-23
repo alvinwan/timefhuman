@@ -39,5 +39,5 @@ include-package-data = true
 timefhuman = ["*.txt", "*.md"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=timefhuman"
+addopts = ["--doctest-modules"]
 testpaths = ["tests"]
