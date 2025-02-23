@@ -14,7 +14,7 @@ Extract datetimes, datetime ranges, and datetime lists from natural language tex
 Install with pip using
 
 ```shell
-pip install timefhuman
+$ pip install timefhuman
 ```
 
 Then, find natural language dates and times in any text.
@@ -197,14 +197,12 @@ class tfhConfig:
 Install the development version.
 
 ```shell
-$ pip install .e .[test]  # for bash
 $ pip install -e .\[test\]  # for zsh
 ```
 
 To run tests and simultaneously generate a coverage report, use the following commands:
 
 ```shell
-$ py.test --cov
-$ coverage html
+$ py.test --cov --cov-report=html
 $ open htmlcov/index.html
 ```
