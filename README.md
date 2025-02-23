@@ -164,7 +164,7 @@ You can also set a default timezone, by again using the config's `now`.
 
 **Change global defaults**: You can also modify the default configuration used by timefhuman, if you don't want to manually pass in configs everywhere.
 
-```
+```python
 >>> from timefhuman import DEFAULT_CONFIG
 >>> DEFAULT_CONFIG.now = datetime.datetime(2025, 2, 23, 12, 0, 0)
 
@@ -180,9 +180,9 @@ class tfhConfig:
     # Default to the next valid datetime or the previous one
     direction: Direction = Direction.next
     
-    # Always produce datetime objects. If no date, use the current date. If no time, use midnight.
-    # If timedelta, add it to the current datetime. Still allows ranges (tuples) of datetimes and
-    # lists of datetimes.
+    # Always produce datetime objects. If no date, use the current date. If no time,
+    # use midnight. If timedelta, add it to the current datetime. Still allows ranges
+    # (tuples) of datetimes and lists of datetimes.
     infer_datetimes: bool = True
     
     # The 'current' datetime, used if infer_datetimes is True
