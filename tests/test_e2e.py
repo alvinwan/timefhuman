@@ -38,6 +38,7 @@ import pytz
     ('3p -4p PDT', [(datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Pacific')), datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))]),
     ('6:00 pm - 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 5, 0, 0))]), # gh#8
     ('8/4 6:00 pm - 8/4 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))]), # force date, do not infer
+    ('11PM to 1AM', [(datetime.datetime(2018, 8, 4, 23, 0), datetime.datetime(2018, 8, 5, 1, 0))]),  # test that 1AM is the next day
     
     # date and time ranges
     ('7/17 3 pm- 7/19 2 pm', [(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 19, 14, 0))]),
@@ -155,6 +156,7 @@ def test_no_inference(now, test_input, expected):
 
 @pytest.mark.parametrize("config, test_input, expected", [
     (tfhConfig(direction=Direction.next, infer_datetimes=False), 'mon', [datetime.date(2018, 8, 6)]),
+    (tfhConfig(direction=Direction.this, infer_datetimes=False), 'mon', [datetime.date(2018, 8, 6)]), # TODO: what should 'this' really do?
     (tfhConfig(direction=Direction.previous, infer_datetimes=False), 'mon', [datetime.date(2018, 7, 30)]),
     
     (tfhConfig(infer_datetimes=True), '5p', [datetime.datetime(2018, 8, 4, 17, 0)]),

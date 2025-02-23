@@ -37,6 +37,7 @@ def test_timezone(now):  # gh#52
     assert timefhuman('Wed 5p EST', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 8, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
     assert timefhuman('5p EST', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 4, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
     assert timefhuman('5p EST', tfhConfig(now=now_PST, direction=Direction.previous)) == [datetime.datetime(2018, 8, 3, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
+    assert timefhuman('5p EST', tfhConfig(now=now_PST, direction=Direction.this)) == [datetime.datetime(2018, 8, 4, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
     assert timefhuman('9a EST', tfhConfig(now=now_PST, direction=Direction.next)) == [datetime.datetime(2018, 8, 5, 9, 0, tzinfo=pytz.timezone('US/Michigan'))]
     assert timefhuman('9a EST', tfhConfig(now=now_PST, infer_datetimes=False)) == [datetime.time(9, 0, tzinfo=pytz.timezone('US/Michigan'))]
     # 2. Otherwise, if a timezone is specified in `now`, use this.

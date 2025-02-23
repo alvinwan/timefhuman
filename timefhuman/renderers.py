@@ -236,7 +236,7 @@ class tfhDatetime(tfhDatelike):
                     pass
                 return candidate
             return _time.replace(tzinfo=tzinfo)
-        raise ValueError("Datetime is missing both date and time")
+        raise ValueError("Datetime is missing both date and time")  # pragma: no cover
         
     @classmethod
     def from_object(cls, obj: datetime):

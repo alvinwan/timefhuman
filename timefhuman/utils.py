@@ -69,7 +69,7 @@ def node_to_dict(node: Tree) -> dict:
         return {node.data.value: node.children[0].value}
     elif isinstance(node, Token):
         return {node.type: node.value}
-    raise ValueError(f"Unknown node type: {type(node)} ({node})")
+    raise ValueError(f"Unknown node type: {type(node)} ({node})")  # pragma: no cover
 
 
 def nodes_to_dict(nodes: List[Tree]) -> dict:
