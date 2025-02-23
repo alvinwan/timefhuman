@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "timefhuman"
-version = "attr: timefhuman.__VERSION__"
+dynamic = ["version"]
 description = "Extract datetimes, datetime ranges, and datetime lists from natural language text"
 readme = "README.md"
 license = { text = "Apache-2.0" }
