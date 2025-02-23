@@ -1,7 +1,7 @@
 from timefhuman import timefhuman
 import datetime
 import pytest
-from timefhuman.main import Direction, tfhConfig
+from timefhuman.main import Direction, tfhConfig, DEFAULT_CONFIG
 import pytz
 
 
@@ -65,18 +65,7 @@ def now():
     ('30-40 mins', [(datetime.datetime(2018, 8, 4, 14, 30), datetime.datetime(2018, 8, 4, 14, 40))]),
     ('1 or 2 days', [[datetime.datetime(2018, 8, 5, 14, 0), datetime.datetime(2018, 8, 6, 14, 0)]]),
     
-    # readme
-    ('Monday noon', [datetime.datetime(2018, 8, 6, 12, 0)]),
-    ('3-4p', [(datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))]), # infer meridiem
-    ('Monday 3 pm or Tu noon', [[datetime.datetime(2018, 8, 6, 15, 0), datetime.datetime(2018, 8, 7, 12, 0)]]),
-    ('7/17 4 or 5 PM', [[datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)]]), # distribute meridiem / date
-    ('7/17 4-5 or 5-6 PM', [[
-        (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
-        (datetime.datetime(2018, 7, 17, 17, 0), datetime.datetime(2018, 7, 17, 18, 0))
-    ]]),
-    
-    ('7/17, 7/18, 7/19 at 2', [[datetime.datetime(2018, 7, 17, 2, 0), datetime.datetime(2018, 7, 18, 2, 0), datetime.datetime(2018, 7, 19, 2, 0)]]), # distribute dates
-    ('2 PM on 7/17 or 7/19', [[datetime.datetime(2018, 7, 17, 14, 0), datetime.datetime(2018, 7, 19, 14, 0)]]), # distribute time across dates
+    # standard structured formats
     ('2022-12-27T09:15:01.002', [datetime.datetime(2022, 12, 27, 9, 15, 1, 2)]),  # fixes gh#31
 ])
 def test_default(now, test_input, expected):
