@@ -48,9 +48,6 @@ def timefhuman(string, config: tfhConfig = tfhConfig(), raw: bool=False, now: bo
         positions = [(renderer.matched_text_pos[0], renderer.matched_text_pos[1]) for renderer in renderers]
         matched_texts = [string[start: end] for start, end in positions]
         return list(zip(matched_texts, positions, datetimes))
-    
-    if config.return_single_object and len(datetimes) == 1:
-        return datetimes[0]
     return datetimes
 
 
