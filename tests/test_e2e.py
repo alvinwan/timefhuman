@@ -5,11 +5,6 @@ from timefhuman.main import Direction, tfhConfig, DEFAULT_CONFIG
 import pytz
 
 
-@pytest.fixture
-def now():
-    return datetime.datetime(year=2018, month=8, day=4, hour=14)
-
-
 @pytest.mark.parametrize("test_input, expected", [
     # time only
     ('5p', [datetime.datetime(2018, 8, 4, 17, 0)]),
