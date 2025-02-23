@@ -160,6 +160,16 @@ You can also set a default timezone, by again using the config's `now`.
 [datetime.datetime(2018, 8, 4, 15, 0)]
 ```
 
+**Change global defaults**: You can also modify the default configuration used by timefhuman, if you don't want to manually pass in configs everywhere.
+
+```
+>>> from timefhuman import DEFAULT_CONFIG
+>>> DEFAULT_CONFIG.now = datetime.datetime(2025, 2, 23, 12, 0, 0)
+
+>>> timefhuman('3PM')
+[datetime.datetime(2025, 2, 23, 15, 0)]
+```
+
 Here is the full set of supported configuration options:
 
 ```python
