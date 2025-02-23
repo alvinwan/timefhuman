@@ -25,11 +25,13 @@ import pytz
     ('3 p.m. today', [datetime.datetime(2018, 8, 4, 15, 0)]),
     ('Tomorrow 3p', [datetime.datetime(2018, 8, 5, 15, 0)]), # gh#24
     ('3p tomorrow', [datetime.datetime(2018, 8, 5, 15, 0)]),
+    ('yesterday 3p', [datetime.datetime(2018, 8, 3, 15, 0)]),
     ('July 3rd', [datetime.datetime(2018, 7, 3, 0, 0)]),
     
     # date-only ranges
     ('7/17-7/18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]),
     ('July 17-18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]), # distribute month
+    # ('June or July 2019', [[datetime.datetime(2019, 6, 1), datetime.datetime(2019, 7, 1)]]), # distribute year TODO: all unk!
     
     # time-only ranges
     ('3p -4p', [(datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))]),
@@ -78,6 +80,7 @@ def test_default(now, test_input, expected):
     # date only
     ('July 2019', [datetime.date(2019, 7, 1)]),
     ('Sunday 7/7/2019', [datetime.date(2019, 7, 7)]),  # fixes gh#27
+    ('1/1/95', [datetime.date(1995, 1, 1)]),
     
     # date-only ranges
     ('7/17-7/18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
@@ -121,11 +124,16 @@ def test_default(now, test_input, expected):
     
     # support for date and month modifiers
     ('next Monday', [datetime.date(2018, 8, 6)]),
+    ('this Monday', [datetime.date(2018, 8, 6)]),
     ('next next Monday', [datetime.date(2018, 8, 13)]),
     ('last Monday', [datetime.date(2018, 7, 30)]),
     ('next July', [datetime.date(2019, 7, 1)]),
     ('last July', [datetime.date(2017, 7, 1)]),
     ('last Wednesday of December', [datetime.date(2018, 12, 26)]), # gh#4
+    ('first Wednesday of December', [datetime.date(2018, 12, 5)]),
+    ('second Wednesday of December', [datetime.date(2018, 12, 12)]),
+    ('third Wednesday of December', [datetime.date(2018, 12, 19)]),
+    ('fourth Wednesday of December', [datetime.date(2018, 12, 26)]),
     
     # support for vernacular datetimes
     ('afternoon', [datetime.time(hour=15, minute=0)]),
@@ -134,6 +142,8 @@ def test_default(now, test_input, expected):
     ('night', [datetime.time(hour=20, minute=0)]),
     ('today night', [datetime.datetime(2018, 8, 4, 20, 0)]),
     ('tonight', [datetime.datetime(2018, 8, 4, 20, 0)]), # gh#30
+    ('midnight', [datetime.time(hour=0, minute=0)]),
+    ('midday', [datetime.time(hour=12, minute=0)]),
     
     ('e 6:50PM', [datetime.time(hour=18, minute=50)]), # gh#51
 ])

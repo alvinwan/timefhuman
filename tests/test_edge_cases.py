@@ -43,3 +43,8 @@ def test_timezone(now):  # gh#52
     assert timefhuman('Wed', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Pacific'))]
     # 3. If no timezone is specified, do not attach one
     assert timefhuman('Wed', tfhConfig(now=now)) == [datetime.datetime(2018, 8, 8, 0, 0)]
+    
+
+def test_unk_correctness():
+    tree = timefhuman('how does 5p sound?', raw=True)
+    assert len(tree.children) > 1, "Should have parsed into many UNK tokens"
