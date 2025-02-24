@@ -105,7 +105,7 @@ config = tfhConfig()
 **Return matched text**: You can additionally grab the matched text from the input string, as well as the string indices of the matched substring. This is useful for modifying the input string, for example. 
 
 ```python
->>> config = tfhConfig(return_matched_text=True)
+>>> config = tfhConfig(return_matched_text=True, now=datetime.datetime(2025, 2, 23))
 
 >>> timefhuman('We could maybe do 3 PM, if you still have time', config=config)
 [('3 PM', (18, 22), datetime.datetime(2025, 2, 23, 15, 0))]
