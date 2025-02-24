@@ -3,7 +3,9 @@
 [![PyPi Downloads per Month](https://img.shields.io/pypi/dm/timefhuman.svg)](https://pypi.python.org/pypi/timefhuman/)
 [![Coverage Status](https://coveralls.io/repos/github/alvinwan/timefhuman/badge.svg?branch=master)](https://coveralls.io/github/alvinwan/timefhuman?branch=master)
 
-Extract datetimes, datetime ranges, and datetime lists from natural language text. Supports Python3+[^1]
+Extract datetimes, datetime ranges, and datetime lists from natural language text. Supports Python3+[^1].
+
+✨ Try the [demo](https://pytwiddle.com/app/?id=example%3Adatetime.py) or [code](https://pytwiddle.com/?id=example%3Adatetime.py) online. No installation needed. ✨
 
 [^1]: https://github.com/alvinwan/timefhuman/issues/3
 
