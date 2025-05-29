@@ -182,7 +182,7 @@ def test_custom_config(now, config, test_input, expected):
     ('There are 3 ways to do it', []),  # '3' should remain ambiguous and then be ignored
     ('salmon for 9 amnesty tickets', []),  # no date or time (contains 'mon' and '9 am')
     ('s 1/1/24 C', [
-        ('1/1/24', (2, 7), datetime.datetime(2024, 1, 1, 0, 0))
+        ('1/1/24', (2, 8), datetime.datetime(2024, 1, 1, 0, 0))
     ]),
 ])
 def test_matched_text(now, test_input, expected):  # gh#9
