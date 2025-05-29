@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from dataclasses import replace
-from lark import Lark, Transformer, v_args
+from lark import Lark, Transformer, v_args, Token
 import pytz
 from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, get_month_mapping, tfhConfig, Direction, direction_to_offset
 from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhUnknown, tfhDatelike, tfhMatchable
@@ -146,9 +146,26 @@ class tfhTransformer(Transformer):
     ############
     
     def duration(self, children):
-        # TODO: just grabbing the first may cause problems later. how to do this more generically?
         config = replace(self.config, infer_datetimes=False)  # Don't infer datetimes while we're summing durations
-        return tfhTimedelta.from_object(sum([child.to_object(config) for child in children], timedelta()), unit=children[0].unit)
+        
+        # detect direction indicators (e.g., in, ago) and use the first timedelta-like's units
+        direction = Direction.next
+        total = timedelta()
+        unit = None
+        for child in children:
+            if isinstance(child, Token):
+                if child.type == 'DURATION_PAST':
+                    direction = Direction.previous
+                elif child.type == 'DURATION_FUTURE':
+                    direction = Direction.next
+            else:
+                total += child.to_object(config)
+                if unit is None:
+                    unit = child.unit
+        
+        if direction == Direction.previous:
+            total = -total
+        return tfhTimedelta.from_object(total, unit=unit)
     
     def duration_part(self, children):
         mapping = {
