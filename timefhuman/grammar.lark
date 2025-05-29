@@ -26,7 +26,7 @@ DATETIMENAME: /(?i)(?<![a-z])(tonight)(?![a-z])/
 
 // Duration unit (minutes, hours, days, etc.)
 DURATION_UNIT: /(?i)(?<![a-z])(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)(?![a-z])/
-DURATION_UNIT_LETTER: /(?i)(?<![a-z])(s|m|h|d|w|mo|y)(?![a-z])/
+DURATION_UNIT_LETTER: /(?i)(?<=\d)(s|m|h|d|w|mo|y)(?![a-z])/
 
 // Duration number (digits like "1", or words like "an", "a", "one", "two", etc.)
 DURATION_NUMBER: /(?i)(?<![a-z])(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?![a-z])/
@@ -77,8 +77,10 @@ datetime: date ("at" (time | houronly))? timezone?
 // won't be processed until the date rule. If additional modifiers are added,
 // update the date rule processor to handle them. It currently assumes that only
 // the month can be modified.
-date: weekday? month "/" day "/" year
-    | weekday? year "/" month "/" day
+!date_mdy: weekday? month "/" day "/" year -> date
+!date_ymd: weekday? year "/" month "/" day -> date
+date: date_mdy
+    | date_ymd
     | weekday? month "/" dayoryear
     | weekday? month "-" day "-" year
     | weekday? year "-" month "-" day
