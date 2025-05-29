@@ -30,6 +30,10 @@ def get_parser():
 
 
 def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now: bool=False):
+    if not string.strip():
+        assert not raw, "Empty string not allowed when raw=True"
+        return []
+
     parser = get_parser()
     tree = parser.parse(string)
 
