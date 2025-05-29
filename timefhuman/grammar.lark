@@ -27,6 +27,8 @@ DATETIMENAME: /(?i)(?<![a-z])(tonight)(?![a-z])/
 // Duration unit (minutes, hours, days, etc.)
 DURATION_UNIT: /(?i)(?<![a-z])(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)(?![a-z])/
 DURATION_UNIT_LETTER: /(?i)(?<=\d)(s|m|h|d|w|mo|y)(?![a-z])/
+DURATION_FUTURE: /(?i)(?<![a-z])in(?![a-z])/ 
+DURATION_PAST: /(?i)(?<![a-z])ago(?![a-z])/ 
 
 // Duration number (digits like "1", or words like "an", "a", "one", "two", etc.)
 DURATION_NUMBER: /(?i)(?<![a-z])(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?![a-z])/
@@ -102,7 +104,7 @@ time: hour COLON minute (COLON second ("." millisecond)?)? meridiem?
     | hour ("o'clock")? meridiem
     | timename
 
-duration: ("in"|"for")? duration_part (("and"|",")? duration_part)* ("ago")?
+duration: (DURATION_FUTURE|"for")? duration_part (("and"|",")? duration_part)* DURATION_PAST?
 duration_part: duration_number (duration_unit | duration_unit_letter)
              | duration_numbername " " duration_unit
 duration_number: FLOAT_NUMBER | INT
