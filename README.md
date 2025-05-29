@@ -91,6 +91,9 @@ You can also use natural language descriptions of dates and times.
 
 >>> timefhuman('afternoon')
 [datetime.datetime(2018, 8, 4, 15, 0)]
+
+>>> timefhuman('1 month ago')
+[datetime.datetime(2018, 7, 5, 14, 0)]
 ```
 
 See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
