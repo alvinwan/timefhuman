@@ -195,6 +195,10 @@ class tfhTransformer(Transformer):
             ('years', 'year', 'yrs', 'yr'),
         ):
             if duration_unit in group:
+                if group[0] == 'months':
+                    return tfhTimedelta.from_object(timedelta(days=30 * duration_number), unit=group[0])
+                if group[0] == 'years':
+                    return tfhTimedelta.from_object(timedelta(days=365 * duration_number), unit=group[0])
                 return tfhTimedelta.from_object(timedelta(**{group[0]: duration_number}), unit=group[0])
         raise NotImplementedError(f"Unknown duration unit: {data['duration_unit']}")
 
