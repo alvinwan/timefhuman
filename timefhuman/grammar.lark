@@ -11,10 +11,16 @@ ORDINAL: INT /(st|nd|rd|th)/i
 TIME_SHORTHAND: /(noon|midnight)/i
 IN: /in/i
 AGO: /ago/i
-UNIT: /(minutes?|mins?|hours?|hrs?|days?|years?)/i
+UNIT: /\b(minutes?|mins?|hours?|hrs?|days?|weeks?|wks?|wk|months?|mos?|years?|yrs?)\b/i
+AND: /and/i
+H: "h"
+M: "m"
+FLOAT.2: /\d+\.\d+/
+WORDNUM: /\b(a|an|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/i
 
 start: choice
      | expression+
+     |
 
 choice: expression (CHOICE_SEP expression)+
      | month_partial_choice
@@ -49,10 +55,14 @@ relative_range: RELATIVE_DAY (range | time_range_shorthand)
 weekday_datetime: WEEKDAY time_only
                 | time_only WEEKDAY
 
-date_only: dash_date
-         | slash_date_full
-         | slash_date_short
-         | monthname_expression
+date_simple: dash_date
+           | slash_date_full
+           | slash_date_short
+           | monthname_expression
+
+date_only: date_simple
+         | WEEKDAY date_simple -> date_only
+         | date_simple WEEKDAY -> date_only
 
 dash_date: INT "-" INT "-" INT
 slash_date_full: INT "/" INT "/" INT
@@ -65,11 +75,21 @@ month_day_range: MONTHNAME INT "-" INT ("," INT)?
 
 time_range_shorthand: INT "-" INT MERIDIEM
 
-duration: INT UNIT
-duration_range_short: INT "-" INT UNIT
-duration_choice_short: INT CHOICE_SEP INT UNIT
-relative_duration: IN INT UNIT
-                 | INT UNIT AGO
+word_number: WORDNUM+
+
+amount: INT
+      | FLOAT
+      | word_number
+
+unit: UNIT
+    | H
+    | M
+
+duration: amount unit (AND? amount unit)? AGO?
+
+duration_range_short: INT "-" INT unit
+duration_choice_short: INT CHOICE_SEP INT unit
+relative_duration: IN amount unit
 
 range: range_value RANGE_SEP range_value
 range_value: datetime | date_only | time_only

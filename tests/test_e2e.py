@@ -84,8 +84,8 @@ def test_default(now, test_input, expected):
     
     # date only
     ('July 2019', [datetime.date(2019, 7, 1)]),
-    # ('Sunday 7/7/2019', [datetime.date(2019, 7, 7)]),  # fixes gh#27
-    # ('1/1/95', [datetime.date(1995, 1, 1)]),
+    ('Sunday 7/7/2019', [datetime.date(2019, 7, 7)]),  # fixes gh#27
+    ('1/1/95', [datetime.date(1995, 1, 1)]),
     
     # date-only ranges
     ('7/17-7/18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
@@ -99,16 +99,16 @@ def test_default(now, test_input, expected):
     ('30 minutes', [datetime.timedelta(minutes=30)]),
     ('30 mins', [datetime.timedelta(minutes=30)]),
     ('2 hours', [datetime.timedelta(hours=2)]),
-    # ('2 hours 30 minutes', [datetime.timedelta(hours=2, minutes=30)]),
-    # ('2 hours and 30 minutes', [datetime.timedelta(hours=2, minutes=30)]), # gh#22
-    # ('2h30m', [datetime.timedelta(hours=2, minutes=30)]),
-    # ('1 day and an hour', [datetime.timedelta(days=1, hours=1)]),
-    # ('1.5 hours', [datetime.timedelta(hours=1, minutes=30)]),
-    # ('1.5h', [datetime.timedelta(hours=1, minutes=30)]),
-    # ('in five minutes', [datetime.timedelta(minutes=5)]), # gh#25
+    ('2 hours 30 minutes', [datetime.timedelta(hours=2, minutes=30)]),
+    ('2 hours and 30 minutes', [datetime.timedelta(hours=2, minutes=30)]), # gh#22
+    ('2h30m', [datetime.timedelta(hours=2, minutes=30)]),
+    ('1 day and an hour', [datetime.timedelta(days=1, hours=1)]),
+    ('1.5 hours', [datetime.timedelta(hours=1, minutes=30)]),
+    ('1.5h', [datetime.timedelta(hours=1, minutes=30)]),
+    ('in five minutes', [datetime.timedelta(minutes=5)]), # gh#25
     # ('awk', []),  # should *not become 'a week'
-    # ('a wk', [datetime.timedelta(days=7)]),
-    # ('thirty two hours', [datetime.timedelta(hours=32)]),
+    ('a wk', [datetime.timedelta(days=7)]),
+    ('thirty two hours', [datetime.timedelta(hours=32)]),
     ('in 1 year', [datetime.timedelta(days=365)]), # gh#73
     ('1 year ago', [datetime.timedelta(days=-365)]), # gh#73
     

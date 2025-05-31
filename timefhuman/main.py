@@ -49,6 +49,28 @@ class _Transformer(Transformer):
     def UNIT(self, token):
         return token.value.lower()
 
+    def H(self, token):
+        return token.value.lower()
+
+    def M(self, token):
+        return token.value.lower()
+
+    def FLOAT(self, token):
+        return float(token)
+
+    def WORDNUM(self, token):
+        return token.value.lower()
+
+    def word_number(self, items):
+        words = [str(w).lower() for w in items]
+        return self._words_to_int(words)
+
+    def amount(self, items):
+        return items[0]
+
+    def unit(self, items):
+        return items[0]
+
     def IN(self, token):
         return token.value.lower()
 
@@ -72,7 +94,9 @@ class _Transformer(Transformer):
 
     # Helpers
     def _year(self, value: int) -> int:
-        return value + 2000 if value < 100 else value
+        if value < 100:
+            return 1900 + value if value >= 70 else 2000 + value
+        return value
 
     def _make_date(self, y, m, d):
         dt = date(self._year(y), m, d)
@@ -115,21 +139,48 @@ class _Transformer(Transformer):
             return _Meta(val, meta.has_date, meridiem)
         return meta
 
-    def _duration_to_timedelta(self, amount: int, unit: str) -> timedelta:
+    def _duration_to_timedelta(self, amount: float, unit: str) -> timedelta:
         unit = unit.lower()
-        if unit.startswith('min'):
+        if unit.startswith('min') or unit == 'm':
             return timedelta(minutes=amount)
-        if unit.startswith('hour') or unit.startswith('hr'):
+        if unit.startswith('hour') or unit.startswith('hr') or unit == 'h':
             return timedelta(hours=amount)
         if unit.startswith('day'):
             return timedelta(days=amount)
-        if unit.startswith('week'):
+        if unit.startswith('week') or unit.startswith('wk'):
             return timedelta(weeks=amount)
-        if unit.startswith('month'):
+        if unit.startswith('month') or unit.startswith('mo'):
             return timedelta(days=30 * amount)
         if unit.startswith('year'):
             return timedelta(days=365 * amount)
         raise ValueError(f'Unknown unit: {unit}')
+
+    def _words_to_int(self, words):
+        ones = {
+            'a': 1, 'an': 1, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
+            'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
+            'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13,
+            'fourteen': 14, 'fifteen': 15, 'sixteen': 16, 'seventeen': 17,
+            'eighteen': 18, 'nineteen': 19,
+        }
+        tens = {
+            'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50,
+            'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90,
+        }
+        total = 0
+        i = 0
+        while i < len(words):
+            word = words[i]
+            if word in tens:
+                val = tens[word]
+                if i + 1 < len(words) and words[i + 1] in ones:
+                    val += ones[words[i + 1]]
+                    i += 1
+                total += val
+            else:
+                total += ones.get(word, 0)
+            i += 1
+        return total
 
     def start(self, items):
         def unwrap(obj):
@@ -225,6 +276,12 @@ class _Transformer(Transformer):
         return self._make_date(y, m, d)
 
     def date_only(self, items):
+        if len(items) == 1:
+            return items[0]
+        # if a weekday is present, ignore it
+        return items[1] if isinstance(items[0], int) else items[0]
+
+    def date_simple(self, items):
         return items[0]
 
     def datetime(self, items):
@@ -349,16 +406,33 @@ class _Transformer(Transformer):
         return (start, end)
 
     def duration(self, items):
-        amount = int(items[0])
-        unit = items[1]
-        delta = self._duration_to_timedelta(amount, unit)
+        def get_amount(token):
+            return float(int(token)) if isinstance(token, Token) else float(token)
+
+        is_ago = False
+        if items and isinstance(items[-1], str) and items[-1].lower() == 'ago':
+            is_ago = True
+            items = items[:-1]
+
+        if len(items) in (2, 4, 5):
+            amount1 = get_amount(items[0])
+            unit1 = items[1]
+            delta = self._duration_to_timedelta(amount1, unit1)
+            if len(items) >= 4:
+                second_idx = 3 if isinstance(items[2], str) and items[2].lower() == 'and' else 2
+                amount2 = get_amount(items[second_idx])
+                unit2 = items[second_idx + 1]
+                delta += self._duration_to_timedelta(amount2, unit2)
+        else:
+            return None
+
         if self.config.infer_datetimes:
-            return self.config.now + delta
-        return delta
+            return self.config.now - delta if is_ago else self.config.now + delta
+        return -delta if is_ago else delta
 
     def duration_range_short(self, items):
-        start_amt = int(items[0])
-        end_amt = int(items[1])
+        start_amt = float(items[0])
+        end_amt = float(items[1])
         unit = items[2]
         start_delta = self._duration_to_timedelta(start_amt, unit)
         end_delta = self._duration_to_timedelta(end_amt, unit)
@@ -367,8 +441,8 @@ class _Transformer(Transformer):
         return (start_delta, end_delta)
 
     def duration_choice_short(self, items):
-        first_amt = int(items[0])
-        second_amt = int(items[2])
+        first_amt = float(items[0])
+        second_amt = float(items[2])
         unit = items[3]
         first_delta = self._duration_to_timedelta(first_amt, unit)
         second_delta = self._duration_to_timedelta(second_amt, unit)
@@ -377,16 +451,10 @@ class _Transformer(Transformer):
         return [first_delta, second_delta]
 
     def relative_duration(self, items):
-        if str(items[0]).lower() == 'in':
-            amount = int(items[1])
-            unit = items[2]
-            delta = self._duration_to_timedelta(amount, unit)
-            return self.config.now + delta if self.config.infer_datetimes else delta
-        else:
-            amount = int(items[0])
-            unit = items[1]
-            delta = self._duration_to_timedelta(amount, unit)
-            return self.config.now - delta if self.config.infer_datetimes else -delta
+        amount = float(items[1])
+        unit = items[2]
+        delta = self._duration_to_timedelta(amount, unit)
+        return self.config.now + delta if self.config.infer_datetimes else delta
 
     def range(self, items):
         if len(items) == 3:
