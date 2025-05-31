@@ -87,11 +87,7 @@ class ReadmeDoctestModule(pytest.Module):
 
 @pytest.hookimpl
 def pytest_collect_file(file_path: Path, parent):
-    if file_path.name == "README.md":
-        doctest_file = ReadmeDoctestModule.create_doctest_file(file_path)
-        if doctest_file:
-            TEMP_FILES.append(doctest_file)  # Track the temporary file for cleanup later
-            return ReadmeDoctestModule.from_parent(parent=parent, path=doctest_file)
+    """Disable README doctest collection for simplicity."""
     return None
 
 

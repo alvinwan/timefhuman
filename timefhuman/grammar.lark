@@ -2,140 +2,37 @@
 %import common.INT
 %ignore WS
 
-// ----------------------
-// TERMINAL DEFINITIONS
-// ----------------------
+MONTHNAME: /(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)/i
+MERIDIEM: /(am|pm|a\.m\.|p\.m\.|a|p)/i
+RELATIVE_DAY: /(today|tomorrow|yesterday)/i
+ORDINAL: INT /(st|nd|rd|th)/i
 
-// Month names as a regex token, case-insensitive
-MONTHNAME: /(?i)(?<![a-z])(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)(?![a-z])/
+start: expression+
 
-// For weekdays, also as a single regex token, case-insensitive
-WEEKDAY: /(?i)(?<![a-z])(monday|mon|tuesday|tues|tue|tu|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)(?![a-z])/
+?expression: datetime
+           | relative_datetime
+           | date_only
+           | time_only
 
-// Meridiem token (am/pm, with optional dots)
-MERIDIEM: /(?i)(?<![a-z])([ap](\.?m\.?)?)(?![a-z])/
+datetime: date_only datetime_sep? time_only
+        | time_only datetime_sep? date_only
 
-// Datename token specifies only day
-DATENAME: /(?i)(?<![a-z])(today|tomorrow|tmw|yesterday)(?![a-z])/
+datetime_sep: "at" | "on"
 
-// Timename token specifies only time
-TIMENAME: /(?i)(?<![a-z])(noon|midday|midnight|morning|afternoon|evening|night)(?![a-z])/
+relative_datetime: RELATIVE_DAY time_only
+                 | time_only RELATIVE_DAY
 
-// Datetimename token specifies date and time
-DATETIMENAME: /(?i)(?<![a-z])(tonight)(?![a-z])/
+date_only: dash_date
+         | slash_date_full
+         | slash_date_short
+         | monthname_expression
 
-// Duration unit (minutes, hours, days, etc.)
-DURATION_UNIT: /(?i)(?<![a-z])(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)(?![a-z])/
-DURATION_UNIT_LETTER: /(?i)(?<=\d)(s|m|h|d|w|mo|y)(?![a-z])/
-DURATION_FUTURE: /(?i)(?<![a-z])in(?![a-z])/ 
-DURATION_PAST: /(?i)(?<![a-z])ago(?![a-z])/ 
+dash_date: INT "-" INT "-" INT
+slash_date_full: INT "/" INT "/" INT
+slash_date_short: INT "/" INT
+monthname_expression: MONTHNAME (ORDINAL|INT) ("," INT)?
 
-// Duration number (digits like "1", or words like "an", "a", "one", "two", etc.)
-DURATION_NUMBER: /(?i)(?<![a-z])(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?![a-z])/
-
-// Day suffix (th, rd, st, nd)
-DAY_SUFFIX: /(?i)(?<![a-z])(th|rd|st|nd)(?![a-z])/
-
-FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/i  // from lark
-
-TIMEZONE: /(?i)(?<![a-z])((TIMEZONE_MAPPING))(?![a-z])/
-
-MODIFIER: /(?i)(?<![a-z])(next|last|this|upcoming|previous|past)(?![a-z])/
-
-POSITION: /(?i)(?<![a-z])(first|second|third|fourth|last)(?![a-z])/
-
-COLON: ":"
-
-// ----------------------
-// PARSER RULES
-// ----------------------
-start: (expression | unknown)+
-
-expression: single
-          | list
-          | range
-
-range: single ("to" | "-") single
-
-list: single ((","|"or")+ single)+ 
-    | range ((","|"or")+ range)+
-
-single: datetime 
-      | duration
-      | ambiguous
-
-// Only add houronly to specific formats that immediately
-// indicate this is an hour-only time.
-datetime: date ("at" (time | houronly))? timezone?
-        | date (time | houronly) timezone?
-        | date "T" time timezone?  // ISO 8601
-        | (time | houronly) date timezone?
-        | (time | houronly) "on" date timezone?
-        | date timezone?
-        | time timezone?
-        | datetimename timezone?
-
-// NOTE: process month modifiers here since the modifier affects the year, which
-// won't be processed until the date rule. If additional modifiers are added,
-// update the date rule processor to handle them. It currently assumes that only
-// the month can be modified.
-!date_mdy: weekday? month "/" day "/" year -> date
-!date_ymd: weekday? year "/" month "/" day -> date
-date: date_mdy
-    | date_ymd
-    | weekday? month "/" dayoryear
-    | weekday? month "-" day "-" year
-    | weekday? year "-" month "-" day
-    | weekday? month "-" dayoryear
-    | weekday? datename
-    | weekday? monthname day DAY_SUFFIX? (",")? year
-    | weekday? monthname day DAY_SUFFIX
-    | weekday? day DAY_SUFFIX
-    | weekday? monthname dayoryear
-    | modifier+ monthname
-    | position weekday ("of"|"in") monthname
-    | weekday
-
-// intentionally not allowing int-only time, so that single-integers can be
-// classified as an ambiguous token (in case it's a month, day, year, etc.)
-// However, that means to support single-integer (e.g., hour) times, we need
-// to manually add them to the `datetime` rule above.
-time: hour COLON minute (COLON second ("." millisecond)?)? meridiem?
-    | hour ("o'clock")? meridiem
-    | timename
-
-duration: (DURATION_FUTURE|"for")? duration_part (("and"|",")? duration_part)* DURATION_PAST?
-duration_part: duration_number (duration_unit | duration_unit_letter)
-             | duration_numbername " " duration_unit
-duration_number: FLOAT_NUMBER | INT
-duration_numbername: DURATION_NUMBER+
-duration_unit: DURATION_UNIT
-duration_unit_letter: DURATION_UNIT_LETTER
-
-datetimename: DATETIMENAME
-
-// process date modifiers here since the weekday processor fully determines the date
-weekday: (modifier+)? WEEKDAY
-monthname: (modifier+)? MONTHNAME
-datename: DATENAME
-dayoryear: INT
-
-day: /0[1-9]|[12][0-9]|3[01]|[1-9]/
-month: /0[1-9]|1[0-2]|[1-9]/
-year: /\d{4}|(?<!\d)\d{2}(?!\d)/
-
-timename: TIMENAME
-hour: INT
-minute: INT
-second: INT
-millisecond: INT
-meridiem: MERIDIEM
-houronly: INT
-timezone: TIMEZONE  // `TIMEZONE` is generated dynamically
-modifier: MODIFIER
-position: POSITION
-
-ambiguous: INT
-
-// catch stray punctuation/letters without interfering with digits/slashes
-unknown: /(?i)[^\s\d:\/]/
+time_only: INT ":" INT MERIDIEM
+         | INT MERIDIEM
+         | INT ":" INT
+         | INT
