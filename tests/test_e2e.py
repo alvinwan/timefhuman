@@ -129,18 +129,18 @@ def test_default(now, test_input, expected):
     # # TODO: support 'this past July' (e.g., reduce to 'this')
     # # TODO: support 'last week of dec'
     
-    # # support for date and month modifiers
-    # ('next Monday', [datetime.date(2018, 8, 6)]),
-    # ('this Monday', [datetime.date(2018, 8, 6)]),
-    # ('next next Monday', [datetime.date(2018, 8, 13)]),
-    # ('last Monday', [datetime.date(2018, 7, 30)]),
-    # ('next July', [datetime.date(2019, 7, 1)]),
-    # ('last July', [datetime.date(2017, 7, 1)]),
-    # ('last Wednesday of December', [datetime.date(2018, 12, 26)]), # gh#4
-    # ('first Wednesday of December', [datetime.date(2018, 12, 5)]),
-    # ('second Wednesday of December', [datetime.date(2018, 12, 12)]),
-    # ('third Wednesday of December', [datetime.date(2018, 12, 19)]),
-    # ('fourth Wednesday of December', [datetime.date(2018, 12, 26)]),
+    # support for date and month modifiers
+    ('next Monday', [datetime.date(2018, 8, 6)]),
+    ('this Monday', [datetime.date(2018, 8, 6)]),
+    ('next next Monday', [datetime.date(2018, 8, 13)]),
+    ('last Monday', [datetime.date(2018, 7, 30)]),
+    ('next July', [datetime.date(2019, 7, 1)]),
+    ('last July', [datetime.date(2017, 7, 1)]),
+    ('last Wednesday of December', [datetime.date(2018, 12, 26)]), # gh#4
+    ('first Wednesday of December', [datetime.date(2018, 12, 5)]),
+    ('second Wednesday of December', [datetime.date(2018, 12, 12)]),
+    ('third Wednesday of December', [datetime.date(2018, 12, 19)]),
+    ('fourth Wednesday of December', [datetime.date(2018, 12, 26)]),
     
     # # support for vernacular datetimes
     # ('afternoon', [datetime.time(hour=15, minute=0)]),

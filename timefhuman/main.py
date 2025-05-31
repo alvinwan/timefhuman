@@ -3,6 +3,7 @@ from datetime import datetime, date, time, timedelta
 from pathlib import Path
 from lark import Lark, Transformer, Token
 from timefhuman.utils import get_month_mapping
+from typing import List, Union
 import re
 
 __all__ = ['timefhuman', 'tfhConfig', 'DEFAULT_CONFIG']
@@ -60,6 +61,25 @@ class _Transformer(Transformer):
 
     def WORDNUM(self, token):
         return token.value.lower()
+
+    def NEXT(self, token):
+        return token.value.lower()
+
+    def LAST(self, token):
+        return token.value.lower()
+
+    def THIS(self, token):
+        return token.value.lower()
+
+    def OF(self, token):
+        return token.value.lower()
+
+    def ORDINAL_WORD(self, token):
+        mapping = {'first': 1, 'second': 2, 'third': 3, 'fourth': 4}
+        return mapping[token.value.lower()]
+
+    def modifier(self, items):
+        return items[0]
 
     def word_number(self, items):
         words = [str(w).lower() for w in items]
@@ -138,6 +158,36 @@ class _Transformer(Transformer):
                 val = val.replace(hour=hour)
             return _Meta(val, meta.has_date, meridiem)
         return meta
+
+    def _relative_weekday(self, weekday: int, mods: List[str]) -> date:
+        base = self.config.now.date()
+        date_val = base + timedelta((weekday - base.weekday()) % 7)
+        count_next = sum(1 for m in mods if m == 'next')
+        count_last = sum(1 for m in mods if m == 'last')
+        week_offset = count_next - count_last
+        if count_next:
+            week_offset -= 1
+        return date_val + timedelta(weeks=week_offset)
+
+    def _weekday_of_month_date(
+        self, year: int, month: int, weekday: int, ordinal: int = 1, last: bool = False
+    ) -> date:
+        if last:
+            if month == 12:
+                next_month = date(year + 1, 1, 1)
+            else:
+                next_month = date(year, month + 1, 1)
+            last_day = next_month - timedelta(days=1)
+            return last_day - timedelta((last_day.weekday() - weekday) % 7)
+        first = date(year, month, 1)
+        offset = (weekday - first.weekday()) % 7
+        return first + timedelta(days=offset + 7 * (ordinal - 1))
+
+    def _year_with_mods(self, mods: Union[str, List[str]]) -> int:
+        if isinstance(mods, str):
+            mods = [mods]
+        offset = sum(1 if m == 'next' else -1 if m == 'last' else 0 for m in mods)
+        return self.config.now.year + offset
 
     def _duration_to_timedelta(self, amount: float, unit: str) -> timedelta:
         unit = unit.lower()
@@ -387,6 +437,41 @@ class _Transformer(Transformer):
             mer = None
         dt = datetime.combine(d, val)
         return _Meta(dt, True, mer)
+
+    def weekday_mod(self, items):
+        month = None
+        if len(items) >= 4 and items[-2] == 'of':
+            month = items[-1]
+            items = items[:-2]
+        *mods, wd = items
+
+        if month is None:
+            date_val = self._relative_weekday(wd, mods)
+            return self._make_date(date_val.year, date_val.month, date_val.day)
+
+        year = self.config.now.year
+        is_last = mods and mods[-1] == 'last'
+        target = self._weekday_of_month_date(year, month, wd, last=is_last)
+        return self._make_date(target.year, target.month, target.day)
+
+    def month_mod(self, items):
+        mod, month = items
+        year = self._year_with_mods(mod)
+        return self._make_date(year, month, 1)
+
+    def weekday_of_month(self, items):
+        if len(items) == 4:
+            ord_token, weekday, _, month = items
+        else:
+            ord_token, weekday, month = items
+        year = self.config.now.year
+        if ord_token == 'last':
+            target = self._weekday_of_month_date(year, month, weekday, last=True)
+        else:
+            target = self._weekday_of_month_date(
+                year, month, weekday, ordinal=int(ord_token)
+            )
+        return self._make_date(target.year, target.month, target.day)
 
     def month_day_range(self, items):
         month = int(items[0])

@@ -17,6 +17,11 @@ H: "h"
 M: "m"
 FLOAT.2: /\d+\.\d+/
 WORDNUM: /\b(a|an|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/i
+NEXT: /next/i
+LAST: /last/i
+THIS: /this/i
+OF: /of/i
+ORDINAL_WORD: /(first|second|third|fourth)/i
 
 start: choice
      | expression+
@@ -34,6 +39,9 @@ month_partial_choice: MONTHNAME (ORDINAL|INT) CHOICE_SEP (ORDINAL|INT) "at" time
            | relative_datetime
            | relative_range
            | weekday_datetime
+           | weekday_mod
+           | month_mod
+           | weekday_of_month
            | date_only
            | time_only
            | relative_duration
@@ -54,6 +62,14 @@ relative_range: RELATIVE_DAY (range | time_range_shorthand)
 
 weekday_datetime: WEEKDAY time_only
                 | time_only WEEKDAY
+
+weekday_mod: modifier+ WEEKDAY (OF MONTHNAME)?
+
+month_mod: modifier MONTHNAME
+
+weekday_of_month: (ORDINAL | ORDINAL_WORD) WEEKDAY OF MONTHNAME
+
+modifier: NEXT | LAST | THIS
 
 date_simple: dash_date
            | slash_date_full
