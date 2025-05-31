@@ -28,17 +28,16 @@ import pytz
     ('yesterday 3p', [datetime.datetime(2018, 8, 3, 15, 0)]),
     ('July 3rd', [datetime.datetime(2018, 7, 3, 0, 0)]),
     
-    # # date-only ranges
-    # ('7/17-7/18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]),
-    # ('July 17-18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]), # distribute month
+    # date-only ranges
+    ('7/17-7/18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]),
+    ('July 17-18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]),
     # # ('June or July 2019', [[datetime.datetime(2019, 6, 1), datetime.datetime(2019, 7, 1)]]), # distribute year TODO: all unk!
     
-    # # time-only ranges
-    # ('3p -4p', [(datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))]),
-    # ('3p -4p PDT', [(datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Pacific')), datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))]),
-    # ('6:00 pm - 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 5, 0, 0))]), # gh#8
-    # ('8/4 6:00 pm - 8/4 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))]), # force date, do not infer
-    # ('11PM to 1AM', [(datetime.datetime(2018, 8, 4, 23, 0), datetime.datetime(2018, 8, 5, 1, 0))]),  # test that 1AM is the next day
+    # time-only ranges
+    ('3p -4p', [(datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))]),
+    ('6:00 pm - 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 5, 0, 0))]),
+    ('8/4 6:00 pm - 8/4 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))]),
+    ('11PM to 1AM', [(datetime.datetime(2018, 8, 4, 23, 0), datetime.datetime(2018, 8, 5, 1, 0))]),
     
     # # date and time ranges
     # ('7/17 3 pm- 7/19 2 pm', [(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 19, 14, 0))]),
@@ -88,13 +87,13 @@ def test_default(now, test_input, expected):
     # ('Sunday 7/7/2019', [datetime.date(2019, 7, 7)]),  # fixes gh#27
     # ('1/1/95', [datetime.date(1995, 1, 1)]),
     
-    # # date-only ranges
-    # ('7/17-7/18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
-    # ('July 17-18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]), # distribute month
+    # date-only ranges
+    ('7/17-7/18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
+    ('July 17-18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
     
-    # # time-only ranges
-    # ('3p -4p', [(datetime.time(15, 0), datetime.time(16, 0))]),
-    # ('3-4p', [(datetime.time(15, 0), datetime.time(16, 0))]), # distribute meridiem
+    # time-only ranges
+    ('3p -4p', [(datetime.time(15, 0), datetime.time(16, 0))]),
+    ('3-4p', [(datetime.time(15, 0), datetime.time(16, 0))]),
     
     # # durations
     # ('30 minutes', [datetime.timedelta(minutes=30)]),

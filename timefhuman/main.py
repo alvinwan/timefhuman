@@ -17,6 +17,14 @@ DIRECTORY = Path(__file__).parent
 _parser = None
 
 
+@dataclass
+class _Meta:
+    value: datetime | date | time
+    has_date: bool
+    meridiem: str | None = None
+
+
+
 def get_parser():
     global _parser
     if _parser is None:
@@ -51,8 +59,10 @@ class _Transformer(Transformer):
     def _make_date(self, y, m, d):
         dt = date(self._year(y), m, d)
         if self.config.infer_datetimes:
-            return datetime.combine(dt, time(0, 0))
-        return dt
+            val = datetime.combine(dt, time(0, 0))
+        else:
+            val = dt
+        return _Meta(val, True)
 
     def _make_time(self, hour, minute=0, meridiem=None):
         if meridiem:
@@ -62,11 +72,40 @@ class _Transformer(Transformer):
                 hour = 0
         t = time(hour, minute)
         if self.config.infer_datetimes:
-            return datetime.combine(self.config.now.date(), t)
-        return t
+            val = datetime.combine(self.config.now.date(), t)
+        else:
+            val = t
+        return _Meta(val, False, meridiem)
+
+    def _apply_meridiem(self, meta: _Meta, meridiem: str) -> _Meta:
+        if meta.meridiem is None:
+            val = meta.value
+            if isinstance(val, datetime):
+                hour = val.hour
+                if meridiem.startswith('p') and hour < 12:
+                    hour += 12
+                if meridiem.startswith('a') and hour == 12:
+                    hour = 0
+                val = val.replace(hour=hour)
+            elif isinstance(val, time):
+                hour = val.hour
+                if meridiem.startswith('p') and hour < 12:
+                    hour += 12
+                if meridiem.startswith('a') and hour == 12:
+                    hour = 0
+                val = val.replace(hour=hour)
+            return _Meta(val, meta.has_date, meridiem)
+        return meta
 
     def start(self, items):
-        return list(items)
+        def unwrap(obj):
+            if isinstance(obj, _Meta):
+                return obj.value
+            if isinstance(obj, tuple):
+                return tuple(unwrap(x) for x in obj)
+            return obj
+
+        return [unwrap(item) for item in items]
 
     # Time only
     def time_only(self, items):
@@ -134,27 +173,36 @@ class _Transformer(Transformer):
             first, _, second = items
         else:
             first, second = items
+        f_val, s_val = first.value, second.value
 
-        if isinstance(first, datetime) and isinstance(second, datetime):
-            if first.time() != time(0, 0) and second.time() == time(0, 0):
-                t = first.time()
-                d = second.date()
-            elif second.time() != time(0, 0) and first.time() == time(0, 0):
-                t = second.time()
-                d = first.date()
+        if isinstance(f_val, datetime) and isinstance(s_val, datetime):
+            if f_val.time() != time(0, 0) and s_val.time() == time(0, 0):
+                t = f_val.time()
+                d = s_val.date()
+                mer = first.meridiem
+            elif s_val.time() != time(0, 0) and f_val.time() == time(0, 0):
+                t = s_val.time()
+                d = f_val.date()
+                mer = second.meridiem
             else:
-                d = first.date()
-                t = second.time()
-        elif isinstance(first, datetime):
-            t = first.time()
-            d = second if isinstance(second, date) else second.date()
-        elif isinstance(second, datetime):
-            t = second.time()
-            d = first if isinstance(first, date) else first.date()
+                d = f_val.date()
+                t = s_val.time()
+                mer = second.meridiem or first.meridiem
+        elif isinstance(f_val, datetime):
+            t = f_val.time()
+            d = s_val if isinstance(s_val, date) else s_val.date()
+            mer = first.meridiem
+        elif isinstance(s_val, datetime):
+            t = s_val.time()
+            d = f_val if isinstance(f_val, date) else f_val.date()
+            mer = second.meridiem
         else:
-            d = first
-            t = second
-        return datetime.combine(d, t)
+            d = f_val
+            t = s_val
+            mer = second.meridiem
+
+        dt = datetime.combine(d, t)
+        return _Meta(dt, True, mer)
 
     def relative_datetime(self, items):
         if isinstance(items[0], str):
@@ -170,14 +218,61 @@ class _Transformer(Transformer):
             d = base + timedelta(days=1)
         else:
             d = base - timedelta(days=1)
-        if isinstance(t, datetime):
-            t = t.time()
-        return datetime.combine(d, t)
+        if isinstance(t, _Meta):
+            val = t.value
+            mer = t.meridiem
+            if isinstance(val, datetime):
+                val = val.time()
+        else:
+            val = t
+            mer = None
+        dt = datetime.combine(d, val)
+        return _Meta(dt, True, mer)
+
+    def month_day_range(self, items):
+        month = int(items[0])
+        start_day = int(items[1])
+        end_day = int(items[2])
+        year = int(items[3]) if len(items) == 4 else self.config.now.year
+        start = self._make_date(year, month, start_day)
+        end = self._make_date(year, month, end_day)
+        return (start, end)
+
+    def time_range_shorthand(self, items):
+        start_hour = int(items[0])
+        end_hour = int(items[1])
+        mer = items[2]
+        start = self._make_time(start_hour, 0, mer)
+        end = self._make_time(end_hour, 0, mer)
+        return (start, end)
+
+    def range(self, items):
+        if len(items) == 3:
+            start, _, end = items
+        else:
+            start, end = items
+        if end.meridiem and not start.meridiem:
+            start = self._apply_meridiem(start, end.meridiem)
+        s_val, e_val = start.value, end.value
+        if (
+            isinstance(s_val, datetime)
+            and isinstance(e_val, datetime)
+            and s_val > e_val
+            and not start.has_date
+            and not end.has_date
+        ):
+            e_val = e_val + timedelta(days=1)
+            end = _Meta(e_val, end.has_date, end.meridiem)
+        return (start, end)
+
+    def range_value(self, items):
+        return items[0]
 
 
 def timefhuman(text: str, config: tfhConfig = DEFAULT_CONFIG):
     if not text.strip():
         return []
+    text = text.strip()
     config = replace(config, now=config.now or datetime.now())
     parser = get_parser()
     tree = parser.parse(text)

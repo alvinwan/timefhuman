@@ -9,7 +9,10 @@ ORDINAL: INT /(st|nd|rd|th)/i
 
 start: expression+
 
-?expression: datetime
+?expression: range
+           | month_day_range
+           | time_range_shorthand
+           | datetime
            | relative_datetime
            | date_only
            | time_only
@@ -30,7 +33,17 @@ date_only: dash_date
 dash_date: INT "-" INT "-" INT
 slash_date_full: INT "/" INT "/" INT
 slash_date_short: INT "/" INT
+
 monthname_expression: MONTHNAME (ORDINAL|INT) ("," INT)?
+
+month_day_range: MONTHNAME INT "-" INT ("," INT)?
+
+time_range_shorthand: INT "-" INT MERIDIEM
+
+range: range_value RANGE_SEP range_value
+range_value: datetime | date_only | time_only
+
+RANGE_SEP: "-" | "to"
 
 time_only: INT ":" INT MERIDIEM
          | INT MERIDIEM
