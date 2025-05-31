@@ -142,15 +142,15 @@ def test_default(now, test_input, expected):
     ('third Wednesday of December', [datetime.date(2018, 12, 19)]),
     ('fourth Wednesday of December', [datetime.date(2018, 12, 26)]),
     
-    # # support for vernacular datetimes
-    # ('afternoon', [datetime.time(hour=15, minute=0)]),
-    # ('morning', [datetime.time(hour=6, minute=0)]),
-    # ('evening', [datetime.time(hour=18, minute=0)]),
-    # ('night', [datetime.time(hour=20, minute=0)]),
-    # ('today night', [datetime.datetime(2018, 8, 4, 20, 0)]),
-    # ('tonight', [datetime.datetime(2018, 8, 4, 20, 0)]), # gh#30
-    # ('midnight', [datetime.time(hour=0, minute=0)]),
-    # ('midday', [datetime.time(hour=12, minute=0)]),
+    # support for vernacular datetimes
+    ('afternoon', [datetime.time(hour=15, minute=0)]),
+    ('morning', [datetime.time(hour=6, minute=0)]),
+    ('evening', [datetime.time(hour=18, minute=0)]),
+    ('night', [datetime.time(hour=20, minute=0)]),
+    ('today night', [datetime.datetime(2018, 8, 4, 20, 0)]),
+    ('tonight', [datetime.datetime(2018, 8, 4, 20, 0)]), # gh#30
+    ('midnight', [datetime.time(hour=0, minute=0)]),
+    ('midday', [datetime.time(hour=12, minute=0)]),
     
     # ('e 6:50PM', [datetime.time(hour=18, minute=50)]), # gh#51
 ])

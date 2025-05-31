@@ -8,7 +8,8 @@ MERIDIEM: /(am|pm|a\.m\.|p\.m\.|a|p)/i
 RELATIVE_DAY: /(today|tomorrow|yesterday)/i
 WEEKDAY: /(Mon(?:day)?|Tue(?:sday)?|Wed(?:nesday)?|Thu(?:rsday)?|Fri(?:day)?|Sat(?:urday)?|Sun(?:day)?)/i
 ORDINAL: INT /(st|nd|rd|th)/i
-TIME_SHORTHAND: /(noon|midnight)/i
+TIME_SHORTHAND: /(noon|midnight|midday|afternoon|morning|evening|night)/i
+TONIGHT: /tonight/i
 IN: /in/i
 AGO: /ago/i
 UNIT: /\b(minutes?|mins?|hours?|hrs?|days?|weeks?|wks?|wk|months?|mos?|years?|yrs?)\b/i
@@ -48,6 +49,7 @@ month_partial_choice: MONTHNAME (ORDINAL|INT) CHOICE_SEP (ORDINAL|INT) "at" time
            | duration_range_short
            | duration_choice_short
            | duration
+           | tonight
 
 datetime: date_only datetime_sep? time_only
         | time_only datetime_sep? date_only
@@ -118,3 +120,5 @@ time_only: INT ":" INT MERIDIEM
          | INT ":" INT
          | INT
          | TIME_SHORTHAND -> time_shorthand
+
+tonight: TONIGHT

@@ -278,10 +278,22 @@ class _Transformer(Transformer):
         return self._make_time(hour, minute, meridiem)
     
     def time_shorthand(self, items):
-        if items[0] == 'noon':
-            return self._make_time(12, 0, 'p')
-        elif items[0] == 'midnight':
-            return self._make_time(0, 0, 'a')
+        mapping = {
+            'noon': (12, 0, 'p'),
+            'midday': (12, 0, 'p'),
+            'midnight': (0, 0, 'a'),
+            'morning': (6, 0, None),
+            'afternoon': (15, 0, None),
+            'evening': (18, 0, None),
+            'night': (20, 0, None),
+        }
+        word = items[0]
+        hour, minute, mer = mapping.get(word)
+        return self._make_time(hour, minute, mer)
+
+    def tonight(self, items):
+        dt = datetime.combine(self.config.now.date(), time(20, 0))
+        return _Meta(dt, True)
 
     # Date components
     def dash_date(self, items):
