@@ -2,7 +2,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, date, time, timedelta
 from pathlib import Path
 from lark import Lark, Transformer, Token
-from timefhuman.utils import get_month_mapping
+from timefhuman.utils import get_month_mapping, Direction
 from typing import List, Union
 import re
 
@@ -10,6 +10,7 @@ __all__ = ['timefhuman', 'tfhConfig', 'DEFAULT_CONFIG']
 
 @dataclass
 class tfhConfig:
+    direction: Direction = Direction.next
     infer_datetimes: bool = True
     now: datetime | None = None
 
@@ -135,6 +136,10 @@ class _Transformer(Transformer):
         t = time(hour, minute)
         if self.config.infer_datetimes:
             val = datetime.combine(self.config.now.date(), t)
+            if self.config.direction == Direction.next and val < self.config.now:
+                val += timedelta(days=1)
+            elif self.config.direction == Direction.previous and val > self.config.now:
+                val -= timedelta(days=1)
         else:
             val = t
         return _Meta(val, False, meridiem)
@@ -149,6 +154,11 @@ class _Transformer(Transformer):
                 if meridiem.startswith('a') and hour == 12:
                     hour = 0
                 val = val.replace(hour=hour)
+                if self.config.infer_datetimes and not meta.has_date:
+                    if self.config.direction == Direction.next and val < self.config.now:
+                        val += timedelta(days=1)
+                    elif self.config.direction == Direction.previous and val > self.config.now:
+                        val -= timedelta(days=1)
             elif isinstance(val, time):
                 hour = val.hour
                 if meridiem.startswith('p') and hour < 12:
@@ -161,6 +171,10 @@ class _Transformer(Transformer):
 
     def _relative_weekday(self, weekday: int, mods: List[str]) -> date:
         base = self.config.now.date()
+        if not mods:
+            if self.config.direction == Direction.previous:
+                return base - timedelta((base.weekday() - weekday) % 7)
+            return base + timedelta((weekday - base.weekday()) % 7)
         date_val = base + timedelta((weekday - base.weekday()) % 7)
         count_next = sum(1 for m in mods if m == 'next')
         count_last = sum(1 for m in mods if m == 'last')
@@ -437,8 +451,11 @@ class _Transformer(Transformer):
             t = items[0]
             wd = items[1]
         base = self.config.now
-        days_ahead = (wd - base.weekday()) % 7
-        d = base.date() + timedelta(days=days_ahead)
+        if self.config.direction == Direction.previous:
+            delta = -((base.weekday() - wd) % 7)
+        else:
+            delta = (wd - base.weekday()) % 7
+        d = base.date() + timedelta(days=delta)
         if isinstance(t, _Meta):
             val = t.value
             mer = t.meridiem
@@ -449,6 +466,7 @@ class _Transformer(Transformer):
             mer = None
         dt = datetime.combine(d, val)
         return _Meta(dt, True, mer)
+
 
     def weekday_mod(self, items):
         month = None

@@ -2,6 +2,7 @@ from timefhuman import timefhuman
 import datetime
 import pytest
 from timefhuman.main import tfhConfig
+from timefhuman.utils import Direction
 import pytz
 
 
@@ -161,13 +162,13 @@ def test_no_inference(now, test_input, expected):
 
 
 @pytest.mark.parametrize("config, test_input, expected", [
-    # (tfhConfig(direction=Direction.next, infer_datetimes=False), 'mon', [datetime.date(2018, 8, 6)]),
-    # (tfhConfig(direction=Direction.this, infer_datetimes=False), 'mon', [datetime.date(2018, 8, 6)]), # TODO: what should 'this' really do?
-    # (tfhConfig(direction=Direction.previous, infer_datetimes=False), 'mon', [datetime.date(2018, 7, 30)]),
-    
-    # (tfhConfig(infer_datetimes=True), '5p', [datetime.datetime(2018, 8, 4, 17, 0)]),
-    # (tfhConfig(infer_datetimes=False), '5p', [datetime.time(hour=17, minute=0)]),
-    # (tfhConfig(infer_datetimes=True), '1p', [datetime.datetime(2018, 8, 5, 13, 0)]), # gh#12
+    (tfhConfig(direction=Direction.next, infer_datetimes=False), 'mon', [datetime.date(2018, 8, 6)]),
+    (tfhConfig(direction=Direction.this, infer_datetimes=False), 'mon', [datetime.date(2018, 8, 6)]),  # TODO: what should 'this' really do?
+    (tfhConfig(direction=Direction.previous, infer_datetimes=False), 'mon', [datetime.date(2018, 7, 30)]),
+
+    (tfhConfig(infer_datetimes=True), '5p', [datetime.datetime(2018, 8, 4, 17, 0)]),
+    (tfhConfig(infer_datetimes=False), '5p', [datetime.time(hour=17, minute=0)]),
+    (tfhConfig(infer_datetimes=True), '1p', [datetime.datetime(2018, 8, 5, 13, 0)]),  # gh#12
 ])
 def test_custom_config(now, config, test_input, expected):
     config.now = now

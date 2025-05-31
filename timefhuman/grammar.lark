@@ -65,7 +65,7 @@ relative_range: RELATIVE_DAY (range | time_range_shorthand)
 weekday_datetime: WEEKDAY time_only
                 | time_only WEEKDAY
 
-weekday_mod: modifier+ WEEKDAY (OF MONTHNAME)?
+weekday_mod: modifier* WEEKDAY (OF MONTHNAME)?
 
 month_mod: modifier MONTHNAME
 
