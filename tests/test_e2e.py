@@ -74,16 +74,16 @@ def test_default(now, test_input, expected):
 
 
 @pytest.mark.parametrize("test_input, expected", [
-    # # empty
-    # ('', []),
+    # empty
+    ('', []),
     
-    # # time only
-    # ('5p', [datetime.time(hour=17, minute=0)]),
+    # time only
+    ('5p', [datetime.time(hour=17, minute=0)]),
     # ("3 o'clock pm", [datetime.time(hour=15, minute=0)]), # fixes gh#12
     # ('5p Eastern Time', [datetime.time(hour=17, minute=0, tzinfo=pytz.timezone('US/Michigan'))]),  # fixes gh#6
     
-    # # date only
-    # ('July 2019', [datetime.date(2019, 7, 1)]),
+    # date only
+    ('July 2019', [datetime.date(2019, 7, 1)]),
     # ('Sunday 7/7/2019', [datetime.date(2019, 7, 7)]),  # fixes gh#27
     # ('1/1/95', [datetime.date(1995, 1, 1)]),
     
@@ -95,10 +95,10 @@ def test_default(now, test_input, expected):
     ('3p -4p', [(datetime.time(15, 0), datetime.time(16, 0))]),
     ('3-4p', [(datetime.time(15, 0), datetime.time(16, 0))]),
     
-    # # durations
-    # ('30 minutes', [datetime.timedelta(minutes=30)]),
-    # ('30 mins', [datetime.timedelta(minutes=30)]),
-    # ('2 hours', [datetime.timedelta(hours=2)]),
+    # durations
+    ('30 minutes', [datetime.timedelta(minutes=30)]),
+    ('30 mins', [datetime.timedelta(minutes=30)]),
+    ('2 hours', [datetime.timedelta(hours=2)]),
     # ('2 hours 30 minutes', [datetime.timedelta(hours=2, minutes=30)]),
     # ('2 hours and 30 minutes', [datetime.timedelta(hours=2, minutes=30)]), # gh#22
     # ('2h30m', [datetime.timedelta(hours=2, minutes=30)]),
@@ -109,12 +109,12 @@ def test_default(now, test_input, expected):
     # ('awk', []),  # should *not become 'a week'
     # ('a wk', [datetime.timedelta(days=7)]),
     # ('thirty two hours', [datetime.timedelta(hours=32)]),
-    # ('in 1 year', [datetime.timedelta(days=365)]), # gh#73
-    # ('1 year ago', [datetime.timedelta(days=-365)]), # gh#73
+    ('in 1 year', [datetime.timedelta(days=365)]), # gh#73
+    ('1 year ago', [datetime.timedelta(days=-365)]), # gh#73
     
-    # # duration ranges and lists
-    # ('30-40 mins', [(datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))]),
-    # ('1 or 2 days', [[datetime.timedelta(days=1), datetime.timedelta(days=2)]]),
+    # duration ranges and lists
+    ('30-40 mins', [(datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))]),
+    ('1 or 2 days', [[datetime.timedelta(days=1), datetime.timedelta(days=2)]]),
 
     # # TODO: support "quarter to 3"
     # # TODO: support "one and a half hours"
