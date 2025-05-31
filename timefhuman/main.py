@@ -46,6 +46,15 @@ class _Transformer(Transformer):
     def MERIDIEM(self, token):
         return token.value.lower()
 
+    def UNIT(self, token):
+        return token.value.lower()
+
+    def IN(self, token):
+        return token.value.lower()
+
+    def AGO(self, token):
+        return token.value.lower()
+
     def ORDINAL(self, token):
         return int(re.match(r"\d+", token.value).group())
 
@@ -105,6 +114,22 @@ class _Transformer(Transformer):
                 val = val.replace(hour=hour)
             return _Meta(val, meta.has_date, meridiem)
         return meta
+
+    def _duration_to_timedelta(self, amount: int, unit: str) -> timedelta:
+        unit = unit.lower()
+        if unit.startswith('min'):
+            return timedelta(minutes=amount)
+        if unit.startswith('hour') or unit.startswith('hr'):
+            return timedelta(hours=amount)
+        if unit.startswith('day'):
+            return timedelta(days=amount)
+        if unit.startswith('week'):
+            return timedelta(weeks=amount)
+        if unit.startswith('month'):
+            return timedelta(days=30 * amount)
+        if unit.startswith('year'):
+            return timedelta(days=365 * amount)
+        raise ValueError(f'Unknown unit: {unit}')
 
     def start(self, items):
         def unwrap(obj):
@@ -322,6 +347,46 @@ class _Transformer(Transformer):
         start = self._make_time(start_hour, 0, mer)
         end = self._make_time(end_hour, 0, mer)
         return (start, end)
+
+    def duration(self, items):
+        amount = int(items[0])
+        unit = items[1]
+        delta = self._duration_to_timedelta(amount, unit)
+        if self.config.infer_datetimes:
+            return self.config.now + delta
+        return delta
+
+    def duration_range_short(self, items):
+        start_amt = int(items[0])
+        end_amt = int(items[1])
+        unit = items[2]
+        start_delta = self._duration_to_timedelta(start_amt, unit)
+        end_delta = self._duration_to_timedelta(end_amt, unit)
+        if self.config.infer_datetimes:
+            return (self.config.now + start_delta, self.config.now + end_delta)
+        return (start_delta, end_delta)
+
+    def duration_choice_short(self, items):
+        first_amt = int(items[0])
+        second_amt = int(items[2])
+        unit = items[3]
+        first_delta = self._duration_to_timedelta(first_amt, unit)
+        second_delta = self._duration_to_timedelta(second_amt, unit)
+        if self.config.infer_datetimes:
+            return [self.config.now + first_delta, self.config.now + second_delta]
+        return [first_delta, second_delta]
+
+    def relative_duration(self, items):
+        if str(items[0]).lower() == 'in':
+            amount = int(items[1])
+            unit = items[2]
+            delta = self._duration_to_timedelta(amount, unit)
+            return self.config.now + delta if self.config.infer_datetimes else delta
+        else:
+            amount = int(items[0])
+            unit = items[1]
+            delta = self._duration_to_timedelta(amount, unit)
+            return self.config.now - delta if self.config.infer_datetimes else -delta
 
     def range(self, items):
         if len(items) == 3:

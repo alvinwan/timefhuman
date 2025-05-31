@@ -57,12 +57,12 @@ import pytz
         (datetime.datetime(2018, 8, 4, 17, 0), datetime.datetime(2018, 8, 4, 18, 0))
     ]]),
     
-    # # timedeltas converted properly
-    # ('30 minutes', [datetime.datetime(2018, 8, 4, 14, 30)]),
-    # ('30-40 mins', [(datetime.datetime(2018, 8, 4, 14, 30), datetime.datetime(2018, 8, 4, 14, 40))]),
-    # ('1 or 2 days', [[datetime.datetime(2018, 8, 5, 14, 0), datetime.datetime(2018, 8, 6, 14, 0)]]),
-    # ('in 1 year', [datetime.datetime(2019, 8, 4, 14, 0)]), # gh#73
-    # ('1 year ago', [datetime.datetime(2017, 8, 4, 14, 0)]), # gh#73
+    # timedeltas converted into datetimes
+    ('30 minutes', [datetime.datetime(2018, 8, 4, 14, 30)]),
+    ('30-40 mins', [(datetime.datetime(2018, 8, 4, 14, 30), datetime.datetime(2018, 8, 4, 14, 40))]),
+    ('1 or 2 days', [[datetime.datetime(2018, 8, 5, 14, 0), datetime.datetime(2018, 8, 6, 14, 0)]]),
+    ('in 1 year', [datetime.datetime(2019, 8, 4, 14, 0)]), # gh#73
+    ('1 year ago', [datetime.datetime(2017, 8, 4, 14, 0)]), # gh#73
     
     # # standard structured formats
     # ('2022-12-27T09:15:01.002', [datetime.datetime(2022, 12, 27, 9, 15, 1, 2)]),  # fixes gh#31

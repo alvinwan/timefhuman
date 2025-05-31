@@ -9,6 +9,9 @@ RELATIVE_DAY: /(today|tomorrow|yesterday)/i
 WEEKDAY: /(Mon(?:day)?|Tue(?:sday)?|Wed(?:nesday)?|Thu(?:rsday)?|Fri(?:day)?|Sat(?:urday)?|Sun(?:day)?)/i
 ORDINAL: INT /(st|nd|rd|th)/i
 TIME_SHORTHAND: /(noon|midnight)/i
+IN: /in/i
+AGO: /ago/i
+UNIT: /(minutes?|mins?|hours?|hrs?|days?|years?)/i
 
 start: choice
      | expression+
@@ -27,6 +30,10 @@ month_partial_choice: MONTHNAME (ORDINAL|INT) CHOICE_SEP (ORDINAL|INT) "at" time
            | weekday_datetime
            | date_only
            | time_only
+           | relative_duration
+           | duration_range_short
+           | duration_choice_short
+           | duration
 
 datetime: date_only datetime_sep? time_only
         | time_only datetime_sep? date_only
@@ -57,6 +64,12 @@ monthname_expression: MONTHNAME (ORDINAL|INT) ("," INT)?
 month_day_range: MONTHNAME INT "-" INT ("," INT)?
 
 time_range_shorthand: INT "-" INT MERIDIEM
+
+duration: INT UNIT
+duration_range_short: INT "-" INT UNIT
+duration_choice_short: INT CHOICE_SEP INT UNIT
+relative_duration: IN INT UNIT
+                 | INT UNIT AGO
 
 range: range_value RANGE_SEP range_value
 range_value: datetime | date_only | time_only
