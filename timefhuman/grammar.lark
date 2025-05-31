@@ -6,15 +6,25 @@ INT_YEAR.2: /\d{4}/
 MONTHNAME: /(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)/i
 MERIDIEM: /(am|pm|a\.m\.|p\.m\.|a|p)/i
 RELATIVE_DAY: /(today|tomorrow|yesterday)/i
+WEEKDAY: /(Mon(?:day)?|Tue(?:sday)?|Wed(?:nesday)?|Thu(?:rsday)?|Fri(?:day)?|Sat(?:urday)?|Sun(?:day)?)/i
 ORDINAL: INT /(st|nd|rd|th)/i
+TIME_SHORTHAND: /(noon|midnight)/i
 
-start: expression+
+start: choice
+     | expression+
+
+choice: expression (CHOICE_SEP expression)+
+     | month_partial_choice
+
+month_partial_choice: MONTHNAME (ORDINAL|INT) CHOICE_SEP (ORDINAL|INT) "at" time_only
 
 ?expression: range
            | month_day_range
            | time_range_shorthand
            | datetime
            | relative_datetime
+           | relative_range
+           | weekday_datetime
            | date_only
            | time_only
 
@@ -25,6 +35,12 @@ datetime_sep: "at" | "on"
 
 relative_datetime: RELATIVE_DAY time_only
                  | time_only RELATIVE_DAY
+
+relative_range: RELATIVE_DAY (range | time_range_shorthand)
+              | (range | time_range_shorthand) RELATIVE_DAY
+
+weekday_datetime: WEEKDAY time_only
+                | time_only WEEKDAY
 
 date_only: dash_date
          | slash_date_full
@@ -46,8 +62,10 @@ range: range_value RANGE_SEP range_value
 range_value: datetime | date_only | time_only
 
 RANGE_SEP: "-" | "to"
+CHOICE_SEP: "," | "or"
 
 time_only: INT ":" INT MERIDIEM
          | INT MERIDIEM
          | INT ":" INT
          | INT
+         | TIME_SHORTHAND -> time_shorthand

@@ -46,16 +46,16 @@ import pytz
     ('6/28 5:00 PM - 8/02 7:00 PM', [(datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))]),
     ('6/28/2019 5:00 PM - 8/02/2019 7:00 PM', [(datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))]),
     
-    # # choices
-    # ('July 4th or 5th at 3PM', [[datetime.datetime(2018, 7, 4, 15, 0), datetime.datetime(2018, 7, 5, 15, 0)]]), # distribute month and time
-    # ('tomorrow noon,Wed 3 p.m.,Fri 11 AM', [[datetime.datetime(2018, 8, 5, 12, 0), datetime.datetime(2018, 8, 8, 15, 0), datetime.datetime(2018, 8, 10, 11, 0)]]), # distribute meridiem
-    # # ('2, 3, or 4p tmw', [datetime.datetime(2018, 8, 4, 2, 0), datetime.datetime(2018, 8, 4, 3, 0), datetime.datetime(2018, 8, 4, 4, 0)]), # multiple ambiguous tokens #TODO (check month?)
+    # choices
+    ('July 4th or 5th at 3PM', [[datetime.datetime(2018, 7, 4, 15, 0), datetime.datetime(2018, 7, 5, 15, 0)]]), # distribute month and time
+    ('tomorrow noon,Wed 3 p.m.,Fri 11 AM', [[datetime.datetime(2018, 8, 5, 12, 0), datetime.datetime(2018, 8, 8, 15, 0), datetime.datetime(2018, 8, 10, 11, 0)]]), # distribute meridiem
+    # ('2, 3, or 4p tmw', [datetime.datetime(2018, 8, 4, 2, 0), datetime.datetime(2018, 8, 4, 3, 0), datetime.datetime(2018, 8, 4, 4, 0)]), # multiple ambiguous tokens #TODO (check month?)
     
-    # # choices of ranges
-    # ('7/17 4-5 PM or 5-6 PM today', [[
-    #     (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
-    #     (datetime.datetime(2018, 8, 4, 17, 0), datetime.datetime(2018, 8, 4, 18, 0))
-    # ]]),
+    # choices of ranges
+    ('7/17 4-5 PM or 5-6 PM today', [[
+        (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
+        (datetime.datetime(2018, 8, 4, 17, 0), datetime.datetime(2018, 8, 4, 18, 0))
+    ]]),
     
     # # timedeltas converted properly
     # ('30 minutes', [datetime.datetime(2018, 8, 4, 14, 30)]),

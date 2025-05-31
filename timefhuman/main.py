@@ -1,7 +1,7 @@
 from dataclasses import dataclass, replace
 from datetime import datetime, date, time, timedelta
 from pathlib import Path
-from lark import Lark, Transformer
+from lark import Lark, Transformer, Token
 from timefhuman.utils import get_month_mapping
 import re
 
@@ -51,6 +51,15 @@ class _Transformer(Transformer):
 
     def RELATIVE_DAY(self, token):
         return token.value.lower()
+    
+    def WEEKDAY(self, token):
+        text = token.value.lower()
+        for i, day in enumerate([
+            'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'
+        ]):
+            if text.startswith(day):
+                return i
+        raise ValueError(f"Invalid weekday: {token.value}")
 
     # Helpers
     def _year(self, value: int) -> int:
@@ -103,9 +112,28 @@ class _Transformer(Transformer):
                 return obj.value
             if isinstance(obj, tuple):
                 return tuple(unwrap(x) for x in obj)
+            if isinstance(obj, list):
+                return [unwrap(x) for x in obj]
             return obj
 
         return [unwrap(item) for item in items]
+    
+    def choice(self, items):
+        items = [item for item in items if not isinstance(item, Token)]
+        if len(items) == 1 and isinstance(items[0], list):
+            return items[0]
+        return items
+
+    def month_partial_choice(self, items):
+        month = int(items[0])
+        first_day = int(items[1])
+        second_day = int(items[3])
+        time_part = items[4]
+        first = self._make_date(self.config.now.year, month, first_day)
+        second = self._make_date(self.config.now.year, month, second_day)
+        first_dt = self.datetime([first, time_part])
+        second_dt = self.datetime([second, time_part])
+        return [first_dt, second_dt]
 
     # Time only
     def time_only(self, items):
@@ -122,6 +150,12 @@ class _Transformer(Transformer):
             minute = int(items[1])
             meridiem = items[2]
         return self._make_time(hour, minute, meridiem)
+    
+    def time_shorthand(self, items):
+        if items[0] == 'noon':
+            return self._make_time(12, 0, 'p')
+        elif items[0] == 'midnight':
+            return self._make_time(0, 0, 'a')
 
     # Date components
     def dash_date(self, items):
@@ -228,6 +262,49 @@ class _Transformer(Transformer):
             mer = None
         dt = datetime.combine(d, val)
         return _Meta(dt, True, mer)
+    
+    def relative_range(self, items):
+        if isinstance(items[0], str):
+            rel = items[0]
+            rng = items[1]
+        else:
+            rng = items[0]
+            rel = items[1]
+        base = self.config.now.date()
+        if rel == 'today':
+            d = base
+        elif rel == 'tomorrow':
+            d = base + timedelta(days=1)
+        else:
+            d = base - timedelta(days=1)
+        start, end = rng
+        def combine(meta: _Meta):
+            val = meta.value
+            if isinstance(val, datetime):
+                val = val.time()
+            return _Meta(datetime.combine(d, val), True, meta.meridiem)
+        return (combine(start), combine(end))
+
+    def weekday_datetime(self, items):
+        if isinstance(items[0], int):
+            wd = items[0]
+            t = items[1]
+        else:
+            t = items[0]
+            wd = items[1]
+        base = self.config.now
+        days_ahead = (wd - base.weekday()) % 7
+        d = base.date() + timedelta(days=days_ahead)
+        if isinstance(t, _Meta):
+            val = t.value
+            mer = t.meridiem
+            if isinstance(val, datetime):
+                val = val.time()
+        else:
+            val = t
+            mer = None
+        dt = datetime.combine(d, val)
+        return _Meta(dt, True, mer)
 
     def month_day_range(self, items):
         month = int(items[0])
@@ -254,6 +331,13 @@ class _Transformer(Transformer):
         if end.meridiem and not start.meridiem:
             start = self._apply_meridiem(start, end.meridiem)
         s_val, e_val = start.value, end.value
+        if isinstance(s_val, datetime) and isinstance(e_val, datetime):
+            if start.has_date and not end.has_date:
+                e_val = e_val.replace(year=s_val.year, month=s_val.month, day=s_val.day)
+                end = _Meta(e_val, True, end.meridiem)
+            elif end.has_date and not start.has_date:
+                s_val = s_val.replace(year=e_val.year, month=e_val.month, day=e_val.day)
+                start = _Meta(s_val, True, start.meridiem)
         if (
             isinstance(s_val, datetime)
             and isinstance(e_val, datetime)
