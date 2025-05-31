@@ -1,4 +1,5 @@
 %import common.WS
+INT_YEAR.2: /\d{4}/
 %import common.INT
 %ignore WS
 
@@ -35,6 +36,7 @@ slash_date_full: INT "/" INT "/" INT
 slash_date_short: INT "/" INT
 
 monthname_expression: MONTHNAME (ORDINAL|INT) ("," INT)?
+                    | MONTHNAME (ORDINAL|INT) INT_YEAR
 
 month_day_range: MONTHNAME INT "-" INT ("," INT)?
 

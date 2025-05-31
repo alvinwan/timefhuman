@@ -39,12 +39,12 @@ import pytz
     ('8/4 6:00 pm - 8/4 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))]),
     ('11PM to 1AM', [(datetime.datetime(2018, 8, 4, 23, 0), datetime.datetime(2018, 8, 5, 1, 0))]),
     
-    # # date and time ranges
-    # ('7/17 3 pm- 7/19 2 pm', [(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 19, 14, 0))]),
-    # ('Jun 28 5:00 PM - Aug 02 7:00 PM', [(datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))]),
-    # ('Jun 28 2019 5:00 PM - Aug 02 2019 7:00 PM', [(datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))]),
-    # ('6/28 5:00 PM - 8/02 7:00 PM', [(datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))]),
-    # ('6/28/2019 5:00 PM - 8/02/2019 7:00 PM', [(datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))]),
+    # date and time ranges
+    ('7/17 3 pm- 7/19 2 pm', [(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 19, 14, 0))]),
+    ('Jun 28 5:00 PM - Aug 02 7:00 PM', [(datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))]),
+    ('Jun 28 2019 5:00 PM - Aug 02 2019 7:00 PM', [(datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))]),
+    ('6/28 5:00 PM - 8/02 7:00 PM', [(datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))]),
+    ('6/28/2019 5:00 PM - 8/02/2019 7:00 PM', [(datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))]),
     
     # # choices
     # ('July 4th or 5th at 3PM', [[datetime.datetime(2018, 7, 4, 15, 0), datetime.datetime(2018, 7, 5, 15, 0)]]), # distribute month and time
