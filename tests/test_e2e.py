@@ -31,6 +31,8 @@ import pytz
     # date-only ranges
     ('7/17-7/18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]),
     ('July 17-18', [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]), # distribute month
+    ('June 11-16, 2026', [(datetime.datetime(2026, 6, 11), datetime.datetime(2026, 6, 16))]),
+    ('June 11-16 2026', [(datetime.datetime(2026, 6, 11), datetime.datetime(2026, 6, 16))]),
     # ('June or July 2019', [[datetime.datetime(2019, 6, 1), datetime.datetime(2019, 7, 1)]]), # distribute year TODO: all unk!
     
     # time-only ranges
@@ -91,6 +93,8 @@ def test_default(now, test_input, expected):
     # date-only ranges
     ('7/17-7/18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
     ('July 17-18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]), # distribute month
+    ('June 11-16, 2026', [(datetime.date(2026, 6, 11), datetime.date(2026, 6, 16))]),
+    ('June 11-16 2026', [(datetime.date(2026, 6, 11), datetime.date(2026, 6, 16))]),
     
     # time-only ranges
     ('3p -4p', [(datetime.time(15, 0), datetime.time(16, 0))]),

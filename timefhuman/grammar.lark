@@ -90,6 +90,7 @@ date: date_mdy
     | weekday? datename
     | weekday? monthname day DAY_SUFFIX? (",")? year
     | weekday? monthname day DAY_SUFFIX
+    | weekday? day DAY_SUFFIX? (",")? year
     | weekday? day DAY_SUFFIX
     | weekday? monthname dayoryear
     | modifier+ monthname
@@ -138,4 +139,4 @@ position: POSITION
 ambiguous: INT
 
 // catch stray punctuation/letters without interfering with digits/slashes
-unknown: /(?i)[^\s\d:\/]/
+unknown: /(?i)[^\s\d:\/\-]/
