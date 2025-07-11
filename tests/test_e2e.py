@@ -15,6 +15,7 @@ import pytz
     ('7-17-18', [datetime.datetime(2018, 7, 17, 0, 0)]),
     ('2018-7-17', [datetime.datetime(2018, 7, 17, 0, 0)]),  # support YMD
     ('7/2018', [datetime.datetime(2018, 7, 1, 0, 0)]),
+    ('Wed 25 Jun', [datetime.datetime(2018, 6, 25, 0, 0)]),
     
     # datetimes
     ('July 17, 2018 at 3p.m.', [datetime.datetime(2018, 7, 17, 15, 0)]),
@@ -89,6 +90,7 @@ def test_default(now, test_input, expected):
     ('July 2019', [datetime.date(2019, 7, 1)]),
     ('Sunday 7/7/2019', [datetime.date(2019, 7, 7)]),  # fixes gh#27
     ('1/1/95', [datetime.date(1995, 1, 1)]),
+    ('Wed 25 Jun', [datetime.date(2018, 6, 25)]),
     
     # date-only ranges
     ('7/17-7/18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),

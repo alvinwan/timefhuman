@@ -92,6 +92,8 @@ date: date_mdy
     | weekday? monthname day DAY_SUFFIX
     | weekday? day DAY_SUFFIX? (",")? year
     | weekday? day DAY_SUFFIX
+    | weekday? day DAY_SUFFIX? monthname (",")? year
+    | weekday? day DAY_SUFFIX? monthname
     | weekday? monthname dayoryear
     | modifier+ monthname
     | position weekday ("of"|"in") monthname
