@@ -53,6 +53,10 @@ import pytz
     # choices
     ('July 4th or 5th at 3PM', [[datetime.datetime(2018, 7, 4, 15, 0), datetime.datetime(2018, 7, 5, 15, 0)]]), # distribute month and time
     ('tomorrow noon,Wed 3 p.m.,Fri 11 AM', [[datetime.datetime(2018, 8, 5, 12, 0), datetime.datetime(2018, 8, 8, 15, 0), datetime.datetime(2018, 8, 10, 11, 0)]]), # distribute meridiem
+    ('Are you free this Wed at 3p? Or maybe Fri at 5p?', [
+        datetime.datetime(2018, 8, 8, 15, 0),
+        datetime.datetime(2018, 8, 10, 17, 0),
+    ]),
     # ('2, 3, or 4p tmw', [datetime.datetime(2018, 8, 4, 2, 0), datetime.datetime(2018, 8, 4, 3, 0), datetime.datetime(2018, 8, 4, 4, 0)]), # multiple ambiguous tokens #TODO (check month?)
     
     # choices of ranges
@@ -197,3 +201,5 @@ def test_custom_config(now, config, test_input, expected):
 ])
 def test_matched_text(now, test_input, expected):  # gh#9
     assert timefhuman(test_input, tfhConfig(now=now, return_matched_text=True)) == expected
+
+

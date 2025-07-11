@@ -141,4 +141,5 @@ position: POSITION
 ambiguous: INT
 
 // catch stray punctuation/letters without interfering with digits/slashes
-unknown: /(?i)[^\s\d:\/\-]/
+// Set low priority so that keywords like "at" or "or" take precedence
+unknown.-1: /(?i)[^\s\d:\/\-]/
