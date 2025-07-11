@@ -197,3 +197,13 @@ def test_custom_config(now, config, test_input, expected):
 ])
 def test_matched_text(now, test_input, expected):  # gh#9
     assert timefhuman(test_input, tfhConfig(now=now, return_matched_text=True)) == expected
+
+
+def test_question_mark_meridiem(now):
+    assert timefhuman(
+        'Are you free this Wed at 3p? Or maybe Fri at 5p?',
+        tfhConfig(now=now)
+    ) == [
+        datetime.datetime(2018, 8, 8, 15, 0),
+        datetime.datetime(2018, 8, 10, 17, 0)
+    ]
