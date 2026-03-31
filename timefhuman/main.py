@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 from pathlib import Path
+import re
 
 from dataclasses import replace
-from lark import Lark, Transformer, v_args, Token
+from lark import Lark, Transformer, UnexpectedInput, v_args, Token
 import pytz
 from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, get_month_mapping, tfhConfig, Direction, direction_to_offset
 from timefhuman.fastpath import extract_fast, parse_fast
@@ -16,18 +17,19 @@ __all__ = ('timefhuman',)
 
 DEFAULT_CONFIG = tfhConfig()
 DIRECTORY = Path(__file__).parent
-parsers = {}
+earley_parsers = {}
+exact_parsers = {}
 timezone_mapping = None
 
 
 def get_parser(propagate_positions: bool = False):
-    global parsers, timezone_mapping
-    if propagate_positions not in parsers:
+    global earley_parsers, timezone_mapping
+    if propagate_positions not in earley_parsers:
         timezone_mapping = generate_timezone_mapping()
         with open(DIRECTORY / 'grammar.lark', 'r') as file:
             grammar = file.read()
         grammar = grammar.replace('(TIMEZONE_MAPPING)', '|'.join(timezone_mapping.keys()))
-        parsers[propagate_positions] = Lark(
+        earley_parsers[propagate_positions] = Lark(
             grammar,
             start="start",
             parser="earley",
@@ -35,7 +37,25 @@ def get_parser(propagate_positions: bool = False):
             propagate_positions=propagate_positions,
             ordered_sets=True,
         )
-    return parsers[propagate_positions]
+    return earley_parsers[propagate_positions]
+
+
+def get_exact_parser(propagate_positions: bool = False):
+    global exact_parsers, timezone_mapping
+    if propagate_positions not in exact_parsers:
+        timezone_mapping = generate_timezone_mapping()
+        with open(DIRECTORY / 'exact_grammar.lark', 'r') as file:
+            grammar = file.read()
+        grammar = grammar.replace('(TIMEZONE_MAPPING)', '|'.join(timezone_mapping.keys()))
+        exact_parsers[propagate_positions] = Lark(
+            grammar,
+            start="start",
+            parser="lalr",
+            lexer="contextual",
+            propagate_positions=propagate_positions,
+            g_regex_flags=re.IGNORECASE,
+        )
+    return exact_parsers[propagate_positions]
 
 
 def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now: bool=False):
@@ -59,9 +79,13 @@ def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now:
         if renderers is None:
             renderers = extract_fast(string, config=config, timezone_mapping=timezone_mapping)
         if renderers is None:
-            parser = get_parser(propagate_positions=config.return_matched_text)
-            tree = parser.parse(string)
             transformer = tfhTransformer(config=config)
+            try:
+                parser = get_exact_parser(propagate_positions=config.return_matched_text)
+                tree = parser.parse(string)
+            except UnexpectedInput:
+                parser = get_parser(propagate_positions=config.return_matched_text)
+                tree = parser.parse(string)
             renderers = transformer.transform(tree)
     else:
         parser = get_parser(propagate_positions=False)
@@ -216,9 +240,16 @@ class tfhTransformer(Transformer):
             return {'date': data['weekday']}
         
         delta = None
-        if 'offset' in data:
+        if 'offset' in data and 'month' in data and 'weekday' in data:
+            weekday = weekdays[data['weekday'].to_object(self.config).weekday()]
+            offset = sum(nodes_to_multidict(children)['offset'])
+            if offset == -1:
+                delta = relativedelta(day=31, weekday=weekday(-1))
+            elif offset == 1:
+                delta = relativedelta(day=1, weekday=weekday(+1))
+        elif 'offset' in data:
             _data = nodes_to_multidict(children)
-            delta = relativedelta(years=sum(_data['offset']))  # sum offsets, such as 'next next'  
+            delta = relativedelta(years=sum(_data['offset']))  # sum offsets, such as 'next next'
         elif 'position' in data:
             assert 'month' in data and 'weekday' in data
             weekday = weekdays[data['weekday'].to_object(self.config).weekday()]

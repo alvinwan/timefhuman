@@ -1,0 +1,104 @@
+%import common.WS
+%import common.INT
+%ignore WS
+
+// ----------------------
+// TERMINAL DEFINITIONS
+// ----------------------
+
+MONTHNAME: /(?<![a-z])(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)(?![a-z])/
+WEEKDAY: /(?<![a-z])(monday|mon|tuesday|tues|tue|tu|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)(?![a-z])/
+MERIDIEM: /(?<![a-z])([ap](\.?m\.?)?)(?![a-z])/
+DATENAME: /(?<![a-z])(today|tomorrow|tmw|yesterday)(?![a-z])/
+TIMENAME: /(?<![a-z])(noon|midday|midnight|morning|afternoon|evening|night)(?![a-z])/
+DATETIMENAME: /(?<![a-z])(tonight)(?![a-z])/
+DURATION_UNIT: /(?<![a-z])(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)(?![a-z])/
+DURATION_UNIT_LETTER: /(?<=\d)(s|m|h|d|w|mo|y)(?![a-z])/
+DURATION_FUTURE: /(?<![a-z])in(?![a-z])/
+DURATION_PAST: /(?<![a-z])ago(?![a-z])/
+DURATION_NUMBER: /(?<![a-z])(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?![a-z])/
+DAY_SUFFIX: /(?<![a-z])(th|rd|st|nd)(?![a-z])/
+FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/
+TIMEZONE: /(?<![a-z])((TIMEZONE_MAPPING))(?![a-z])/
+MODIFIER: /(?<![a-z])(next|last|this|upcoming|previous|past)(?![a-z])/
+POSITION: /(?<![a-z])(first|second|third|fourth|last)(?![a-z])/
+
+COLON: ":"
+
+// ----------------------
+// PARSER RULES
+// ----------------------
+
+start: expression
+
+expression: single
+          | list
+          | range
+
+range: single ("to" | "-") single
+
+list: single (("," | "or")+ single)+
+    | range (("," | "or")+ range)+
+
+single: datetime
+      | duration
+
+datetime: date ("at" (time | houronly))? timezone?
+        | date (time | houronly) timezone?
+        | date "T" time timezone?
+        | (time | houronly) date timezone?
+        | (time | houronly) "on" date timezone?
+        | date timezone?
+        | time timezone?
+        | datetimename timezone?
+
+!date_mdy: weekday? month "/" day "/" year -> date
+!date_ymd: weekday? year "/" month "/" day -> date
+date: date_mdy
+    | date_ymd
+    | weekday? month "/" dayoryear
+    | weekday? month "-" day "-" year
+    | weekday? year "-" month "-" day
+    | weekday? month "-" dayoryear
+    | weekday? datename
+    | weekday? monthname day DAY_SUFFIX? (",")? year
+    | weekday? monthname day DAY_SUFFIX
+    | weekday? monthname dayoryear
+    | weekday? day DAY_SUFFIX
+    | modifier+ monthname
+    | position weekday ("of" | "in") monthname
+    | modifier weekday ("of" | "in") monthname
+    | weekday
+
+time: hour COLON minute (COLON second ("." millisecond)?)? meridiem?
+    | hour ("o'clock")? meridiem
+    | timename
+
+duration: (DURATION_FUTURE | "for")? duration_part (("and" | ",")? duration_part)* DURATION_PAST?
+duration_part: duration_number (duration_unit | duration_unit_letter)
+             | duration_numbername " " duration_unit
+duration_number: FLOAT_NUMBER | INT
+duration_numbername: DURATION_NUMBER+
+duration_unit: DURATION_UNIT
+duration_unit_letter: DURATION_UNIT_LETTER
+
+datetimename: DATETIMENAME
+weekday: modifier* WEEKDAY
+monthname: MONTHNAME
+datename: DATENAME
+dayoryear: INT
+
+day: /0[1-9]|[12][0-9]|3[01]|[1-9]/
+month: /0[1-9]|1[0-2]|[1-9]/
+year: /\d{4}|(?<!\d)\d{2}(?!\d)/
+
+timename: TIMENAME
+hour: INT
+minute: INT
+second: INT
+millisecond: INT
+meridiem: MERIDIEM
+houronly: INT
+timezone: TIMEZONE
+modifier: MODIFIER
+position: POSITION

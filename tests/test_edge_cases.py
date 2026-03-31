@@ -1,6 +1,8 @@
 from timefhuman import timefhuman, tfhConfig, Direction
 import pytz
 import datetime
+import pytest
+import timefhuman.main as main
 
 
 def test_now_changes(now): # gh#53
@@ -49,3 +51,18 @@ def test_timezone(now):  # gh#52
 def test_unk_correctness():
     tree = timefhuman('how does 5p sound?', raw=True)
     assert len(tree.children) > 1, "Should have parsed into many UNK tokens"
+
+
+def test_lalr_fallback_without_fastpath(now, monkeypatch):
+    config = tfhConfig(now=now, infer_datetimes=False)
+
+    monkeypatch.setattr(main, 'parse_fast', lambda *args, **kwargs: None)
+    monkeypatch.setattr(main, 'extract_fast', lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        main,
+        'get_parser',
+        lambda *args, **kwargs: pytest.fail("Unexpected Earley fallback"),
+    )
+
+    assert timefhuman('last Wednesday of December', config=config) == [datetime.date(2018, 12, 26)]
+    assert timefhuman('2 hours and 30 minutes', config=config) == [datetime.timedelta(hours=2, minutes=30)]

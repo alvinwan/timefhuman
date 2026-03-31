@@ -5,11 +5,12 @@ Status as of March 30, 2026.
 ## Current State
 
 - Branch: `codex/fast-path-parser`
-- Tests: `123 passed`
+- Tests: `124 passed`
 - Deterministic fast path for common dates, times, durations, ranges, lists, and timezone suffixes in [timefhuman/fastpath.py](timefhuman/fastpath.py)
+- Exact-expression LALR fallback for non-extraction parses in [timefhuman/exact_grammar.lark](timefhuman/exact_grammar.lark)
 - Shared inference logic in [timefhuman/inference.py](timefhuman/inference.py)
 - Cached month/timezone helpers in [timefhuman/utils.py](timefhuman/utils.py)
-- Original Lark Earley parser retained as fallback in [timefhuman/main.py](timefhuman/main.py)
+- Original Lark Earley parser retained only as the final fallback in [timefhuman/main.py](timefhuman/main.py)
 
 ## What Changed
 
@@ -19,6 +20,7 @@ Status as of March 30, 2026.
 4. Split inference into a shared module so fast-path and grammar-path behavior stay aligned.
 5. Cached expensive lookup data and removed repeated timezone candidate sorting.
 6. Added an accuracy-aware benchmark harness in [benchmarks/benchmark_baselines.py](benchmarks/benchmark_baselines.py).
+7. Added an exact-expression LALR grammar so whole-string fallback no longer jumps straight to Earley.
 
 ## Latest Numbers
 
@@ -28,13 +30,13 @@ Latest run snapshot:
 
 | Parser | us/input | ok | exact |
 | --- | ---: | ---: | ---: |
-| `timefhuman` | `32.3` | `37/37` | `10/10` |
-| `dateparser.parse` | `46985.8` | `20/37` | `6/10` |
-| `parsedatetime.parseDT` | `43.6` | `36/37` | `6/10` |
-| `datefinder.find_dates` | `30.1` | `23/37` | `5/10` |
-| `ctparse.ctparse` | `12708.2` | `37/37` | `3/10` |
-| `recurrent.parse` | `193.8` | `36/37` | `6/10` |
-| `metadate.parse_date` | `34.4` | `31/37` | `5/10` |
+| `timefhuman` | `31.0` | `37/37` | `10/10` |
+| `dateparser.parse` | `48598.4` | `20/37` | `6/10` |
+| `parsedatetime.parseDT` | `45.8` | `36/37` | `6/10` |
+| `datefinder.find_dates` | `37.1` | `23/37` | `5/10` |
+| `ctparse.ctparse` | `13193.4` | `37/37` | `3/10` |
+| `recurrent.parse` | `197.0` | `36/37` | `6/10` |
+| `metadate.parse_date` | `34.6` | `31/37` | `5/10` |
 
 Additional local tight-loop measurement for the current 37-input suite:
 
@@ -80,11 +82,11 @@ Run the older simple parser benchmark:
 ## Remaining Work
 
 - Identify which real-world inputs still hit the Earley fallback and document them.
+- Move more natural-language exact parses from Earley into the LALR grammar until Earley is only needed for raw/debug parsing.
 - Keep reducing the cost of complex list/range expressions, which are still the slowest fast-path cases.
-- Decide whether the fallback should stay Earley or be replaced with a smaller LALR-safe grammar.
 - Expand the benchmark corpus beyond the current 37-case suite into a more realistic extraction corpus.
 - Add a lightweight performance regression check so major slowdowns are visible before release.
 
 ## Guiding Rule
 
-Prefer deterministic parsing first, then extraction heuristics, and use Earley only as the last resort.
+Prefer deterministic parsing first, then exact-expression LALR parsing, and use Earley only as the last resort.
