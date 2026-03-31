@@ -5,7 +5,7 @@ Status as of March 30, 2026.
 ## Current State
 
 - Branch: `codex/fast-path-parser`
-- Tests: `124 passed`
+- Test suite: green
 - Deterministic fast path for common dates, times, durations, ranges, lists, and timezone suffixes in [timefhuman/fastpath.py](timefhuman/fastpath.py)
 - Exact-expression LALR fallback for non-extraction parses in [timefhuman/exact_grammar.lark](timefhuman/exact_grammar.lark)
 - Synthetic raw parse tree builder for `raw=True` in [timefhuman/main.py](timefhuman/main.py)

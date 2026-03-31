@@ -1,4 +1,5 @@
 from timefhuman import timefhuman, tfhConfig, Direction
+from timefhuman.renderers import tfhTime
 import pytz
 import datetime
 import timefhuman.main as main
@@ -66,3 +67,10 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
     assert timefhuman('7/2018', config=config) == [datetime.date(2018, 7, 1)]
     assert timefhuman('2022-12-27T09:15:01.002', config=infer_config) == [datetime.datetime(2022, 12, 27, 9, 15, 1, 2)]
     assert timefhuman('2 hours and 30 minutes', config=config) == [datetime.timedelta(hours=2, minutes=30)]
+
+
+def test_time_renderer_does_not_mutate_hour():
+    renderer = tfhTime(hour=5, meridiem=tfhTime.Meridiem.PM)
+    assert renderer.to_object() == datetime.time(17, 0)
+    assert renderer.hour == 5
+    assert "tz=" not in repr(renderer)
