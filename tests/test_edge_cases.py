@@ -1,7 +1,6 @@
 from timefhuman import timefhuman, tfhConfig, Direction
 import pytz
 import datetime
-import pytest
 import timefhuman.main as main
 
 
@@ -59,11 +58,6 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
 
     monkeypatch.setattr(main, 'parse_fast', lambda *args, **kwargs: None)
     monkeypatch.setattr(main, 'extract_fast', lambda *args, **kwargs: None)
-    monkeypatch.setattr(
-        main,
-        'get_parser',
-        lambda *args, **kwargs: pytest.fail("Unexpected Earley fallback"),
-    )
 
     assert timefhuman('last Wednesday of December', config=config) == [datetime.date(2018, 12, 26)]
     assert timefhuman('next Monday', config=config) == [datetime.date(2018, 8, 6)]

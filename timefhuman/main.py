@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 
 from dataclasses import replace
-from lark import Lark, Transformer, UnexpectedInput, v_args, Token
+from lark import Lark, Transformer, Tree, UnexpectedInput, v_args, Token
 import pytz
 from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, get_month_mapping, tfhConfig, Direction, direction_to_offset
 from timefhuman.fastpath import extract_fast, parse_fast
@@ -17,27 +17,9 @@ __all__ = ('timefhuman',)
 
 DEFAULT_CONFIG = tfhConfig()
 DIRECTORY = Path(__file__).parent
-earley_parsers = {}
 exact_parsers = {}
 timezone_mapping = None
-
-
-def get_parser(propagate_positions: bool = False):
-    global earley_parsers, timezone_mapping
-    if propagate_positions not in earley_parsers:
-        timezone_mapping = generate_timezone_mapping()
-        with open(DIRECTORY / 'grammar.lark', 'r') as file:
-            grammar = file.read()
-        grammar = grammar.replace('(TIMEZONE_MAPPING)', '|'.join(timezone_mapping.keys()))
-        earley_parsers[propagate_positions] = Lark(
-            grammar,
-            start="start",
-            parser="earley",
-            lexer="dynamic",
-            propagate_positions=propagate_positions,
-            ordered_sets=True,
-        )
-    return earley_parsers[propagate_positions]
+RAW_TOKEN_PATTERN = re.compile(r"\d+(?:[/:.-]\d+)*(?:[ap](?:\.?m\.?)?)?|[a-z]+(?:\.[a-z]+\.?)?|\S", re.IGNORECASE)
 
 
 def get_exact_parser(propagate_positions: bool = False):
@@ -58,6 +40,24 @@ def get_exact_parser(propagate_positions: bool = False):
     return exact_parsers[propagate_positions]
 
 
+def build_raw_tree(string: str, config: tfhConfig):
+    match_config = replace(config, return_matched_text=True)
+    matches = timefhuman(string, config=match_config)
+
+    children = []
+    cursor = 0
+    for matched_text, (start, end), _ in matches:
+        children.extend(_unknown_children(string[cursor:start]))
+        children.append(Tree('expression', [Token('MATCH', matched_text)]))
+        cursor = end
+    children.extend(_unknown_children(string[cursor:]))
+    return Tree('start', children)
+
+
+def _unknown_children(text: str):
+    return [Tree('unknown', [Token('UNKNOWN', match.group(0))]) for match in RAW_TOKEN_PATTERN.finditer(text)]
+
+
 def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now: bool=False):
     if not string.strip():
         assert not raw, "Empty string not allowed when raw=True"
@@ -66,6 +66,9 @@ def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now:
     config = config if config.now is not None else replace(config, now=datetime.now())
     if now:
         return config.now
+
+    if raw:
+        return build_raw_tree(string, config)
 
     if not raw:
         timezone_mapping = generate_timezone_mapping()
@@ -84,12 +87,8 @@ def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now:
                 parser = get_exact_parser(propagate_positions=config.return_matched_text)
                 tree = parser.parse(string)
             except UnexpectedInput:
-                parser = get_parser(propagate_positions=config.return_matched_text)
-                tree = parser.parse(string)
+                return []
             renderers = transformer.transform(tree)
-    else:
-        parser = get_parser(propagate_positions=False)
-        return parser.parse(string)
 
     renderers = list(filter(lambda r: not isinstance(r, (tfhUnknown, tfhAmbiguous)), renderers))
     datetimes = [renderer.to_object(config) for renderer in renderers]
