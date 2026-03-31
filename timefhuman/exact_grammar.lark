@@ -19,6 +19,8 @@ DURATION_PAST: /(?<![a-z])ago(?![a-z])/
 DURATION_NUMBER: /(?<![a-z])(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?![a-z])/
 DAY_SUFFIX: /(?<![a-z])(th|rd|st|nd)(?![a-z])/
 FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/
+NUMERIC_DATE.2: /\d{1,4}[\/-]\d{1,4}(?:[\/-]\d{1,4})?/
+ISO_DATETIME.3: /\d{4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?/
 TIMEZONE: /(?<![a-z])((TIMEZONE_MAPPING))(?![a-z])/
 MODIFIER: /(?<![a-z])(next|last|this|upcoming|previous|past)(?![a-z])/
 POSITION: /(?<![a-z])(first|second|third|fourth|last)(?![a-z])/
@@ -51,11 +53,13 @@ datetime: date ("at" (time | houronly))? timezone?
         | date timezone?
         | time timezone?
         | datetimename timezone?
+        | iso_datetime timezone?
 
 !date_mdy: weekday? month "/" day "/" year -> date
 !date_ymd: weekday? year "/" month "/" day -> date
 date: date_mdy
     | date_ymd
+    | numeric_date
     | weekday? month "/" dayoryear
     | weekday? month "-" day "-" year
     | weekday? year "-" month "-" day
@@ -65,9 +69,10 @@ date: date_mdy
     | weekday? monthname day DAY_SUFFIX
     | weekday? monthname dayoryear
     | weekday? day DAY_SUFFIX
-    | modifier+ monthname
+    | modified_month
     | position weekday ("of" | "in") monthname
     | modifier weekday ("of" | "in") monthname
+    | modified_weekday
     | weekday
 
 time: hour COLON minute (COLON second ("." millisecond)?)? meridiem?
@@ -83,7 +88,13 @@ duration_unit: DURATION_UNIT
 duration_unit_letter: DURATION_UNIT_LETTER
 
 datetimename: DATETIMENAME
-weekday: modifier* WEEKDAY
+iso_datetime: ISO_DATETIME
+numeric_date: NUMERIC_DATE
+modified_weekday: modifier WEEKDAY
+                | modifier modifier WEEKDAY
+modified_month: modifier MONTHNAME
+              | modifier modifier MONTHNAME
+weekday: WEEKDAY
 monthname: MONTHNAME
 datename: DATENAME
 dayoryear: INT

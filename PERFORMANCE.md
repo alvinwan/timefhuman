@@ -21,6 +21,7 @@ Status as of March 30, 2026.
 5. Cached expensive lookup data and removed repeated timezone candidate sorting.
 6. Added an accuracy-aware benchmark harness in [benchmarks/benchmark_baselines.py](benchmarks/benchmark_baselines.py).
 7. Added an exact-expression LALR grammar so whole-string fallback no longer jumps straight to Earley.
+8. Moved modifier-based weekdays/months, numeric dates, and ISO datetimes into the LALR layer to shrink the Earley-only surface.
 
 ## Latest Numbers
 
@@ -30,13 +31,13 @@ Latest run snapshot:
 
 | Parser | us/input | ok | exact |
 | --- | ---: | ---: | ---: |
-| `timefhuman` | `31.0` | `37/37` | `10/10` |
-| `dateparser.parse` | `48598.4` | `20/37` | `6/10` |
+| `timefhuman` | `30.7` | `37/37` | `10/10` |
+| `dateparser.parse` | `47770.6` | `20/37` | `6/10` |
 | `parsedatetime.parseDT` | `45.8` | `36/37` | `6/10` |
-| `datefinder.find_dates` | `37.1` | `23/37` | `5/10` |
-| `ctparse.ctparse` | `13193.4` | `37/37` | `3/10` |
-| `recurrent.parse` | `197.0` | `36/37` | `6/10` |
-| `metadate.parse_date` | `34.6` | `31/37` | `5/10` |
+| `datefinder.find_dates` | `39.8` | `23/37` | `5/10` |
+| `ctparse.ctparse` | `12923.3` | `37/37` | `3/10` |
+| `recurrent.parse` | `191.2` | `36/37` | `6/10` |
+| `metadate.parse_date` | `33.6` | `31/37` | `5/10` |
 
 Additional local tight-loop measurement for the current 37-input suite:
 
@@ -47,6 +48,7 @@ Notes:
 - Raw microbench timings vary from run to run.
 - `datefinder` and `metadate` are lighter-weight extractors and are not exact semantic peers for lists, ranges, and durations.
 - The current target is not just raw speed. It is speed with correctness preserved on the repo’s intended behavior.
+- On the local exact-parser audit across test strings, the Earley-only set dropped from `37` strings to `22` after the latest LALR additions.
 
 ## Fast Enough Check
 

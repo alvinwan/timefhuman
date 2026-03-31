@@ -273,8 +273,32 @@ class tfhTransformer(Transformer):
             day=data.get('day'),
             delta=delta,
         )}
-        
-        
+
+    def numeric_date(self, children):
+        value = children[0].value
+        sep = '/' if '/' in value else '-'
+        parts = [int(part) for part in value.split(sep)]
+        first, second = parts[0], parts[1]
+
+        if len(parts) == 2:
+            if second > 31:
+                if 50 < second < 100:
+                    second += 1900
+                elif 0 < second < 50:
+                    second += 2000
+                return {'date': tfhDate(month=first, year=second)}
+            return {'date': tfhDate(month=first, day=second)}
+
+        third = parts[2]
+        if first >= 1000:
+            return {'date': tfhDate(year=first, month=second, day=third)}
+
+        if 50 < third < 100:
+            third += 1900
+        elif 0 < third < 50:
+            third += 2000
+        return {'date': tfhDate(month=first, day=second, year=third)}
+
     def day(self, children):
         return {'day': int(children[0].value)}
     
@@ -295,7 +319,13 @@ class tfhTransformer(Transformer):
         monthname = children[0].value.lower()
         month = get_month_mapping().get(monthname, self.config.now.month)
         return {'month': month}
-    
+
+    def modified_month(self, children):
+        offset = sum(child['offset'] for child in children[:-1])
+        monthname = children[-1].value.lower()
+        month = get_month_mapping().get(monthname, self.config.now.month)
+        return {'month': month, 'offset': offset}
+
     def weekday(self, children):
         data = nodes_to_multidict(children)
         
@@ -303,10 +333,14 @@ class tfhTransformer(Transformer):
         target_weekday = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su'].index(weekday)
         
         offset = direction_to_offset(self.config.direction)
-        if 'offset' in data:
-            offset = sum(data['offset'])  # sum offsets, such as 'next next'
-
         # TODO: store as delta and let renderer infer date?
+        date = self.config.now.date() + relativedelta(weekday=weekdays[target_weekday](offset))
+        return {'weekday': tfhDate.from_object(date)}
+
+    def modified_weekday(self, children):
+        offset = sum(child['offset'] for child in children[:-1])
+        weekday = children[-1].value[:2].lower()
+        target_weekday = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su'].index(weekday)
         date = self.config.now.date() + relativedelta(weekday=weekdays[target_weekday](offset))
         return {'weekday': tfhDate.from_object(date)}
     
@@ -395,3 +429,23 @@ class tfhTransformer(Transformer):
         else:
             raise NotImplementedError(f"Unknown datetimename: {datetimename}")
         return {'datetime': _datetime}
+
+    def iso_datetime(self, children):
+        value = children[0].value
+        date_part, time_part = value.split('T', 1)
+        year, month, day = [int(part) for part in date_part.split('-')]
+
+        millisecond = 0
+        second = 0
+        if '.' in time_part:
+            time_part, fraction = time_part.split('.', 1)
+            millisecond = int(fraction)
+        time_parts = [int(part) for part in time_part.split(':')]
+        hour, minute = time_parts[:2]
+        if len(time_parts) > 2:
+            second = time_parts[2]
+
+        return {'datetime': tfhDatetime(
+            date=tfhDate(year=year, month=month, day=day),
+            time=tfhTime(hour=hour, minute=minute, second=second, millisecond=millisecond),
+        )}
