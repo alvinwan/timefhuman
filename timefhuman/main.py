@@ -5,6 +5,8 @@ from dataclasses import replace
 from lark import Lark, Transformer, v_args, Token
 import pytz
 from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, get_month_mapping, tfhConfig, Direction, direction_to_offset
+from timefhuman.fastpath import extract_fast, parse_fast
+from timefhuman.inference import infer
 from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhUnknown, tfhDatelike, tfhMatchable
 from dateutil.relativedelta import relativedelta, weekdays
 
@@ -14,19 +16,26 @@ __all__ = ('timefhuman',)
 
 DEFAULT_CONFIG = tfhConfig()
 DIRECTORY = Path(__file__).parent
-parser = None
+parsers = {}
 timezone_mapping = None
 
 
-def get_parser():
-    global parser, timezone_mapping
-    if parser is None:
+def get_parser(propagate_positions: bool = False):
+    global parsers, timezone_mapping
+    if propagate_positions not in parsers:
         timezone_mapping = generate_timezone_mapping()
         with open(DIRECTORY / 'grammar.lark', 'r') as file:
             grammar = file.read()
         grammar = grammar.replace('(TIMEZONE_MAPPING)', '|'.join(timezone_mapping.keys()))
-        parser = Lark(grammar, start="start", propagate_positions=True)
-    return parser
+        parsers[propagate_positions] = Lark(
+            grammar,
+            start="start",
+            parser="earley",
+            lexer="dynamic",
+            propagate_positions=propagate_positions,
+            ordered_sets=True,
+        )
+    return parsers[propagate_positions]
 
 
 def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now: bool=False):
@@ -34,18 +43,26 @@ def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now:
         assert not raw, "Empty string not allowed when raw=True"
         return []
 
-    parser = get_parser()
-    tree = parser.parse(string)
-
-    if raw:
-        return tree
-    
     config = replace(config, now=config.now or datetime.now())
     if now:
         return config.now
 
-    transformer = tfhTransformer(config=config)
-    renderers = transformer.transform(tree)
+    if not raw:
+        timezone_mapping = generate_timezone_mapping()
+        renderers = None
+        if not config.return_matched_text:
+            renderers = parse_fast(string, config=config, timezone_mapping=timezone_mapping)
+            if renderers is None:
+                renderers = extract_fast(string, config=config, timezone_mapping=timezone_mapping)
+        if renderers is None:
+            parser = get_parser(propagate_positions=config.return_matched_text)
+            tree = parser.parse(string)
+            transformer = tfhTransformer(config=config)
+            renderers = transformer.transform(tree)
+    else:
+        parser = get_parser(propagate_positions=False)
+        return parser.parse(string)
+
     renderers = list(filter(lambda r: not isinstance(r, (tfhUnknown, tfhAmbiguous)), renderers))
     datetimes = [renderer.to_object(config) for renderer in renderers]
     
@@ -53,52 +70,6 @@ def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now:
         positions = [(renderer.matched_text_pos[0], renderer.matched_text_pos[1]) for renderer in renderers]
         matched_texts = [string[start: end] for start, end in positions]
         return list(zip(matched_texts, positions, datetimes))
-    return datetimes
-
-
-def infer_from(source: tfhDatelike, target: tfhDatelike):
-    if isinstance(source, tfhAmbiguous):
-        # NOTE: Ambiguous tokens have no information to offer
-        return target
-    if isinstance(target, tfhAmbiguous) and isinstance(source, tfhDatelike):
-        if source.time:
-            target = tfhDatetime(time=tfhTime(hour=target.value, meridiem=source.meridiem))
-        elif source.year:
-            target = tfhDatetime(date=tfhDate(year=target.value))
-        elif source.day:
-            target = tfhDatetime(date=tfhDate(day=target.value))
-        elif source.month:
-            target = tfhDatetime(date=tfhDate(month=target.value))
-        else:
-            raise NotImplementedError(f"Not enough context to infer what {target} is")
-    if isinstance(source, tfhDatelike) and isinstance(target, tfhDatelike):
-        if source.date and not target.date:
-            target.date = source.date
-        if source.time and not target.time:
-            target.time = source.time
-        if source.month and not target.month:
-            target.month = source.month
-        if source.year and not target.year:
-            target.year = source.year
-        if source.meridiem and not target.meridiem:
-            target.meridiem = source.meridiem
-        if source.tz and not target.tz:
-            target.tz = source.tz
-    if isinstance(source, tfhTimedelta) and isinstance(target, tfhAmbiguous):
-        target = tfhTimedelta.from_object(timedelta(**{source.unit: target.value}), unit=source.unit)
-    return target
-
-
-def infer(datetimes):
-    """
-    Infer any missing components of datetimes from the first or last datetime.
-    """
-    for i, dt in enumerate(datetimes[1:], start=1):
-        datetimes[i] = infer_from(datetimes[0], dt)
-        
-    for i, dt in enumerate(datetimes[:-1]):
-        datetimes[i] = infer_from(datetimes[-1], dt)
-
     return datetimes
 
 
@@ -389,4 +360,3 @@ class tfhTransformer(Transformer):
         else:
             raise NotImplementedError(f"Unknown datetimename: {datetimename}")
         return {'datetime': _datetime}
-

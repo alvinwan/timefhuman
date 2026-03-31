@@ -5,6 +5,7 @@ from lark.tree import Tree
 from lark.lexer import Token
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 from typing import List
 
 
@@ -32,6 +33,7 @@ class tfhConfig:
     return_matched_text: bool = False
 
 
+@lru_cache(maxsize=1)
 def generate_timezone_mapping():
     text_to_timezone = {}
 
@@ -50,6 +52,7 @@ def generate_timezone_mapping():
     }
     
     
+@lru_cache(maxsize=1)
 def get_month_mapping():
     mapping = {
         month: i + 1 for i, month in enumerate(MONTHS)
