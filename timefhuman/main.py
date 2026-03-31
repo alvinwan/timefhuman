@@ -50,10 +50,14 @@ def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now:
     if not raw:
         timezone_mapping = generate_timezone_mapping()
         renderers = None
-        if not config.return_matched_text:
-            renderers = parse_fast(string, config=config, timezone_mapping=timezone_mapping)
-            if renderers is None:
-                renderers = extract_fast(string, config=config, timezone_mapping=timezone_mapping)
+        fast_text = string
+        fast_start = 0
+        if config.return_matched_text:
+            fast_text = string.strip()
+            fast_start = string.index(fast_text) if fast_text else 0
+        renderers = parse_fast(fast_text, config=config, timezone_mapping=timezone_mapping, start_pos=fast_start)
+        if renderers is None:
+            renderers = extract_fast(string, config=config, timezone_mapping=timezone_mapping)
         if renderers is None:
             parser = get_parser(propagate_positions=config.return_matched_text)
             tree = parser.parse(string)

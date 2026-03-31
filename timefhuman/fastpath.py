@@ -161,10 +161,11 @@ WEEKDAY_ALIASES = {
 }
 
 
-def parse_fast(text: str, config: tfhConfig, timezone_mapping):
+def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
     expression = _parse_expression(_normalize_space(text), config, timezone_mapping, allow_ambiguous=False)
     if expression is None:
         return None
+    expression.matched_text_pos = (start_pos, start_pos + len(text))
     return [expression]
 
 
@@ -692,7 +693,7 @@ def _extract_longest_match(tokens, start_index: int, text: str, config: tfhConfi
         if not candidate:
             continue
 
-        expression = parse_fast(candidate, config, timezone_mapping)
+        expression = parse_fast(candidate, config, timezone_mapping, start_pos=start)
         if expression is not None:
             return expression, end_index
 
