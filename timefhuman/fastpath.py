@@ -6,7 +6,7 @@ import pytz
 
 from timefhuman.inference import infer
 from timefhuman.renderers import tfhAmbiguous, tfhDatetime, tfhDate, tfhList, tfhRange, tfhTime, tfhTimedelta
-from timefhuman.utils import Direction, direction_to_offset, get_month_mapping, tfhConfig
+from timefhuman.utils import Direction, direction_to_offset, get_month_mapping, get_timezone_word_lengths, tfhConfig
 
 
 MERIDIEM_PATTERN = r"(?:[ap](?:\.?m\.?)?)"
@@ -202,17 +202,27 @@ def _parse_expression(text: str, config: tfhConfig, timezone_mapping, allow_ambi
     if not text:
         return None
 
+    if _prefer_collection_parse(text):
+        listed = _parse_list(text, config, timezone_mapping)
+        if listed is not None:
+            return listed
+
+        ranged = _parse_range(text, config, timezone_mapping)
+        if ranged is not None:
+            return ranged
+
     single = _parse_single(text, config, timezone_mapping, allow_ambiguous=allow_ambiguous)
     if single is not None:
         return single
 
-    listed = _parse_list(text, config, timezone_mapping)
-    if listed is not None:
-        return listed
+    if not _prefer_collection_parse(text):
+        listed = _parse_list(text, config, timezone_mapping)
+        if listed is not None:
+            return listed
 
-    ranged = _parse_range(text, config, timezone_mapping)
-    if ranged is not None:
-        return ranged
+        ranged = _parse_range(text, config, timezone_mapping)
+        if ranged is not None:
+            return ranged
 
     return None
 
@@ -220,7 +230,11 @@ def _parse_expression(text: str, config: tfhConfig, timezone_mapping, allow_ambi
 def _parse_list(text: str, config: tfhConfig, timezone_mapping):
     body, tzinfo = _strip_trailing_timezone(text, timezone_mapping)
 
-    for pattern in (r"\s+or\s+", r"\s*,\s*"):
+    patterns = [r"\s+or\s+"]
+    if _supports_comma_list(body, config, timezone_mapping):
+        patterns.append(r"\s*,\s*")
+
+    for pattern in patterns:
         parts = [part.strip() for part in re.split(pattern, body) if part.strip()]
         if len(parts) < 2:
             continue
@@ -600,11 +614,19 @@ def _timedelta_for_unit(unit: str, amount: float):
 
 def _strip_trailing_timezone(text: str, timezone_mapping):
     lowered = text.lower()
-    for candidate in sorted(timezone_mapping, key=len, reverse=True):
-        if lowered == candidate:
-            return "", pytz.timezone(timezone_mapping[candidate])
-        if lowered.endswith(" " + candidate):
-            return text[: -len(candidate)].strip(), pytz.timezone(timezone_mapping[candidate])
+    timezone_name = timezone_mapping.get(lowered)
+    if timezone_name is not None:
+        return "", pytz.timezone(timezone_name)
+
+    words = text.split()
+    lowered_words = lowered.split()
+    for word_count in get_timezone_word_lengths():
+        if len(words) < word_count:
+            continue
+        candidate = " ".join(lowered_words[-word_count:])
+        timezone_name = timezone_mapping.get(candidate)
+        if timezone_name is not None:
+            return " ".join(words[:-word_count]).strip(), pytz.timezone(timezone_name)
     return text, None
 
 
@@ -679,6 +701,21 @@ def _time_score(value: tfhTime):
     if value.hour is not None:
         score += 1
     return score
+
+
+def _prefer_collection_parse(text: str):
+    lowered = text.lower()
+    return "," in text or " or " in lowered or " to " in lowered or " -" in text or "- " in text
+
+
+def _supports_comma_list(text: str, config: tfhConfig, timezone_mapping):
+    if "," not in text:
+        return False
+    if text.count(",") > 1:
+        return True
+
+    collapsed = text.replace(",", " ")
+    return _parse_single(collapsed, config, timezone_mapping, allow_ambiguous=False) is None
 
 
 def _extract_longest_match(tokens, start_index: int, text: str, config: tfhConfig, timezone_mapping):

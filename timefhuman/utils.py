@@ -63,6 +63,16 @@ def get_month_mapping():
     return mapping
 
 
+@lru_cache(maxsize=1)
+def get_timezone_candidates():
+    return tuple(sorted(generate_timezone_mapping(), key=len, reverse=True))
+
+
+@lru_cache(maxsize=1)
+def get_timezone_word_lengths():
+    return tuple(sorted({len(candidate.split()) for candidate in generate_timezone_mapping()}, reverse=True))
+
+
 def node_to_dict(node: Tree) -> dict:
     assert isinstance(node, (Tree, dict, Token)), f"Expected a Tree or dict, got {type(node)} ({node})"
     if isinstance(node, dict):

@@ -43,7 +43,7 @@ def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now:
         assert not raw, "Empty string not allowed when raw=True"
         return []
 
-    config = replace(config, now=config.now or datetime.now())
+    config = config if config.now is not None else replace(config, now=datetime.now())
     if now:
         return config.now
 
