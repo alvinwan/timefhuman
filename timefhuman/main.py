@@ -3,12 +3,27 @@ from pathlib import Path
 import re
 
 from dataclasses import replace
-from lark import Lark, Transformer, Tree, UnexpectedInput, v_args, Token
+from lark import Lark, Transformer, Tree, UnexpectedInput, Token
 import pytz
-from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, get_month_mapping, tfhConfig, Direction, direction_to_offset
+from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, tfhConfig, Direction, direction_to_offset
 from timefhuman.fastpath import extract_fast, parse_fast
 from timefhuman.inference import infer
-from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous, tfhMatchable
+from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous
+from timefhuman.semantics import (
+    DATE_NAME_TO_OFFSET,
+    DATE_TIME_NAME_TO_TEMPLATE,
+    MODIFIER_TO_OFFSET,
+    NUMBER_WORDS,
+    POSITION_TO_DELTA,
+    TIME_NAME_TO_TEMPLATE,
+    UNIT_ALIASES,
+    clone_datetime,
+    clone_time,
+    month_number,
+    normalize_year,
+    timedelta_for_unit,
+    weekday_index,
+)
 from dateutil.relativedelta import relativedelta, weekdays
 
 
@@ -20,94 +35,82 @@ DIRECTORY = Path(__file__).parent
 exact_parsers = {}
 timezone_mapping = None
 RAW_TOKEN_PATTERN = re.compile(r"\d+(?:[/:.-]\d+)*(?:[ap](?:\.?m\.?)?)?|[a-z]+(?:\.[a-z]+\.?)?|\S", re.IGNORECASE)
-TIME_NAME_TO_TEMPLATE = {
-    'noon': tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM),
-    'midday': tfhTime(hour=12, minute=0, meridiem=tfhTime.Meridiem.PM),
-    'midnight': tfhTime(hour=0, minute=0, meridiem=tfhTime.Meridiem.AM),
-    'morning': tfhTime(hour=6, minute=0, meridiem=tfhTime.Meridiem.AM),
-    'afternoon': tfhTime(hour=15, minute=0, meridiem=tfhTime.Meridiem.PM),
-    'evening': tfhTime(hour=18, minute=0, meridiem=tfhTime.Meridiem.PM),
-    'night': tfhTime(hour=20, minute=0, meridiem=tfhTime.Meridiem.PM),
-}
-DATE_NAME_TO_OFFSET = {'today': 0, 'tomorrow': 1, 'yesterday': -1}
-WEEKDAY_INDEX = {'mo': 0, 'tu': 1, 'we': 2, 'th': 3, 'fr': 4, 'sa': 5, 'su': 6}
-MODIFIER_TO_OFFSET = {
-    'next': 1,
-    'upcoming': 1,
-    'following': 1,
-    'previous': -1,
-    'last': -1,
-    'past': -1,
-    'preceding': -1,
-    'this': 0,
-}
+MONTHNAME_DATE_PATTERN = re.compile(
+    r"(?ix)^"
+    r"(?P<month>[a-z]+)"
+    r"\s+"
+    r"(?P<first>\d{1,4})"
+    r"(?P<suffix>st|nd|rd|th)?"
+    r"(?:\s*,?\s*(?P<year>\d{2,4}))?$"
+)
+DAY_ORDINAL_PATTERN = re.compile(r"(?i)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
 
 
-def get_exact_parser(propagate_positions: bool = False):
+def get_exact_parser():
     global exact_parsers, timezone_mapping
-    if propagate_positions not in exact_parsers:
+    if 'default' not in exact_parsers:
         timezone_mapping = generate_timezone_mapping()
         with open(DIRECTORY / 'exact_grammar.lark', 'r') as file:
             grammar = file.read()
         grammar = grammar.replace('(TIMEZONE_MAPPING)', '|'.join(timezone_mapping.keys()))
-        exact_parsers[propagate_positions] = Lark(
+        exact_parsers['default'] = Lark(
             grammar,
             start="start",
             parser="lalr",
             lexer="contextual",
-            propagate_positions=propagate_positions,
             g_regex_flags=re.IGNORECASE,
         )
-    return exact_parsers[propagate_positions]
+    return exact_parsers['default']
 
 
-def _normalize_year(value: int):
-    if 50 < value < 100:
-        return 1900 + value
-    if 0 < value < 50:
-        return 2000 + value
-    return value
+def _trimmed_span(string: str, start_pos: int = 0):
+    stripped = string.strip()
+    if not stripped:
+        return "", start_pos, start_pos
+    leading = len(string) - len(string.lstrip())
+    trailing = len(string.rstrip())
+    return stripped, start_pos + leading, start_pos + trailing
 
 
-def _copy_time_template(template: tfhTime):
-    return tfhTime(
-        hour=template.hour,
-        minute=template.minute,
-        second=template.second,
-        millisecond=template.millisecond,
-        meridiem=template.meridiem,
+def _parse_exact(string: str, config: tfhConfig, start_pos: int = 0):
+    stripped, span_start, span_end = _trimmed_span(string, start_pos)
+    if not stripped:
+        return None
+
+    try:
+        tree = get_exact_parser().parse(stripped)
+    except UnexpectedInput:
+        return None
+
+    renderers = tfhTransformer(config=config).transform(tree)
+    for renderer in renderers:
+        renderer.matched_text_pos = (span_start, span_end)
+    return renderers
+
+
+def _parse_candidate(string: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
+    return (
+        parse_fast(string, config=config, timezone_mapping=timezone_mapping, start_pos=start_pos)
+        or _parse_exact(string, config=config, start_pos=start_pos)
     )
-
-
-def _month_number(value: str, fallback: int):
-    return get_month_mapping().get(value.lower(), fallback)
-
-
-def _weekday_index(value: str):
-    return WEEKDAY_INDEX[value[:2].lower()]
 
 
 def _parse_renderers(string: str, config: tfhConfig):
     timezone_mapping = generate_timezone_mapping()
-    fast_text = string
-    fast_start = 0
-    if config.return_matched_text:
-        fast_text = string.strip()
-        fast_start = string.index(fast_text) if fast_text else 0
-
-    renderers = parse_fast(fast_text, config=config, timezone_mapping=timezone_mapping, start_pos=fast_start)
+    renderers = _parse_candidate(string, config=config, timezone_mapping=timezone_mapping)
     if renderers is not None:
         return renderers
 
-    renderers = extract_fast(string, config=config, timezone_mapping=timezone_mapping)
+    renderers = extract_fast(
+        string,
+        parse_candidate=lambda candidate, start_pos: _parse_candidate(
+            candidate, config=config, timezone_mapping=timezone_mapping, start_pos=start_pos
+        ),
+    )
     if renderers is not None:
         return renderers
 
-    try:
-        tree = get_exact_parser(propagate_positions=config.return_matched_text).parse(string)
-    except UnexpectedInput:
-        return []
-    return tfhTransformer(config=config).transform(tree)
+    return []
 
 
 def _matched_results(string: str, renderers, config: tfhConfig):
@@ -162,16 +165,16 @@ class tfhTransformer(Transformer):
         """Strip the 'start' rule and return child(ren) directly."""
         return children
 
-    @v_args(tree=True)
-    def expression(self, tree):
-        """The top-level expression could be a range, list, or single."""
-        expr = tree.children[0]
-        if self.config.return_matched_text:
-            assert isinstance(expr, tfhMatchable), f"Expected matchable expression, got {type(expr)}"
-            expr.matched_text_pos = (tree.meta.start_pos, tree.meta.end_pos)
-        return expr
+    def expression(self, children):
+        return children[0]
 
     def single(self, children):
+        return children[0]
+
+    def range_item(self, children):
+        return children[0]
+
+    def list_item(self, children):
         return children[0]
     
     ###############
@@ -214,56 +217,12 @@ class tfhTransformer(Transformer):
         return tfhTimedelta.from_object(total, unit=unit)
     
     def duration_part(self, children):
-        mapping = {
-            'an': 1,
-            'a': 1,
-            'one': 1,
-            'two': 2,
-            'three': 3,
-            'four': 4,
-            'five': 5,
-            'six': 6,
-            'seven': 7,
-            'eight': 8,
-            'nine': 9,
-            'ten': 10,
-            'eleven': 11,
-            'twelve': 12,
-            'thirteen': 13,
-            'fourteen': 14,
-            'fifteen': 15,
-            'sixteen': 16,
-            'seventeen': 17,
-            'eighteen': 18,
-            'nineteen': 19,
-            'twenty': 20,
-            'thirty': 30,
-            'forty': 40,
-            'fifty': 50,
-            'sixty': 60,
-            'seventy': 70,
-            'eighty': 80,
-            'ninety': 90,
-        }
-        # TODO: write my own multidict?
         data = {child.data.value: [_child.value for _child in child.children] for child in children}
-        duration_number = float(data['duration_number'][0]) if 'duration_number' in data else sum([mapping[value] for value in data.get('duration_numbername', [])])
-        duration_unit = data.get('duration_unit', data.get('duration_unit_letter', None))[0]
-        for group in (
-            ('minutes', 'minute', 'mins', 'min', 'm'),
-            ('hours', 'hour', 'hrs', 'hr', 'h'),
-            ('days', 'day', 'd'),
-            ('weeks', 'week', 'wks', 'wk'),
-            ('months', 'month', 'mos'),
-            ('years', 'year', 'yrs', 'yr'),
-        ):
-            if duration_unit in group:
-                if group[0] == 'months':
-                    return tfhTimedelta.from_object(timedelta(days=30 * duration_number), unit=group[0])
-                if group[0] == 'years':
-                    return tfhTimedelta.from_object(timedelta(days=365 * duration_number), unit=group[0])
-                return tfhTimedelta.from_object(timedelta(**{group[0]: duration_number}), unit=group[0])
-        raise NotImplementedError(f"Unknown duration unit: {data['duration_unit']}")
+        duration_number = float(data['duration_number'][0]) if 'duration_number' in data else sum(
+            NUMBER_WORDS[value] for value in data.get('duration_numbername', [])
+        )
+        duration_unit = UNIT_ALIASES[data.get('duration_unit', data.get('duration_unit_letter', None))[0]]
+        return tfhTimedelta.from_object(timedelta_for_unit(duration_unit, duration_number), unit=duration_unit)
 
     ############
     # Datetime #
@@ -300,19 +259,7 @@ class tfhTransformer(Transformer):
         elif 'position' in data:
             assert 'month' in data and 'weekday' in data
             weekday = weekdays[data['weekday'].to_object(self.config).weekday()]
-            position = data['position']
-            if position == 'first':
-                delta = relativedelta(day=1, weekday=weekday(+1))
-            elif position == 'second':
-                delta = relativedelta(day=8, weekday=weekday(+1))
-            elif position == 'third':
-                delta = relativedelta(day=15, weekday=weekday(+1))
-            elif position == 'fourth':
-                delta = relativedelta(day=22, weekday=weekday(+1))
-            elif position == 'last':
-                delta = relativedelta(day=31, weekday=weekday(-1))
-            else:
-                raise NotImplementedError(f"Unknown position: {position}")
+            delta = POSITION_TO_DELTA[data['position']](weekday)
 
         return {'date': tfhDate(
             year=data.get('year'),
@@ -329,13 +276,13 @@ class tfhTransformer(Transformer):
 
         if len(parts) == 2:
             if second > 31:
-                return {'date': tfhDate(month=first, year=_normalize_year(second))}
+                return {'date': tfhDate(month=first, year=normalize_year(second))}
             return {'date': tfhDate(month=first, day=second)}
 
         third = parts[2]
         if first >= 1000:
             return {'date': tfhDate(year=first, month=second, day=third)}
-        return {'date': tfhDate(month=first, day=second, year=_normalize_year(third))}
+        return {'date': tfhDate(month=first, day=second, year=normalize_year(third))}
 
     def day(self, children):
         return {'day': int(children[0].value)}
@@ -344,25 +291,46 @@ class tfhTransformer(Transformer):
         return {'month': int(children[0].value)}
     
     def year(self, children):
-        return {'year': _normalize_year(int(children[0].value))}
+        return {'year': normalize_year(int(children[0].value))}
     
     def monthname(self, children):
-        return {'month': _month_number(children[0].value, self.config.now.month)}
+        return {'month': month_number(children[0].value, self.config.now.month)}
+
+    def monthname_date(self, children):
+        match = MONTHNAME_DATE_PATTERN.fullmatch(children[0].value)
+        if match is None:
+            raise NotImplementedError(f"Unknown monthname date: {children[0].value}")
+
+        month = month_number(match.group('month'), self.config.now.month)
+        first = int(match.group('first'))
+        year = match.group('year')
+
+        if year is not None:
+            return {'date': tfhDate(month=month, day=first, year=normalize_year(int(year)))}
+        if match.group('suffix') or first <= 31:
+            return {'date': tfhDate(month=month, day=first)}
+        return {'date': tfhDate(month=month, year=normalize_year(first))}
+
+    def day_ordinal(self, children):
+        match = DAY_ORDINAL_PATTERN.fullmatch(children[0].value)
+        if match is None:
+            raise NotImplementedError(f"Unknown day ordinal: {children[0].value}")
+        return {'date': tfhDate(day=int(match.group('day')))}
 
     def modified_month(self, children):
         offset = sum(child['offset'] for child in children[:-1])
-        month = _month_number(children[-1].value, self.config.now.month)
+        month = month_number(children[-1].value, self.config.now.month)
         return {'month': month, 'offset': offset}
 
     def weekday(self, children):
-        target_weekday = _weekday_index(children[0].value)
+        target_weekday = weekday_index(children[0].value)
         offset = direction_to_offset(self.config.direction)
         date = self.config.now.date() + relativedelta(weekday=weekdays[target_weekday](offset))
         return {'weekday': tfhDate.from_object(date)}
 
     def modified_weekday(self, children):
         offset = sum(child['offset'] for child in children[:-1])
-        target_weekday = _weekday_index(children[-1].value)
+        target_weekday = weekday_index(children[-1].value)
         date = self.config.now.date() + relativedelta(weekday=weekdays[target_weekday](offset))
         return {'weekday': tfhDate.from_object(date)}
     
@@ -383,6 +351,9 @@ class tfhTransformer(Transformer):
             value = int(children[0].value)
             return {'day': value} if value < 32 else {'year': value}
         raise NotImplementedError(f"Unknown day or year: {children[0]}")
+
+    def ambiguous(self, children):
+        return tfhAmbiguous(int(children[0].value))
 
     def time(self, children):
         data = nodes_to_dict(children)
@@ -415,18 +386,18 @@ class tfhTransformer(Transformer):
         timename = children[0].value.lower()
         if timename not in TIME_NAME_TO_TEMPLATE:
             raise NotImplementedError(f"Unknown timename: {timename}")
-        return {'time': _copy_time_template(TIME_NAME_TO_TEMPLATE[timename])}
+        return {'time': clone_time(TIME_NAME_TO_TEMPLATE[timename])}
     
     def houronly(self, children):
         return {'time': tfhTime(hour=int(children[0].value))}
 
     def datetimename(self, children):
         datetimename = children[0].value.lower()
-        if datetimename == 'tonight':
-            _datetime = tfhDatetime(date=tfhDate.from_object(self.config.now.date()), time=tfhTime(hour=20, minute=0, meridiem=tfhTime.Meridiem.PM))
-        else:
+        if datetimename not in DATE_TIME_NAME_TO_TEMPLATE:
             raise NotImplementedError(f"Unknown datetimename: {datetimename}")
-        return {'datetime': _datetime}
+        value = clone_datetime(DATE_TIME_NAME_TO_TEMPLATE[datetimename])
+        value.date = tfhDate.from_object(self.config.now.date())
+        return {'datetime': value}
 
     def iso_datetime(self, children):
         value = children[0].value
