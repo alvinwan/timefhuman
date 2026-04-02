@@ -310,13 +310,13 @@ def _parse_atomic_datetime(text: str, config: tfhConfig, tzinfo):
         value.tz = tzinfo
         return value
 
-    date = _parse_date(text, config)
-    if date is not None:
-        return tfhDatetime(date=date, tz=tzinfo)
-
     time = _parse_time_component(text, allow_houronly=False)
     if time is not None:
         return tfhDatetime(time=time, tz=tzinfo)
+
+    date = _parse_date(text, config)
+    if date is not None:
+        return tfhDatetime(date=date, tz=tzinfo)
 
     return None
 
@@ -517,6 +517,9 @@ def _consume_word_duration(segment: str):
 
 
 def _strip_trailing_timezone(text: str, timezone_mapping):
+    if not text or not text[-1].isalpha():
+        return text, None
+
     lowered = text.lower()
     timezone_name = timezone_mapping.get(lowered)
     if timezone_name is not None:
@@ -579,7 +582,12 @@ def _trimmed_span(text: str, start_pos: int):
 
 
 def _normalize_space(text: str):
-    return " ".join(text.split())
+    stripped = text.strip()
+    if not stripped:
+        return ""
+    if "  " not in stripped and "\t" not in stripped and "\n" not in stripped and "\r" not in stripped:
+        return stripped
+    return " ".join(stripped.split())
 
 
 def _looks_like_range_hyphen(text: str, index: int):
