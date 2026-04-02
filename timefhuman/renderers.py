@@ -219,18 +219,18 @@ class tfhDatetime(tfhDatelike):
         tzinfo = self.tz or config.now.tzinfo
         
         if self.date and self.time:
-            return datetime.combine(_date, _time, tzinfo=tzinfo)
+            return _localize_datetime(datetime.combine(_date, _time), tzinfo)
         elif self.date:
             if config.infer_datetimes:
-                return datetime.combine(_date, time(0, 0), tzinfo=tzinfo)
+                return _localize_datetime(datetime.combine(_date, time(0, 0)), tzinfo)
             return _date  # NOTE: a date object cannot hold a timezone
         elif self.time:
             if config.infer_datetimes:
-                _now = config.now.replace(tzinfo=tzinfo)
-                candidate = datetime.combine(_now.date(), _time, tzinfo=tzinfo)
+                _now = _reference_now(config.now, tzinfo)
+                candidate = _localize_datetime(datetime.combine(_now.date(), _time), tzinfo)
                 if candidate < _now and config.direction == Direction.next:
                     candidate += timedelta(days=1)
-                elif candidate > _now and config.direction == Direction.previous:
+                elif candidate >= _now and config.direction == Direction.previous:
                     candidate -= timedelta(days=1)
                 elif config.direction == Direction.this:
                     pass
@@ -244,6 +244,23 @@ class tfhDatetime(tfhDatelike):
 
     def __repr__(self):
         return f"tfhDatetime({self.date}, {self.time})"
+
+
+def _localize_datetime(value: datetime, tzinfo):
+    if tzinfo is None:
+        return value
+    localize = getattr(tzinfo, "localize", None)
+    if callable(localize):
+        return localize(value)
+    return value.replace(tzinfo=tzinfo)
+
+
+def _reference_now(now: datetime, tzinfo):
+    if tzinfo is None:
+        return now.replace(tzinfo=None) if now.tzinfo else now
+    if now.tzinfo is None:
+        return _localize_datetime(now, tzinfo)
+    return now.astimezone(tzinfo)
     
 
 class tfhAmbiguous(tfhMatchable):

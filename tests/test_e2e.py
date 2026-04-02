@@ -5,10 +5,14 @@ from timefhuman.main import Direction, tfhConfig, DEFAULT_CONFIG
 import pytz
 
 
+def localized_datetime(tz_name, *parts):
+    return pytz.timezone(tz_name).localize(datetime.datetime(*parts))
+
+
 @pytest.mark.parametrize("test_input, expected", [
     # time only
     ('5p', [datetime.datetime(2018, 8, 4, 17, 0)]),
-    ('3p EST', [datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Michigan'))]),  # fixes gh#6
+    ('3p EST', [localized_datetime('US/Michigan', 2018, 8, 4, 15, 0)]),  # fixes gh#6
     
     # date only
     ('July 2019', [datetime.datetime(2019, 7, 1, 0, 0)]),
@@ -38,7 +42,7 @@ import pytz
     
     # time-only ranges
     ('3p -4p', [(datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))]),
-    ('3p -4p PDT', [(datetime.datetime(2018, 8, 4, 15, 0, tzinfo=pytz.timezone('US/Pacific')), datetime.datetime(2018, 8, 4, 16, 0, tzinfo=pytz.timezone('US/Pacific')))]),
+    ('3p -4p PDT', [(localized_datetime('US/Pacific', 2018, 8, 4, 15, 0), localized_datetime('US/Pacific', 2018, 8, 4, 16, 0))]),
     ('6:00 pm - 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 5, 0, 0))]), # gh#8
     ('8/4 6:00 pm - 8/4 12:00 am', [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))]), # force date, do not infer
     ('11PM to 1AM', [(datetime.datetime(2018, 8, 4, 23, 0), datetime.datetime(2018, 8, 5, 1, 0))]),  # test that 1AM is the next day
@@ -201,5 +205,4 @@ def test_custom_config(now, config, test_input, expected):
 ])
 def test_matched_text(now, test_input, expected):  # gh#9
     assert timefhuman(test_input, tfhConfig(now=now, return_matched_text=True)) == expected
-
 
