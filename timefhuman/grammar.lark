@@ -24,6 +24,7 @@ FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/
 NUMERIC_DATE.2: /\d{1,4}\/\d{1,4}(?:\/\d{1,4})?|\d{1,4}\-\d{1,4}\-\d{1,4}/
 ISO_DATETIME.3: /\d{4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?/
 TIMEZONE: /(?<![a-z])((TIMEZONE_MAPPING))(?![a-z])/
+TIMEZONE_OFFSET.2: /[+-]\d{2}:?\d{2}/
 MODIFIER: /(?<![a-z])(next|last|this|upcoming|previous|past)(?![a-z])/
 POSITION: /(?<![a-z])(first|second|third|fourth|last)(?![a-z])/
 
@@ -97,7 +98,7 @@ modified_weekday: modifier WEEKDAY
                 | modifier modifier WEEKDAY
 modified_month: modifier MONTHNAME
               | modifier modifier MONTHNAME
-weekday: WEEKDAY
+weekday: WEEKDAY (",")?
 monthname: MONTHNAME
 datename: DATENAME
 dayoryear: INT
@@ -114,6 +115,6 @@ second: INT
 millisecond: INT
 meridiem: MERIDIEM
 houronly: INT
-timezone: TIMEZONE
+timezone: TIMEZONE | TIMEZONE_OFFSET
 modifier: MODIFIER
 position: POSITION

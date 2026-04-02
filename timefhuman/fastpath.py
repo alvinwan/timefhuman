@@ -1,5 +1,5 @@
 import re
-from datetime import timedelta
+from datetime import timedelta, timezone as dt_timezone
 
 from dateutil.relativedelta import relativedelta, weekdays
 import pytz
@@ -11,6 +11,9 @@ from timefhuman.semantics import (
     DATE_TIME_NAME_TO_TEMPLATE,
     MODIFIER_TO_OFFSET,
     NUMBER_WORDS,
+    build_date,
+    build_numeric_date,
+    build_time,
     POSITION_TO_DELTA,
     TIME_NAME_TO_TEMPLATE,
     UNIT_ALIASES,
@@ -78,6 +81,7 @@ NUMBER_UNIT_PATTERN = re.compile(
     r"\s*"
     r"(?P<unit>seconds?|secs?|sec|minutes?|mins?|min|hours?|hour|hrs?|hr|days?|day|weeks?|week|wks?|wk|months?|month|mos|years?|year|yrs?|yr|mo|[smhdwy])"
 )
+NUMERIC_TIMEZONE_OFFSET_PATTERN = re.compile(r"^(?P<body>.*\S)\s+(?P<sign>[+-])(?P<hour>\d{2})(?::?(?P<minute>\d{2}))$")
 
 
 def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
@@ -253,18 +257,22 @@ def _parse_atomic_datetime(text: str, config: tfhConfig, tzinfo):
     lower_body = text.lower()
     iso_match = ISO_PATTERN.fullmatch(text)
     if iso_match:
+        date = build_date(
+            year=int(iso_match.group("year")),
+            month=int(iso_match.group("month")),
+            day=int(iso_match.group("day")),
+        )
+        time = build_time(
+            hour=int(iso_match.group("hour")),
+            minute=int(iso_match.group("minute")),
+            second=int(iso_match.group("second") or 0),
+            millisecond=int(iso_match.group("millisecond") or 0),
+        )
+        if date is None or time is None:
+            return None
         return tfhDatetime(
-            date=tfhDate(
-                year=int(iso_match.group("year")),
-                month=int(iso_match.group("month")),
-                day=int(iso_match.group("day")),
-            ),
-            time=tfhTime(
-                hour=int(iso_match.group("hour")),
-                minute=int(iso_match.group("minute")),
-                second=int(iso_match.group("second") or 0),
-                millisecond=int(iso_match.group("millisecond") or 0),
-            ),
+            date=date,
+            time=time,
             tz=tzinfo,
         )
 
@@ -336,7 +344,7 @@ def _parse_date(text: str, config: tfhConfig):
 
     day_suffix = DAY_SUFFIX_PATTERN.fullmatch(lower)
     if day_suffix:
-        return tfhDate(day=int(day_suffix.group("day")))
+        return build_date(day=int(day_suffix.group("day")))
 
     weekday = _parse_weekday_name(lower)
     if weekday is not None:
@@ -354,15 +362,7 @@ def _parse_numeric_date(text: str):
     first = int(match.group("a"))
     second = int(match.group("b"))
     third = match.group("c")
-
-    if third is None:
-        if second > 31:
-            return tfhDate(month=first, year=normalize_year(second))
-        return tfhDate(month=first, day=second)
-
-    if len(match.group("a")) == 4:
-        return tfhDate(year=first, month=second, day=int(third))
-    return tfhDate(month=first, day=second, year=normalize_year(int(third)))
+    return build_numeric_date(first, second, int(third) if third is not None else None)
 
 
 def _parse_monthname_date(text: str):
@@ -379,10 +379,10 @@ def _parse_monthname_date(text: str):
     year = match.group("year")
 
     if year is not None:
-        return tfhDate(month=month, day=first, year=normalize_year(int(year)))
+        return build_date(month=month, day=first, year=normalize_year(int(year)))
     if suffix or first <= 31:
-        return tfhDate(month=month, day=first)
-    return tfhDate(month=month, year=normalize_year(first))
+        return build_date(month=month, day=first)
+    return build_date(month=month, year=normalize_year(first))
 
 
 def _parse_day_month_or_year(text: str):
@@ -393,12 +393,12 @@ def _parse_day_month_or_year(text: str):
             return None
         year = match.group("year")
         if year is not None:
-            return tfhDate(day=int(match.group("day")), month=month, year=normalize_year(int(year)))
-        return tfhDate(day=int(match.group("day")), month=month)
+            return build_date(day=int(match.group("day")), month=month, year=normalize_year(int(year)))
+        return build_date(day=int(match.group("day")), month=month)
 
     match = DAY_YEAR_PATTERN.fullmatch(text)
     if match:
-        return tfhDate(day=int(match.group("day")), year=normalize_year(int(match.group("year"))))
+        return build_date(day=int(match.group("day")), year=normalize_year(int(match.group("year"))))
 
     return None
 
@@ -423,7 +423,7 @@ def _parse_time_component(text: str, allow_houronly: bool):
     if meridiem is None and match.group("minute") is None and not allow_houronly:
         return None
 
-    return tfhTime(
+    return build_time(
         hour=int(match.group("hour")),
         minute=int(match.group("minute") or 0),
         second=int(match.group("second") or 0),
@@ -503,6 +503,15 @@ def _consume_word_duration(segment: str):
 
 
 def _strip_trailing_timezone(text: str, timezone_mapping):
+    offset_match = NUMERIC_TIMEZONE_OFFSET_PATTERN.fullmatch(text)
+    if offset_match:
+        hours = int(offset_match.group("hour"))
+        minutes = int(offset_match.group("minute"))
+        if hours <= 23 and minutes <= 59:
+            sign = -1 if offset_match.group("sign") == "-" else 1
+            offset = sign * timedelta(hours=hours, minutes=minutes)
+            return offset_match.group("body").strip(), dt_timezone(offset)
+
     if not text or not text[-1].isalpha():
         return text, None
 
@@ -534,7 +543,7 @@ def _parse_modifier_prefix(tokens):
 
 def _strip_leading_weekday(text: str):
     parts = text.split(maxsplit=1)
-    if len(parts) == 2 and weekday_index(parts[0]) is not None:
+    if len(parts) == 2 and weekday_index(parts[0].rstrip(",")) is not None:
         return parts[1]
     return text
 

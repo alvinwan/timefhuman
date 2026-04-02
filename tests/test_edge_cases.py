@@ -97,6 +97,10 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
     assert timefhuman('next Monday', config=config) == [datetime.date(2018, 8, 6)]
     assert timefhuman('next next Monday', config=config) == [datetime.date(2018, 8, 13)]
     assert timefhuman('1/1/95', config=config) == [datetime.date(1995, 1, 1)]
+    assert timefhuman('31/08/2012 to 30/08/2013', config=config) == [(
+        datetime.date(2012, 8, 31),
+        datetime.date(2013, 8, 30),
+    )]
     assert timefhuman('7/2018', config=config) == [datetime.date(2018, 7, 1)]
     assert timefhuman('Sunday 7/7/2019', config=config) == [datetime.date(2019, 7, 7)]
     assert timefhuman('2022-12-27T09:15:01.002', config=infer_config) == [datetime.datetime(2022, 12, 27, 9, 15, 1, 2)]
@@ -110,6 +114,8 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
         datetime.datetime(2018, 7, 4, 15, 0),
         datetime.datetime(2018, 7, 5, 15, 0),
     ]]
+    assert timefhuman('90p', config=config) == []
+    assert timefhuman('4906/0', config=config) == []
     assert timefhuman('7/17 4-5 PM or 5-6 PM today', config=infer_config) == [[
         (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
         (datetime.datetime(2018, 8, 4, 17, 0), datetime.datetime(2018, 8, 4, 18, 0)),
@@ -167,3 +173,19 @@ def test_prefixed_or_punctuated_text_skips_lalr_fallback(now, monkeypatch):
         ("September 30, 2019", (0, 18), datetime.datetime(2019, 9, 30, 0, 0)),
     ]
     assert calls == 0
+
+
+def test_corpus_regressions_do_not_crash():
+    config = tfhConfig(now=localized_datetime('UTC', 2026, 3, 18, 12, 0), return_matched_text=True)
+
+    assert timefhuman("90p", config=config) == []
+    assert timefhuman("4906/0", config=config) == []
+    assert timefhuman("31/08/2012 to 30/08/2013", config=tfhConfig(now=config.now, infer_datetimes=False)) == [(
+        datetime.date(2012, 8, 31),
+        datetime.date(2013, 8, 30),
+    )]
+    assert timefhuman("Tue, 23 Apr 1996 13:28:27 -0400", config=config) == [
+        ("Tue, 23 Apr 1996 13:28:27 -0400", (0, 31), datetime.datetime(
+            1996, 4, 23, 13, 28, 27, tzinfo=datetime.timezone(datetime.timedelta(hours=-4))
+        ))
+    ]

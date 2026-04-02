@@ -1,9 +1,10 @@
-from datetime import timedelta
+from datetime import timedelta, timezone as dt_timezone
 from pathlib import Path
 import re
 
 from dataclasses import replace
 from lark import Lark, Transformer, UnexpectedInput
+from lark.exceptions import VisitError
 import pytz
 from dateutil.relativedelta import relativedelta, weekdays
 
@@ -14,6 +15,9 @@ from timefhuman.semantics import (
     DATE_TIME_NAME_TO_TEMPLATE,
     MODIFIER_TO_OFFSET,
     NUMBER_WORDS,
+    build_date,
+    build_numeric_date,
+    build_time,
     POSITION_TO_DELTA,
     TIME_NAME_TO_TEMPLATE,
     UNIT_ALIASES,
@@ -85,7 +89,12 @@ def parse_lalr_renderers(string: str, config: tfhConfig, start_pos: int = 0):
     except UnexpectedInput:
         return None
 
-    renderers = tfhTransformer(config=config).transform(tree)
+    try:
+        renderers = tfhTransformer(config=config).transform(tree)
+    except VisitError as exc:
+        if isinstance(exc.orig_exc, ValueError):
+            return None
+        raise
     for renderer in renderers:
         renderer.matched_text_pos = (span_start, span_end)
     return renderers
@@ -186,16 +195,10 @@ class tfhTransformer(Transformer):
         sep = '/' if '/' in value else '-'
         parts = [int(part) for part in value.split(sep)]
         first, second = parts[0], parts[1]
-
-        if len(parts) == 2:
-            if second > 31:
-                return {'date': tfhDate(month=first, year=normalize_year(second))}
-            return {'date': tfhDate(month=first, day=second)}
-
-        third = parts[2]
-        if first >= 1000:
-            return {'date': tfhDate(year=first, month=second, day=third)}
-        return {'date': tfhDate(month=first, day=second, year=normalize_year(third))}
+        result = build_numeric_date(first, second, parts[2] if len(parts) == 3 else None)
+        if result is None:
+            raise ValueError(f"Invalid numeric date: {value}")
+        return {'date': result}
 
     def day(self, children):
         return {'day': int(children[0].value)}
@@ -219,16 +222,28 @@ class tfhTransformer(Transformer):
         year = match.group('year')
 
         if year is not None:
-            return {'date': tfhDate(month=month, day=first, year=normalize_year(int(year)))}
+            result = build_date(month=month, day=first, year=normalize_year(int(year)))
+            if result is None:
+                raise ValueError(f"Invalid monthname date: {children[0].value}")
+            return {'date': result}
         if match.group('suffix') or first <= 31:
-            return {'date': tfhDate(month=month, day=first)}
-        return {'date': tfhDate(month=month, year=normalize_year(first))}
+            result = build_date(month=month, day=first)
+            if result is None:
+                raise ValueError(f"Invalid monthname date: {children[0].value}")
+            return {'date': result}
+        result = build_date(month=month, year=normalize_year(first))
+        if result is None:
+            raise ValueError(f"Invalid monthname date: {children[0].value}")
+        return {'date': result}
 
     def day_ordinal(self, children):
         match = DAY_ORDINAL_PATTERN.fullmatch(children[0].value)
         if match is None:
             raise NotImplementedError(f"Unknown day ordinal: {children[0].value}")
-        return {'date': tfhDate(day=int(match.group('day')))}
+        result = build_date(day=int(match.group('day')))
+        if result is None:
+            raise ValueError(f"Invalid day ordinal: {children[0].value}")
+        return {'date': result}
 
     def modified_month(self, children):
         offset = sum(child['offset'] for child in children[:-1])
@@ -274,13 +289,16 @@ class tfhTransformer(Transformer):
         if 'time' in data:
             return {'time': data['time']}
 
-        return {'time': tfhTime(
+        result = build_time(
             hour=int(data.get("hour", 0)),
             minute=int(data.get("minute", 0)),
             second=int(data.get("second", 0)),
             millisecond=int(data.get("millisecond", 0)),
-            meridiem=data.get("meridiem", None)
-        )}
+            meridiem=data.get("meridiem", None),
+        )
+        if result is None:
+            raise ValueError(f"Invalid time: {data}")
+        return {'time': result}
 
     def meridiem(self, children):
         meridiem = children[0].value.lower()
@@ -292,6 +310,14 @@ class tfhTransformer(Transformer):
 
     def timezone(self, children):
         timezone = children[0].value.lower()
+        if timezone.startswith(("+", "-")):
+            sign = -1 if timezone[0] == "-" else 1
+            body = timezone[1:].replace(":", "")
+            hours = int(body[:2])
+            minutes = int(body[2:])
+            if hours > 23 or minutes > 59:
+                raise ValueError(f"Invalid timezone offset: {timezone}")
+            return {'timezone': dt_timezone(sign * timedelta(hours=hours, minutes=minutes))}
         return {'timezone': pytz.timezone(timezone_mapping[timezone])}
 
     def timename(self, children):
@@ -301,7 +327,10 @@ class tfhTransformer(Transformer):
         return {'time': clone_time(TIME_NAME_TO_TEMPLATE[timename])}
 
     def houronly(self, children):
-        return {'time': tfhTime(hour=int(children[0].value))}
+        result = build_time(hour=int(children[0].value))
+        if result is None:
+            raise ValueError(f"Invalid hour: {children[0].value}")
+        return {'time': result}
 
     def datetimename(self, children):
         datetimename = children[0].value.lower()
@@ -326,7 +355,11 @@ class tfhTransformer(Transformer):
         if len(time_parts) > 2:
             second = time_parts[2]
 
+        date = build_date(year=year, month=month, day=day)
+        time = build_time(hour=hour, minute=minute, second=second, millisecond=millisecond)
+        if date is None or time is None:
+            raise ValueError(f"Invalid ISO datetime: {value}")
         return {'datetime': tfhDatetime(
-            date=tfhDate(year=year, month=month, day=day),
-            time=tfhTime(hour=hour, minute=minute, second=second, millisecond=millisecond),
+            date=date,
+            time=time,
         )}

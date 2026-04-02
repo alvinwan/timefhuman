@@ -1,8 +1,8 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
 from dateutil.relativedelta import relativedelta
 
-from timefhuman.renderers import tfhDatetime, tfhTime
+from timefhuman.renderers import tfhDate, tfhDatetime, tfhTime
 from timefhuman.utils import get_month_mapping
 
 
@@ -101,6 +101,69 @@ def normalize_year(value: int):
     if 0 < value < 50:
         return 2000 + value
     return value
+
+
+def build_date(year: int | None = None, month: int | None = None, day: int | None = None):
+    if year is not None and not 1 <= year <= 9999:
+        return None
+    if month is not None and not 1 <= month <= 12:
+        return None
+    if day is not None and not 1 <= day <= 31:
+        return None
+    if month is not None and day is not None:
+        validation_year = year if year is not None else 2000
+        try:
+            date(validation_year, month, day)
+        except ValueError:
+            return None
+    return tfhDate(year=year, month=month, day=day)
+
+
+def build_numeric_date(first: int, second: int, third: int | None = None):
+    if third is None:
+        if first >= 1000:
+            return build_date(year=first, month=second)
+        if second > 31:
+            return build_date(month=first, year=normalize_year(second))
+        if 1 <= first <= 12:
+            return build_date(month=first, day=second)
+        if 1 <= second <= 12:
+            return build_date(month=second, day=first)
+        return None
+
+    if first >= 1000:
+        return build_date(year=first, month=second, day=third)
+
+    year = normalize_year(third)
+    if 1 <= first <= 12:
+        return build_date(month=first, day=second, year=year)
+    if 1 <= second <= 12:
+        return build_date(year=year, month=second, day=first)
+    return None
+
+
+def build_time(
+    hour: int,
+    minute: int = 0,
+    second: int = 0,
+    millisecond: int = 0,
+    meridiem=None,
+):
+    if not 0 <= minute <= 59 or not 0 <= second <= 59 or not 0 <= millisecond <= 999999:
+        return None
+    if meridiem is None:
+        if not 0 <= hour <= 23:
+            return None
+    elif not 1 <= hour <= 12:
+        return None
+
+    return tfhTime(
+        hour=hour,
+        minute=minute,
+        second=second,
+        millisecond=millisecond,
+        meridiem=meridiem,
+    )
 
 
 def clone_time(template: tfhTime):
