@@ -98,6 +98,10 @@ You can also use natural language descriptions of dates and times.
 
 See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
+## Performance
+
+Current parser architecture, benchmark snapshots, and next optimization targets are tracked in [`PERFORMANCE.md`](PERFORMANCE.md).
+
 ## Advanced Usage
 
 For more configuration options, simply create a `tfhConfig` object.

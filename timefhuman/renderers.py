@@ -159,20 +159,20 @@ class tfhTime:
 
     def to_object(self, config: tfhConfig = tfhConfig()) -> time:
         """Convert to a real time object. Assumes all fields are filled in."""
-        if self.meridiem == tfhTime.Meridiem.PM and self.hour < 12:
-            self.hour += 12
-        elif self.meridiem == tfhTime.Meridiem.AM and self.hour == 12:
-            self.hour = 0
-        object = time(self.hour, self.minute or 0, self.second or 0, self.millisecond or 0)
-        return object
+        hour = self.hour
+        if self.meridiem == tfhTime.Meridiem.PM and hour < 12:
+            hour += 12
+        elif self.meridiem == tfhTime.Meridiem.AM and hour == 12:
+            hour = 0
+        return time(hour, self.minute or 0, self.second or 0, self.millisecond or 0)
     
     @classmethod
     def from_object(cls, obj: time):
-        return cls(hour=obj.hour, minute=obj.minute, second=obj.second, millisecond=obj.millisecond, meridiem=obj.meridiem, tz=obj.tz)
+        return cls(hour=obj.hour, minute=obj.minute, second=obj.second, millisecond=obj.microsecond, meridiem=None)
 
     def __repr__(self):
         return (f"tfhTime("
-                f"hour={self.hour}, minute={self.minute}, second={self.second}, millisecond={self.millisecond}, meridiem={self.meridiem}, tz={self.tz})")
+                f"hour={self.hour}, minute={self.minute}, second={self.second}, millisecond={self.millisecond}, meridiem={self.meridiem})")
 
 
 class tfhDatetime(tfhDatelike):
