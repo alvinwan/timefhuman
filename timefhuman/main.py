@@ -115,10 +115,6 @@ def _parse_renderers(string: str, config: tfhConfig):
     if renderers is not None:
         return renderers
 
-    renderers = _parse_exact(string, config=config)
-    if renderers is not None:
-        return renderers
-
     renderers = extract_fast(
         string,
         parse_candidate=lambda candidate, start_pos: _parse_exact(candidate, config=config, start_pos=start_pos),

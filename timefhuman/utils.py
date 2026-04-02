@@ -73,6 +73,15 @@ def get_timezone_word_lengths():
     return tuple(sorted({len(candidate.split()) for candidate in generate_timezone_mapping()}, reverse=True))
 
 
+@lru_cache(maxsize=1)
+def get_timezone_words():
+    return frozenset(
+        word
+        for candidate in generate_timezone_mapping()
+        for word in candidate.split()
+    )
+
+
 def node_to_dict(node: Tree) -> dict:
     assert isinstance(node, (Tree, dict, Token)), f"Expected a Tree or dict, got {type(node)} ({node})"
     if isinstance(node, dict):
