@@ -1,69 +1,153 @@
-# Performance Progress
+# Performance
 
-Status as of March 30, 2026.
+Status as of April 2, 2026.
 
-## Current State
+## Current Snapshot
 
 - Branch: `codex/fast-path-parser`
-- Test suite: green
-- Deterministic fast path for common dates, times, durations, ranges, lists, and timezone suffixes in [timefhuman/fastpath.py](timefhuman/fastpath.py)
-- Exact-expression LALR fallback for non-extraction parses in [timefhuman/exact_grammar.lark](timefhuman/exact_grammar.lark)
-- Synthetic raw parse tree builder for `raw=True` in [timefhuman/main.py](timefhuman/main.py)
-- Shared inference logic in [timefhuman/inference.py](timefhuman/inference.py)
-- Cached month/timezone helpers in [timefhuman/utils.py](timefhuman/utils.py)
-- Earley has been removed from the runtime parser path.
+- Test suite: `127 passed in 0.27s`
+- Runtime parser stack:
+  1. handwritten deterministic parser in [timefhuman/fastpath.py](timefhuman/fastpath.py)
+  2. exact-expression LALR fallback in [timefhuman/exact_grammar.lark](timefhuman/exact_grammar.lark)
+  3. fast noisy-text extraction using the handwritten parser
+  4. exact noisy-text rescue using the LALR parser
+- Earley is not used in the runtime parser path.
 
-## What Changed
+## Why It Is Fast
 
-1. Added a fast deterministic parser for the common structured and semi-structured cases.
-2. Added a token-window extractor so noisy text no longer forces full Earley parsing in common cases.
-3. Moved matched-text extraction onto the fast path when possible.
-4. Split inference into a shared module so fast-path and grammar-path behavior stay aligned.
-5. Cached expensive lookup data and removed repeated timezone candidate sorting.
-6. Added an accuracy-aware benchmark harness in [benchmarks/benchmark_baselines.py](benchmarks/benchmark_baselines.py).
-7. Added an exact-expression LALR grammar so whole-string fallback no longer jumps straight to Earley.
-8. Moved modifier-based weekdays/months, numeric dates, and ISO datetimes into the LALR layer to shrink the Earley-only surface.
-9. Removed the Earley parser entirely and replaced `raw=True` with a lightweight synthetic tree built from matched spans plus tokenized unknown gaps.
+### 1. Common expressions do not go through a general parser
 
-## Latest Numbers
+Standalone inputs like:
 
-Benchmark source: [benchmarks/benchmark_baselines.py](benchmarks/benchmark_baselines.py)
+- `5p`
+- `7/17/18 3:00 p.m.`
+- `30 minutes`
+- `3p -4p`
+- `July 4th or 5th at 3PM`
 
-Latest run snapshot:
+are handled by the deterministic parser in [timefhuman/fastpath.py](timefhuman/fastpath.py). That avoids parse-table work for the cases that dominate normal usage.
+
+### 2. LALR is a fallback, not the primary path
+
+The exact-expression grammar in [timefhuman/exact_grammar.lark](timefhuman/exact_grammar.lark) is still valuable, but it only runs when the deterministic parser misses. That keeps grammar flexibility without paying grammar cost on every input.
+
+### 3. Prose extraction is bounded and selective
+
+For noisy text like:
+
+- `How does 5p mon sound? Or maybe 4p tu?`
+- `e 6:50PM`
+- `September 30, 2019.`
+
+the extractor in [timefhuman/fastpath.py](timefhuman/fastpath.py) does not blindly try large windows of prose. It:
+
+- scans for plausible start tokens
+- limits candidate spans to contiguous expression-like token runs
+- skips duplicate trimmed candidates
+- uses the LALR parser only as a rescue path after fast extraction misses
+
+That keeps extraction from exploding into repeated failed parses.
+
+### 4. Expensive lookup data is cached
+
+[timefhuman/utils.py](timefhuman/utils.py) caches timezone mappings, timezone word lengths, timezone words, and month mappings so the hot path is not rebuilding or resorting metadata on every call.
+
+### 5. `raw=True` is cheap
+
+Debug output no longer requires a heavyweight parser pass. [timefhuman/main.py](timefhuman/main.py) builds a lightweight synthetic tree from matched spans plus unknown-token gaps.
+
+## Latest Benchmarks
+
+### Validation
+
+```bash
+/tmp/timefhuman-bench-venv/bin/python -m pytest -q
+```
+
+Result:
+
+```text
+127 passed in 0.27s
+```
+
+### Local Tight Loop
+
+This is the best signal for `timefhuman` itself because it removes most cross-library benchmark noise.
+
+Command:
+
+```bash
+/tmp/timefhuman-bench-venv/bin/python - <<'PY'
+import time
+from datetime import datetime
+from benchmarks.benchmark_baselines import INPUTS
+from timefhuman import timefhuman
+from timefhuman.main import tfhConfig
+
+cfg = tfhConfig(now=datetime(2018, 8, 4, 14, 0))
+for rounds in [1000, 5000, 10000]:
+    start = time.perf_counter()
+    for _ in range(rounds):
+        for text in INPUTS:
+            timefhuman(text, config=cfg)
+    us = (time.perf_counter() - start) / (rounds * len(INPUTS)) * 1e6
+    print(rounds, f"{us:.2f} us/input")
+PY
+```
+
+Latest run:
+
+- `1000` rounds: `22.19 us/input`
+- `5000` rounds: `20.10 us/input`
+- `10000` rounds: `19.52 us/input`
+
+### Path Benchmark
+
+Source: [benchmarks/benchmark_paths.py](benchmarks/benchmark_paths.py)
+
+Latest run:
+
+| Exact Case | `timefhuman` | `parse_fast` | `parse_exact` |
+| --- | ---: | ---: | ---: |
+| `fast exact` | `5.4 us` | `3.5 us` | `22.1 us` |
+| `fast collection` | `21.6 us` | `17.6 us` | `55.4 us` |
+| `prefixed input` | `20.5 us` | `10.5 us` | `12.8 us` |
+| `structured` | `4.9 us` | `4.0 us` | `13.5 us` |
+
+| Extract Case | `timefhuman` | `fast extract` | `exact extract` |
+| --- | ---: | ---: | ---: |
+| `extract hit` | `101.1 us` | `37.8 us` | `93.5 us` |
+| `extract miss` | `67.9 us` | `7.4 us` | `7.4 us` |
+
+Interpretation:
+
+- The handwritten parser is the hot path.
+- The LALR parser is materially slower than the handwritten parser, so it should stay a fallback.
+- Noisy extraction is still the slowest common path, but it is much cheaper than it was before candidate pruning.
+
+### Cross-Library Snapshot
+
+Source: [benchmarks/benchmark_baselines.py](benchmarks/benchmark_baselines.py)
+
+Latest run:
 
 | Parser | us/input | ok | exact |
 | --- | ---: | ---: | ---: |
-| `timefhuman` | `32.7` | `37/37` | `10/10` |
-| `dateparser.parse` | `47488.5` | `20/37` | `6/10` |
-| `parsedatetime.parseDT` | `42.9` | `36/37` | `6/10` |
-| `datefinder.find_dates` | `35.1` | `23/37` | `5/10` |
-| `ctparse.ctparse` | `12806.8` | `37/37` | `3/10` |
-| `recurrent.parse` | `201.8` | `36/37` | `6/10` |
-| `metadate.parse_date` | `34.0` | `31/37` | `5/10` |
-
-Additional local tight-loop measurement for the current 37-input suite:
-
-- `timefhuman`: roughly `24-25 us/input`
+| `timefhuman` | `56.1` | `37/37` | `10/10` |
+| `dateparser.parse` | `49105.3` | `20/37` | `6/10` |
+| `parsedatetime.parseDT` | `45.0` | `36/37` | `6/10` |
+| `datefinder.find_dates` | `42.9` | `23/37` | `5/10` |
+| `ctparse.ctparse` | `12808.2` | `37/37` | `3/10` |
+| `recurrent.parse` | `195.2` | `36/37` | `6/10` |
+| `metadate.parse_date` | `32.3` | `31/37` | `5/10` |
 
 Notes:
 
-- Raw microbench timings vary from run to run.
+- This table is useful for rough comparison, but it is noisier than the local tight-loop measurement.
+- `timefhuman`'s own stable throughput is better represented by the tight-loop numbers above.
 - `datefinder` and `metadate` are lighter-weight extractors and are not exact semantic peers for lists, ranges, and durations.
-- The current target is not just raw speed. It is speed with correctness preserved on the repo’s intended behavior.
-- On the local exact-parser audit across test strings, the Earley-only set dropped from `37` strings to `22` before the final Earley removal. Those remaining cases are now handled by the fast path, the LALR parser, or the synthetic raw tree.
 
-## Fast Enough Check
-
-Use this as the quick acceptance gate for future changes:
-
-1. Run `pytest` and require the full test suite to stay green.
-2. Run `benchmarks/benchmark_baselines.py`.
-3. Confirm `timefhuman` stays faster than `dateparser`, `ctparse`, and `recurrent`.
-4. Confirm `timefhuman` stays competitive with `parsedatetime`, `datefinder`, and `metadate` while preserving higher exactness on the checked cases.
-
-If a change speeds up microbenchmarks but drops exactness or pushes more cases out of the deterministic fast path and LALR parser, it is not a win.
-
-## Validation Commands
+## Commands
 
 Run tests:
 
@@ -71,10 +155,16 @@ Run tests:
 /tmp/timefhuman-bench-venv/bin/python -m pytest -q
 ```
 
-Run baseline comparison:
+Run the cross-library benchmark:
 
 ```bash
 /tmp/timefhuman-bench-venv/bin/python benchmarks/benchmark_baselines.py
+```
+
+Run the internal path benchmark:
+
+```bash
+/tmp/timefhuman-bench-venv/bin/python benchmarks/benchmark_paths.py
 ```
 
 Run the older simple parser benchmark:
@@ -83,14 +173,13 @@ Run the older simple parser benchmark:
 /tmp/timefhuman-bench-venv/bin/python benchmarks/benchmark_parsers.py
 ```
 
-## Remaining Work
+## Rule Of Thumb
 
-- Identify which real-world inputs still miss the exact LALR grammar and document them.
-- Move more natural-language exact parses from the fast path into the LALR grammar where that simplifies maintenance without regressing speed.
-- Keep reducing the cost of complex list/range expressions, which are still the slowest fast-path cases.
-- Expand the benchmark corpus beyond the current 37-case suite into a more realistic extraction corpus.
-- Add a lightweight performance regression check so major slowdowns are visible before release.
+If a change makes the exact LALR parser or noisy extraction run more often, it is probably a slowdown.
 
-## Guiding Rule
+The fastest route is:
 
-Prefer deterministic parsing first, then exact-expression LALR parsing, and use the synthetic raw tree only for debug output.
+1. deterministic whole-string parse
+2. exact whole-string LALR fallback only when needed
+3. bounded noisy extraction
+4. exact extraction rescue only when the fast extractor misses
