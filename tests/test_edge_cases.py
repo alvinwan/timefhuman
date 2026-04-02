@@ -1,9 +1,10 @@
 from timefhuman import timefhuman, tfhConfig, Direction
-from timefhuman.renderers import tfhTime
+from timefhuman.renderers import tfhRange, tfhTimedelta, tfhTime
 import pytz
 import datetime
 import timefhuman.main as main
 import timefhuman.utils as utils
+from timefhuman.extraction import prefer_extraction
 
 
 def localized_datetime(tz_name, *parts):
@@ -189,3 +190,35 @@ def test_corpus_regressions_do_not_crash():
             1996, 4, 23, 13, 28, 27, tzinfo=datetime.timezone(datetime.timedelta(hours=-4))
         ))
     ]
+
+
+def test_large_multiline_documents_prefer_extraction(now, monkeypatch):
+    doc = "1/1/95 header text\n" + ("plain filler line without dates\n" * 1100) + "How does 5p mon sound?\n"
+    calls = 0
+    real_parse_fast = main.parse_fast
+
+    def wrapped_parse_fast(text, *args, **kwargs):
+        nonlocal calls
+        if text == doc:
+            calls += 1
+        return real_parse_fast(text, *args, **kwargs)
+
+    monkeypatch.setattr(main, "parse_fast", wrapped_parse_fast)
+
+    assert prefer_extraction(doc) is True
+    assert timefhuman(doc, tfhConfig(now=now, return_matched_text=True)) == [
+        ("1/1/95", (0, 6), datetime.datetime(1995, 1, 1, 0, 0)),
+        ("5p mon", (doc.index("5p mon"), doc.index("5p mon") + 6), datetime.datetime(2018, 8, 6, 17, 0)),
+    ]
+    assert calls == 0
+
+
+def test_timedelta_range_does_not_assume_date(now):
+    renderer = tfhRange([
+        tfhTimedelta(days=4, unit="days"),
+        tfhTimedelta(seconds=10 * 60 * 60, unit="hours"),
+    ])
+    assert renderer.to_object(tfhConfig(now=now)) == (
+        now + datetime.timedelta(days=4),
+        now + datetime.timedelta(hours=10),
+    )

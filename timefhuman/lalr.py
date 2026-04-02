@@ -92,7 +92,7 @@ def parse_lalr_renderers(string: str, config: tfhConfig, start_pos: int = 0):
     try:
         renderers = tfhTransformer(config=config).transform(tree)
     except VisitError as exc:
-        if isinstance(exc.orig_exc, ValueError):
+        if isinstance(exc.orig_exc, (KeyError, ValueError)):
             return None
         raise
     for renderer in renderers:

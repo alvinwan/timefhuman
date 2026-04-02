@@ -100,7 +100,7 @@ See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
 ## Performance
 
-Current parser architecture, benchmark snapshots, and next optimization targets are tracked in [`PERFORMANCE.md`](PERFORMANCE.md).
+Current benchmark snapshots and repro commands are tracked in [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Advanced Usage
 

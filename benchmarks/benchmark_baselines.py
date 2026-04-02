@@ -1,5 +1,8 @@
+import statistics
 import time
 from datetime import datetime
+import os
+from pathlib import Path
 
 from timefhuman import timefhuman
 from timefhuman.main import tfhConfig
@@ -36,6 +39,7 @@ except ImportError:
 
 
 NOW = datetime(2018, 8, 4, 14, 0)
+DATEFINDER_ROOT = Path(os.environ.get("DATEFINDER_ROOT", "/tmp/datefinder"))
 INPUTS = [
     "5p",
     "3p EST",
@@ -87,29 +91,82 @@ EXACT_CASES = [
     ("1 year ago", datetime(2017, 8, 4, 14, 0)),
     ("2022-12-27T09:15:01.002", datetime(2022, 12, 27, 9, 15, 1, 2)),
 ]
+DOCUMENT_DATASETS = (
+    ("core_corpus", "core_s", 10),
+    ("seattle_html_76k", "seattle_s", 7),
+    ("test_data_560k", "test_data_s", 3),
+)
 
 
 def build_benches():
     cfg = tfhConfig(now=NOW)
-    benches = [("timefhuman", lambda text: timefhuman(text, config=cfg))]
+    benches = [{
+        "label": "timefhuman",
+        "func": lambda text: timefhuman(text, config=cfg),
+        "document_func": lambda text: timefhuman(text, config=cfg),
+    }]
 
     if dateparser:
-        benches.append(("dateparser.parse", lambda text: dateparser.parse(text, settings={"RELATIVE_BASE": NOW})))
+        benches.append({
+            "label": "dateparser.parse",
+            "func": lambda text: dateparser.parse(text, settings={"RELATIVE_BASE": NOW}),
+            "document_func": None,
+        })
     if parsedatetime:
         calendar = parsedatetime.Calendar()
-        benches.append(("parsedatetime.parseDT", lambda text: calendar.parseDT(text, NOW)))
+        benches.append({
+            "label": "parsedatetime.parseDT",
+            "func": lambda text: calendar.parseDT(text, NOW),
+            "document_func": None,
+        })
     if datefinder:
-        benches.append(("datefinder.find_dates", lambda text: list(datefinder.find_dates(text, base_date=NOW))))
+        benches.append({
+            "label": "datefinder.find_dates",
+            "func": lambda text: list(datefinder.find_dates(text, base_date=NOW)),
+            "document_func": lambda text: list(datefinder.find_dates(text, base_date=NOW)),
+        })
     if ctparse:
-        benches.append(("ctparse.ctparse", lambda text: ctparse.ctparse(text, ts=NOW)))
+        benches.append({
+            "label": "ctparse.ctparse",
+            "func": lambda text: ctparse.ctparse(text, ts=NOW),
+            "document_func": None,
+        })
     if recurrent:
-        benches.append(("recurrent.parse", lambda text: recurrent.parse(text, NOW)))
+        benches.append({
+            "label": "recurrent.parse",
+            "func": lambda text: recurrent.parse(text, NOW),
+            "document_func": None,
+        })
     if metadate:
-        benches.append(
-            ("metadate.parse_date", lambda text: metadate.parse_date(text, reference_date=NOW, multi=True, use_c_scanner=True))
-        )
+        benches.append({
+            "label": "metadate.parse_date",
+            "func": lambda text: metadate.parse_date(text, reference_date=NOW, multi=True, use_c_scanner=True),
+            "document_func": None,
+        })
 
     return benches
+
+
+def load_document_datasets():
+    if not DATEFINDER_ROOT.exists():
+        return {}
+
+    core_path = DATEFINDER_ROOT / "bench" / "corpus_core.txt"
+    seattle_path = DATEFINDER_ROOT / "tests" / "seattle_weekly.html"
+    test_data_path = DATEFINDER_ROOT / "tests" / "test_data.txt"
+    if not (core_path.exists() and seattle_path.exists() and test_data_path.exists()):
+        return {}
+
+    core_lines = [
+        line.strip()
+        for line in core_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    return {
+        "core_corpus": "\n".join(core_lines),
+        "seattle_html_76k": seattle_path.read_text(errors="ignore"),
+        "test_data_560k": test_data_path.read_text(errors="ignore"),
+    }
 
 
 def has_result(label, result):
@@ -150,7 +207,29 @@ def normalize_exact_result(label, text, func):
     return None
 
 
-def run_benchmark(label, func):
+def benchmark_document(document_func, text, iterations):
+    if document_func is None:
+        return None
+
+    try:
+        document_func(text)
+    except Exception:
+        return None
+
+    times = []
+    for _ in range(iterations):
+        start = time.perf_counter()
+        try:
+            document_func(text)
+        except Exception:
+            return None
+        times.append(time.perf_counter() - start)
+    return statistics.median(times)
+
+
+def run_benchmark(bench, document_datasets):
+    label = bench["label"]
+    func = bench["func"]
     for text in INPUTS[:5]:
         try:
             func(text)
@@ -159,12 +238,11 @@ def run_benchmark(label, func):
 
     start = time.perf_counter()
     successes = 0
-    errors = 0
     for text in INPUTS:
         try:
             successes += has_result(label, func(text))
         except Exception:
-            errors += 1
+            pass
     elapsed = time.perf_counter() - start
 
     exact = 0
@@ -174,26 +252,40 @@ def run_benchmark(label, func):
         except Exception:
             pass
 
+    document_results = {}
+    for dataset_name, key, iterations in DOCUMENT_DATASETS:
+        text = document_datasets.get(dataset_name)
+        document_results[key] = benchmark_document(bench["document_func"], text, iterations) if text is not None else None
+
     return {
         "label": label,
         "seconds": elapsed,
         "us_per_input": elapsed / len(INPUTS) * 1e6,
-        "ok": successes,
-        "errors": errors,
-        "exact": exact,
+        "extracted": successes,
+        "correctness": exact,
+        **document_results,
     }
 
 
 def main():
-    rows = [run_benchmark(label, func) for label, func in build_benches()]
-    print(f"{'parser':24} {'us/input':>10} {'ok':>8} {'exact':>8} {'errors':>8}")
+    document_datasets = load_document_datasets()
+    rows = [run_benchmark(bench, document_datasets) for bench in build_benches()]
+    print(
+        f"{'parser':24} {'us/input':>10} {'extracted':>12} {'correctness':>13} "
+        f"{'core_s':>10} {'seattle_s':>12} {'test_data_s':>12}"
+    )
     for row in rows:
+        def format_doc(value):
+            return f"{value:10.4f}" if value is not None else f"{'n/a':>10}"
+
         print(
             f"{row['label']:24} "
             f"{row['us_per_input']:10.1f} "
-            f"{row['ok']:>2}/{len(INPUTS):<5} "
-            f"{row['exact']:>2}/{len(EXACT_CASES):<5} "
-            f"{row['errors']:>8}"
+            f"{row['extracted']:>2}/{len(INPUTS):<9} "
+            f"{row['correctness']:>2}/{len(EXACT_CASES):<10} "
+            f"{format_doc(row['core_s'])} "
+            f"{format_doc(row['seattle_s'])} "
+            f"{format_doc(row['test_data_s'])}"
         )
 
 

@@ -25,12 +25,19 @@ MERIDIEM_ONLY_PATTERN = re.compile(rf"(?ix)^{MERIDIEM_PATTERN}$")
 EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
+LARGE_DOCUMENT_LINE_THRESHOLD = 1024
+LARGE_DOCUMENT_CHAR_THRESHOLD = 262144
 
 
 def prefer_extraction(text: str):
     stripped = text.strip()
     if not stripped:
         return False
+    if (
+        stripped.count("\n") + stripped.count("\r") >= LARGE_DOCUMENT_LINE_THRESHOLD
+        or len(stripped) >= LARGE_DOCUMENT_CHAR_THRESHOLD
+    ):
+        return True
     head = stripped.split(None, 1)[0].rstrip(",.?!")
     if head and _is_expression_head(head):
         return False

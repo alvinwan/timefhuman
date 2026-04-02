@@ -75,7 +75,7 @@ class tfhRange(tfhCollection):
         if config.infer_datetimes:
             _start, _end = self.items
             start, end = _start.to_object(config), _end.to_object(config)
-            if start > end and not _end.date:
+            if start > end and isinstance(_end, tfhDatetime) and _end.time and not _end.date:
                 end += timedelta(days=1)
             return (start, end)
         return tuple([item.to_object(config) for item in self.items])
