@@ -88,3 +88,26 @@ def test_time_renderer_does_not_mutate_hour():
     assert renderer.to_object() == datetime.time(17, 0)
     assert renderer.hour == 5
     assert "tz=" not in repr(renderer)
+
+
+def test_extraction_avoids_exact_candidate_fallback(now, monkeypatch):
+    calls = 0
+    real_parse_exact = main._parse_exact
+
+    def wrapped_parse_exact(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return real_parse_exact(*args, **kwargs)
+
+    monkeypatch.setattr(main, "_parse_exact", wrapped_parse_exact)
+
+    result = timefhuman(
+        "How does 5p mon sound? Or maybe 4p tu?",
+        tfhConfig(now=now, return_matched_text=True),
+    )
+
+    assert result == [
+        ("5p mon", (9, 15), datetime.datetime(2018, 8, 6, 17, 0)),
+        ("4p tu", (32, 37), datetime.datetime(2018, 8, 7, 16, 0)),
+    ]
+    assert calls == 1
