@@ -5,12 +5,12 @@ Status as of April 2, 2026.
 ## Current Snapshot
 
 - Branch: `codex/fast-path-parser`
-- Test suite: `127 passed in 0.27s`
+- Test suite: `127 passed in 0.22s`
 - Runtime parser stack:
-  1. handwritten deterministic parser in [timefhuman/fastpath.py](timefhuman/fastpath.py)
-  2. exact-expression LALR fallback in [timefhuman/exact_grammar.lark](timefhuman/exact_grammar.lark)
-  3. fast noisy-text extraction using the handwritten parser
-  4. exact noisy-text rescue using the LALR parser
+  1. handwritten deterministic whole-string parser in [timefhuman/fastpath.py](timefhuman/fastpath.py)
+  2. extraction-first routing for noisy text in [timefhuman/extraction.py](timefhuman/extraction.py)
+  3. LALR whole-string fallback for exact expressions in [timefhuman/grammar.lark](timefhuman/grammar.lark)
+  4. LALR extraction rescue only after fast extraction misses
 - Earley is not used in the runtime parser path.
 
 ## Why It Is Fast
@@ -27,11 +27,19 @@ Standalone inputs like:
 
 are handled by the deterministic parser in [timefhuman/fastpath.py](timefhuman/fastpath.py). That avoids parse-table work for the cases that dominate normal usage.
 
-### 2. LALR is a fallback, not the primary path
+### 2. Noisy input skips straight to extraction
 
-The exact-expression grammar in [timefhuman/exact_grammar.lark](timefhuman/exact_grammar.lark) is still valuable, but it only runs when the deterministic parser misses. That keeps grammar flexibility without paying grammar cost on every input.
+If an input looks like prose instead of a standalone expression, [timefhuman/main.py](timefhuman/main.py) routes directly into [timefhuman/extraction.py](timefhuman/extraction.py) instead of trying to parse the full sentence as one date expression first. That avoids wasting the hot path on strings like:
 
-### 3. Prose extraction is bounded and selective
+- `How does 5p mon sound? Or maybe 4p tu?`
+- `There are 3 ways to do it`
+- `e 6:50PM`
+
+### 3. LALR is a fallback, not the primary path
+
+The exact-expression grammar in [timefhuman/grammar.lark](timefhuman/grammar.lark) is still valuable, but it only runs after the deterministic path misses. That keeps grammar flexibility without paying grammar cost on every input.
+
+### 4. Prose extraction is bounded and selective
 
 For noisy text like:
 
@@ -39,7 +47,7 @@ For noisy text like:
 - `e 6:50PM`
 - `September 30, 2019.`
 
-the extractor in [timefhuman/fastpath.py](timefhuman/fastpath.py) does not blindly try large windows of prose. It:
+the extractor in [timefhuman/extraction.py](timefhuman/extraction.py) does not blindly try large windows of prose. It:
 
 - scans for plausible start tokens
 - limits candidate spans to contiguous expression-like token runs
@@ -48,11 +56,11 @@ the extractor in [timefhuman/fastpath.py](timefhuman/fastpath.py) does not blind
 
 That keeps extraction from exploding into repeated failed parses.
 
-### 4. Expensive lookup data is cached
+### 5. Expensive lookup data is cached
 
 [timefhuman/utils.py](timefhuman/utils.py) caches timezone mappings, timezone word lengths, timezone words, and month mappings so the hot path is not rebuilding or resorting metadata on every call.
 
-### 5. `raw=True` is cheap
+### 6. `raw=True` is cheap
 
 Debug output no longer requires a heavyweight parser pass. [timefhuman/main.py](timefhuman/main.py) builds a lightweight synthetic tree from matched spans plus unknown-token gaps.
 
@@ -67,7 +75,7 @@ Debug output no longer requires a heavyweight parser pass. [timefhuman/main.py](
 Result:
 
 ```text
-127 passed in 0.27s
+127 passed in 0.22s
 ```
 
 ### Local Tight Loop
@@ -107,23 +115,24 @@ Source: [benchmarks/benchmark_paths.py](benchmarks/benchmark_paths.py)
 
 Latest run:
 
-| Exact Case | `timefhuman` | `parse_fast` | `parse_exact` |
+| Expression Case | `timefhuman` | `parse_fast` | `parse_lalr` |
 | --- | ---: | ---: | ---: |
-| `fast exact` | `5.4 us` | `3.5 us` | `22.1 us` |
-| `fast collection` | `21.6 us` | `17.6 us` | `55.4 us` |
-| `prefixed input` | `20.5 us` | `10.5 us` | `12.8 us` |
-| `structured` | `4.9 us` | `4.0 us` | `13.5 us` |
+| `fast exact` | `6.5 us` | `3.3 us` | `18.2 us` |
+| `fast collection` | `19.5 us` | `16.5 us` | `50.5 us` |
+| `prefixed input` | `9.1 us` | `9.7 us` | `11.1 us` |
+| `structured` | `5.4 us` | `3.5 us` | `12.7 us` |
 
-| Extract Case | `timefhuman` | `fast extract` | `exact extract` |
+| Extract Case | `timefhuman` | `fast extract` | `lalr extract` |
 | --- | ---: | ---: | ---: |
-| `extract hit` | `101.1 us` | `37.8 us` | `93.5 us` |
-| `extract miss` | `67.9 us` | `7.4 us` | `7.4 us` |
+| `extract hit` | `46.1 us` | `35.5 us` | `84.4 us` |
+| `extract miss` | `13.6 us` | `6.7 us` | `6.6 us` |
 
 Interpretation:
 
 - The handwritten parser is the hot path.
+- Extraction-first routing keeps noisy inputs off the expensive whole-string path.
 - The LALR parser is materially slower than the handwritten parser, so it should stay a fallback.
-- Noisy extraction is still the slowest common path, but it is much cheaper than it was before candidate pruning.
+- Even after routing improvements, noisy extraction is still slower than exact-expression parsing because it has to scan a larger token stream.
 
 ### Cross-Library Snapshot
 
@@ -179,7 +188,7 @@ If a change makes the exact LALR parser or noisy extraction run more often, it i
 
 The fastest route is:
 
-1. deterministic whole-string parse
-2. exact whole-string LALR fallback only when needed
-3. bounded noisy extraction
-4. exact extraction rescue only when the fast extractor misses
+1. deterministic whole-string parse for exact expressions
+2. bounded noisy extraction for prose-like inputs
+3. exact whole-string LALR fallback only when needed
+4. LALR extraction rescue only when the fast extractor misses

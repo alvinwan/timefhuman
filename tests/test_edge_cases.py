@@ -90,16 +90,16 @@ def test_time_renderer_does_not_mutate_hour():
     assert "tz=" not in repr(renderer)
 
 
-def test_extraction_avoids_exact_candidate_fallback(now, monkeypatch):
+def test_extraction_avoids_lalr_candidate_fallback(now, monkeypatch):
     calls = 0
-    real_parse_exact = main._parse_exact
+    real_parse_lalr = main._parse_lalr
 
-    def wrapped_parse_exact(*args, **kwargs):
+    def wrapped_parse_lalr(*args, **kwargs):
         nonlocal calls
         calls += 1
-        return real_parse_exact(*args, **kwargs)
+        return real_parse_lalr(*args, **kwargs)
 
-    monkeypatch.setattr(main, "_parse_exact", wrapped_parse_exact)
+    monkeypatch.setattr(main, "_parse_lalr", wrapped_parse_lalr)
 
     result = timefhuman(
         "How does 5p mon sound? Or maybe 4p tu?",
@@ -113,16 +113,16 @@ def test_extraction_avoids_exact_candidate_fallback(now, monkeypatch):
     assert calls == 0
 
 
-def test_prefixed_or_punctuated_text_skips_exact_fallback(now, monkeypatch):
+def test_prefixed_or_punctuated_text_skips_lalr_fallback(now, monkeypatch):
     calls = 0
-    real_parse_exact = main._parse_exact
+    real_parse_lalr = main._parse_lalr
 
-    def wrapped_parse_exact(*args, **kwargs):
+    def wrapped_parse_lalr(*args, **kwargs):
         nonlocal calls
         calls += 1
-        return real_parse_exact(*args, **kwargs)
+        return real_parse_lalr(*args, **kwargs)
 
-    monkeypatch.setattr(main, "_parse_exact", wrapped_parse_exact)
+    monkeypatch.setattr(main, "_parse_lalr", wrapped_parse_lalr)
 
     prefixed = timefhuman("e 6:50PM", tfhConfig(now=now, return_matched_text=True))
     punctuated = timefhuman("September 30, 2019.", tfhConfig(now=now, return_matched_text=True))
