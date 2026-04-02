@@ -227,7 +227,7 @@ def benchmark_document(document_func, text, iterations):
     return statistics.median(times)
 
 
-def run_benchmark(bench, document_datasets):
+def run_short_benchmark(bench):
     label = bench["label"]
     func = bench["func"]
     for text in INPUTS[:5]:
@@ -252,41 +252,56 @@ def run_benchmark(bench, document_datasets):
         except Exception:
             pass
 
-    document_results = {}
-    for dataset_name, key, iterations in DOCUMENT_DATASETS:
-        text = document_datasets.get(dataset_name)
-        document_results[key] = benchmark_document(bench["document_func"], text, iterations) if text is not None else None
-
     return {
         "label": label,
         "seconds": elapsed,
         "us_per_input": elapsed / len(INPUTS) * 1e6,
         "extracted": successes,
         "correctness": exact,
-        **document_results,
     }
 
 
-def main():
-    document_datasets = load_document_datasets()
-    rows = [run_benchmark(bench, document_datasets) for bench in build_benches()]
-    print(
-        f"{'parser':24} {'us/input':>10} {'extracted':>12} {'correctness':>13} "
-        f"{'core_corpus':>14} {'seattle_html_76k':>18} {'test_data_560k':>16}"
-    )
-    for row in rows:
-        def format_doc(value):
-            return f"{value:>18.4f}" if value is not None else f"{'n/a':>18}"
+def run_document_benchmark(bench, document_datasets):
+    document_results = {"label": bench["label"]}
+    for dataset_name, key, iterations in DOCUMENT_DATASETS:
+        text = document_datasets.get(dataset_name)
+        document_results[key] = benchmark_document(bench["document_func"], text, iterations) if text is not None else None
+    return document_results
 
+
+def main():
+    benches = build_benches()
+    document_datasets = load_document_datasets()
+    short_rows = [run_short_benchmark(bench) for bench in benches]
+    document_rows = [run_document_benchmark(bench, document_datasets) for bench in benches if bench["document_func"] is not None]
+
+    print("short-input parsing")
+    print(
+        f"{'parser':24} {'us/input':>10} {'extracted':>12} {'correctness':>13}"
+    )
+    for row in short_rows:
         print(
             f"{row['label']:24} "
             f"{row['us_per_input']:10.1f} "
             f"{row['extracted']:>2}/{len(INPUTS):<9} "
-            f"{row['correctness']:>2}/{len(EXACT_CASES):<10} "
-            f"{format_doc(row['core_corpus'])} "
-            f"{format_doc(row['seattle_html_76k'])} "
-            f"{format_doc(row['test_data_560k'])}"
+            f"{row['correctness']:>2}/{len(EXACT_CASES):<10}"
         )
+
+    if document_rows:
+        print()
+        print("whole-document extraction")
+        print(f"{'parser':24} {'core_corpus':>14} {'seattle_html_76k':>18} {'test_data_560k':>16}")
+
+        def format_doc(value):
+            return f"{value:>18.4f}" if value is not None else f"{'n/a':>18}"
+
+        for row in document_rows:
+            print(
+                f"{row['label']:24} "
+                f"{format_doc(row['core_corpus'])} "
+                f"{format_doc(row['seattle_html_76k'])} "
+                f"{format_doc(row['test_data_560k'])}"
+            )
 
 
 if __name__ == "__main__":

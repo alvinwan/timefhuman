@@ -5,20 +5,30 @@ Status as of April 2, 2026.
 ## Results
 
 - Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
-- `extracted`: returned any result on the 37-case short-input benchmark corpus.
+- `extracted`: returned any result on the 37-case short-input corpus.
 - `correctness`: exact match on the 10-case exactness subset.
-- `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds on the `datefinder` corpora.
-- `n/a` means that parser is not run on full-document extraction in this harness. Right now those columns are limited to parsers with a comparable whole-document extraction API, which is why only `timefhuman` and `datefinder.find_dates` populate them.
+- `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds on the `datefinder` document corpora.
 
-| parser | us/input | extracted | correctness | core_corpus | seattle_html_76k | test_data_560k |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `timefhuman` | `101.5` | `37/37` | `10/10` | `0.0020` | `0.1304` | `0.4669` |
-| `dateparser.parse` | `135984.3` | `20/37` | `6/10` | `n/a` | `n/a` | `n/a` |
-| `parsedatetime.parseDT` | `118.5` | `36/37` | `6/10` | `n/a` | `n/a` | `n/a` |
-| `datefinder.find_dates` | `74.5` | `23/37` | `5/10` | `0.0007` | `0.1036` | `1.2725` |
-| `ctparse.ctparse` | `35208.7` | `37/37` | `3/10` | `n/a` | `n/a` | `n/a` |
-| `recurrent.parse` | `571.8` | `36/37` | `6/10` | `n/a` | `n/a` | `n/a` |
-| `metadate.parse_date` | `95.0` | `31/37` | `5/10` | `n/a` | `n/a` | `n/a` |
+### Short-Input Parsing
+
+| parser | us/input | extracted | correctness |
+| --- | ---: | ---: | ---: |
+| `timefhuman` | `86.1` | `37/37` | `10/10` |
+| `dateparser.parse` | `120460.1` | `20/37` | `6/10` |
+| `parsedatetime.parseDT` | `135.7` | `36/37` | `6/10` |
+| `datefinder.find_dates` | `81.3` | `23/37` | `5/10` |
+| `ctparse.ctparse` | `31528.9` | `37/37` | `3/10` |
+| `recurrent.parse` | `446.0` | `36/37` | `6/10` |
+| `metadate.parse_date` | `98.9` | `31/37` | `5/10` |
+
+### Whole-Document Extraction
+
+Only parsers with a comparable whole-document extraction API are included here.
+
+| parser | core_corpus | seattle_html_76k | test_data_560k |
+| --- | ---: | ---: | ---: |
+| `timefhuman` | `0.0019` | `0.1051` | `0.3878` |
+| `datefinder.find_dates` | `0.0005` | `0.0839` | `1.0026` |
 
 ## Reproduce
 
@@ -29,7 +39,7 @@ Run tests:
 ```
 
 Run the combined baseline benchmark.
-This expects a local clone of `datefinder` at `/tmp/datefinder` to populate the document columns.
+This expects a local clone of `datefinder` at `/tmp/datefinder` to populate the whole-document table.
 
 ```bash
 /tmp/timefhuman-bench-venv/bin/python benchmarks/benchmark_baselines.py
