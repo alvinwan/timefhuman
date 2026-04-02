@@ -76,6 +76,24 @@ def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 
     return [expression]
 
 
+def prefer_extraction(text: str):
+    stripped = text.strip()
+    if not stripped:
+        return False
+    if stripped[-1] in ".?!":
+        return True
+
+    tokens = [(match.group(0), match.start(), match.end()) for match in TOKEN_PATTERN.finditer(stripped)]
+    if not tokens:
+        return False
+
+    for index in range(len(tokens)):
+        if _is_plausible_start(tokens, index):
+            return index > 0
+
+    return len(tokens) > 1
+
+
 def extract_fast(text: str, parse_candidate):
     tokens = [(match.group(0), match.start(), match.end()) for match in TOKEN_PATTERN.finditer(text)]
     if not tokens:
@@ -553,7 +571,10 @@ def _trimmed_span(text: str, start_pos: int):
     if not stripped:
         return "", start_pos, start_pos
     leading = len(text) - len(text.lstrip())
-    trailing = len(text.rstrip())
+    stripped = stripped.rstrip(".?!").rstrip()
+    if not stripped:
+        return "", start_pos, start_pos
+    trailing = leading + len(stripped)
     return stripped, start_pos + leading, start_pos + trailing
 
 

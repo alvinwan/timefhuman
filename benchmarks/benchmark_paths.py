@@ -13,7 +13,7 @@ TIMEZONE_MAPPING = generate_timezone_mapping()
 EXACT_CASES = [
     ("fast exact", "5p"),
     ("fast collection", "July 4th or 5th at 3PM"),
-    ("cold exact", "e 6:50PM"),
+    ("prefixed input", "e 6:50PM"),
     ("structured", "2022-12-27T09:15:01.002"),
 ]
 EXTRACT_CASES = [

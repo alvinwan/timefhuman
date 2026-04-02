@@ -110,4 +110,27 @@ def test_extraction_avoids_exact_candidate_fallback(now, monkeypatch):
         ("5p mon", (9, 15), datetime.datetime(2018, 8, 6, 17, 0)),
         ("4p tu", (32, 37), datetime.datetime(2018, 8, 7, 16, 0)),
     ]
-    assert calls == 1
+    assert calls == 0
+
+
+def test_prefixed_or_punctuated_text_skips_exact_fallback(now, monkeypatch):
+    calls = 0
+    real_parse_exact = main._parse_exact
+
+    def wrapped_parse_exact(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return real_parse_exact(*args, **kwargs)
+
+    monkeypatch.setattr(main, "_parse_exact", wrapped_parse_exact)
+
+    prefixed = timefhuman("e 6:50PM", tfhConfig(now=now, return_matched_text=True))
+    punctuated = timefhuman("September 30, 2019.", tfhConfig(now=now, return_matched_text=True))
+
+    assert prefixed == [
+        ("6:50PM", (2, 8), datetime.datetime(2018, 8, 4, 18, 50)),
+    ]
+    assert punctuated == [
+        ("September 30, 2019", (0, 18), datetime.datetime(2019, 9, 30, 0, 0)),
+    ]
+    assert calls == 0

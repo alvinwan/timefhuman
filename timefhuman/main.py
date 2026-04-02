@@ -6,7 +6,7 @@ from dataclasses import replace
 from lark import Lark, Transformer, Tree, UnexpectedInput, Token
 import pytz
 from timefhuman.utils import generate_timezone_mapping, nodes_to_dict, nodes_to_multidict, tfhConfig, Direction, direction_to_offset
-from timefhuman.fastpath import extract_fast, parse_fast
+from timefhuman.fastpath import extract_fast, parse_fast, prefer_extraction
 from timefhuman.inference import infer
 from timefhuman.renderers import tfhDatetime, tfhDate, tfhTime, tfhRange, tfhList, tfhTimedelta, tfhAmbiguous
 from timefhuman.semantics import (
@@ -97,9 +97,14 @@ def _parse_candidate(string: str, config: tfhConfig, timezone_mapping, start_pos
 
 def _parse_renderers(string: str, config: tfhConfig):
     timezone_mapping = generate_timezone_mapping()
-    renderers = _parse_candidate(string, config=config, timezone_mapping=timezone_mapping)
+    renderers = parse_fast(string, config=config, timezone_mapping=timezone_mapping)
     if renderers is not None:
         return renderers
+
+    if not prefer_extraction(string):
+        renderers = _parse_exact(string, config=config)
+        if renderers is not None:
+            return renderers
 
     renderers = extract_fast(
         string,
@@ -107,6 +112,10 @@ def _parse_renderers(string: str, config: tfhConfig):
             candidate, config=config, timezone_mapping=timezone_mapping, start_pos=start_pos
         ),
     )
+    if renderers is not None:
+        return renderers
+
+    renderers = _parse_exact(string, config=config)
     if renderers is not None:
         return renderers
 
