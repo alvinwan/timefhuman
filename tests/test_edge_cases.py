@@ -5,6 +5,10 @@ import datetime
 import timefhuman.main as main
 
 
+def localized_datetime(tz_name, *parts):
+    return pytz.timezone(tz_name).localize(datetime.datetime(*parts))
+
+
 def test_now_changes(now): # gh#53
     """
     The 'now' attribute should not be modified by the function, and if not specified, the
@@ -32,20 +36,27 @@ def test_timezone(now):  # gh#52
     1. When a timezone is specified in the original text, honor this first.
     2. Otherwise, if a timezone is specified in `now`, use this.
     """
-    now_PST = now.replace(tzinfo=pytz.timezone('US/Pacific'))
+    now_PST = localized_datetime('US/Pacific', 2018, 8, 4, 14, 0)
     
     # 1. When a timezone is specified in the original text, honor this first.
-    assert timefhuman('Wed EST', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('Wed 5p EST', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 8, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('5p EST', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 4, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('5p EST', tfhConfig(now=now_PST, direction=Direction.previous)) == [datetime.datetime(2018, 8, 3, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('5p EST', tfhConfig(now=now_PST, direction=Direction.this)) == [datetime.datetime(2018, 8, 4, 17, 0, tzinfo=pytz.timezone('US/Michigan'))]
-    assert timefhuman('9a EST', tfhConfig(now=now_PST, direction=Direction.next)) == [datetime.datetime(2018, 8, 5, 9, 0, tzinfo=pytz.timezone('US/Michigan'))]
+    assert timefhuman('Wed EST', tfhConfig(now=now_PST)) == [localized_datetime('US/Michigan', 2018, 8, 8, 0, 0)]
+    assert timefhuman('Wed 5p EST', tfhConfig(now=now_PST)) == [localized_datetime('US/Michigan', 2018, 8, 8, 17, 0)]
+    assert timefhuman('5p EST', tfhConfig(now=now_PST)) == [localized_datetime('US/Michigan', 2018, 8, 4, 17, 0)]
+    assert timefhuman('5p EST', tfhConfig(now=now_PST, direction=Direction.previous)) == [localized_datetime('US/Michigan', 2018, 8, 3, 17, 0)]
+    assert timefhuman('5p EST', tfhConfig(now=now_PST, direction=Direction.this)) == [localized_datetime('US/Michigan', 2018, 8, 4, 17, 0)]
+    assert timefhuman('9a EST', tfhConfig(now=now_PST, direction=Direction.next)) == [localized_datetime('US/Michigan', 2018, 8, 5, 9, 0)]
     assert timefhuman('9a EST', tfhConfig(now=now_PST, infer_datetimes=False)) == [datetime.time(9, 0, tzinfo=pytz.timezone('US/Michigan'))]
     # 2. Otherwise, if a timezone is specified in `now`, use this.
-    assert timefhuman('Wed', tfhConfig(now=now_PST)) == [datetime.datetime(2018, 8, 8, 0, 0, tzinfo=pytz.timezone('US/Pacific'))]
+    assert timefhuman('Wed', tfhConfig(now=now_PST)) == [localized_datetime('US/Pacific', 2018, 8, 8, 0, 0)]
     # 3. If no timezone is specified, do not attach one
     assert timefhuman('Wed', tfhConfig(now=now)) == [datetime.datetime(2018, 8, 8, 0, 0)]
+
+
+def test_timezone_datetimes_use_localized_offsets():
+    config = tfhConfig(now=localized_datetime('UTC', 2025, 11, 10, 12, 0))
+    result = timefhuman("next friday 2 pm CET", config=config)[0]
+    assert result.tzname() == "CET"
+    assert result.utcoffset() == datetime.timedelta(hours=1)
     
 
 def test_unk_correctness():
