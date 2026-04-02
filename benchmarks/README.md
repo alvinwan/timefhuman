@@ -7,9 +7,10 @@ Status as of April 2, 2026.
 - Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
 - `extracted`: returned any result on the 37-case short-input benchmark corpus.
 - `correctness`: exact match on the 10-case exactness subset.
-- `core_s`, `seattle_s`, `test_data_s`: warmed median seconds on the `datefinder` corpora. `n/a` means that parser is not run on full-document extraction in this harness.
+- `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds on the `datefinder` corpora.
+- `n/a` means that parser is not run on full-document extraction in this harness. Right now those columns are limited to parsers with a comparable whole-document extraction API, which is why only `timefhuman` and `datefinder.find_dates` populate them.
 
-| parser | us/input | extracted | correctness | core_s | seattle_s | test_data_s |
+| parser | us/input | extracted | correctness | core_corpus | seattle_html_76k | test_data_560k |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `timefhuman` | `101.5` | `37/37` | `10/10` | `0.0020` | `0.1304` | `0.4669` |
 | `dateparser.parse` | `135984.3` | `20/37` | `6/10` | `n/a` | `n/a` | `n/a` |

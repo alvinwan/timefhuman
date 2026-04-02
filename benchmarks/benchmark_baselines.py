@@ -92,9 +92,9 @@ EXACT_CASES = [
     ("2022-12-27T09:15:01.002", datetime(2022, 12, 27, 9, 15, 1, 2)),
 ]
 DOCUMENT_DATASETS = (
-    ("core_corpus", "core_s", 10),
-    ("seattle_html_76k", "seattle_s", 7),
-    ("test_data_560k", "test_data_s", 3),
+    ("core_corpus", "core_corpus", 10),
+    ("seattle_html_76k", "seattle_html_76k", 7),
+    ("test_data_560k", "test_data_560k", 3),
 )
 
 
@@ -272,20 +272,20 @@ def main():
     rows = [run_benchmark(bench, document_datasets) for bench in build_benches()]
     print(
         f"{'parser':24} {'us/input':>10} {'extracted':>12} {'correctness':>13} "
-        f"{'core_s':>10} {'seattle_s':>12} {'test_data_s':>12}"
+        f"{'core_corpus':>14} {'seattle_html_76k':>18} {'test_data_560k':>16}"
     )
     for row in rows:
         def format_doc(value):
-            return f"{value:10.4f}" if value is not None else f"{'n/a':>10}"
+            return f"{value:>18.4f}" if value is not None else f"{'n/a':>18}"
 
         print(
             f"{row['label']:24} "
             f"{row['us_per_input']:10.1f} "
             f"{row['extracted']:>2}/{len(INPUTS):<9} "
             f"{row['correctness']:>2}/{len(EXACT_CASES):<10} "
-            f"{format_doc(row['core_s'])} "
-            f"{format_doc(row['seattle_s'])} "
-            f"{format_doc(row['test_data_s'])}"
+            f"{format_doc(row['core_corpus'])} "
+            f"{format_doc(row['seattle_html_76k'])} "
+            f"{format_doc(row['test_data_560k'])}"
         )
 
 
