@@ -100,7 +100,25 @@ See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
 ## Performance
 
-Current benchmark snapshots and repro commands are tracked in [`benchmarks/README.md`](benchmarks/README.md).
+Current benchmark snapshot from [`benchmarks/README.md`](benchmarks/README.md). Short-input parsing and whole-document extraction are measured separately.
+
+| parser | us/input | extracted | correctness |
+| --- | ---: | ---: | ---: |
+| timefhuman | 37.9 | **37/37** | **10/10** |
+| datefinder.find_dates | **24.7** | 23/37 | 5/10 |
+| metadate.parse_date | 33.6 | 31/37 | 5/10 |
+| parsedatetime.parseDT | 48.4 | 36/37 | 6/10 |
+| recurrent.parse | 188.5 | 36/37 | 6/10 |
+| ctparse.ctparse | 12222.2 | **37/37** | 3/10 |
+| dateparser.parse | 45066.8 | 20/37 | 6/10 |
+
+| parser | core_corpus | seattle_html_76k | test_data_560k |
+| --- | ---: | ---: | ---: |
+| timefhuman | 0.0011 (10) | 0.0808 (59) | **0.3378 (716)** |
+| datefinder.find_dates | **0.0002 (11)** | **0.0400 (57)** | 0.4943 (313) |
+| dateparser.search_dates | 0.1105 (14) | 0.3299 (90) | >15s (n/a) |
+
+Whole-document extracted counts are raw matches. `datefinder.find_dates` and `dateparser.search_dates` include extra HTML and metadata false positives on these corpora, so count alone overstates their quality. Details, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Advanced Usage
 
