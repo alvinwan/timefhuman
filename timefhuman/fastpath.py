@@ -22,6 +22,7 @@ from timefhuman.semantics import (
     clone_time,
     month_number,
     normalize_year,
+    supports_numeric_date_text,
     timedelta_for_unit,
     weekday_index,
 )
@@ -41,7 +42,7 @@ TIME_PATTERN = re.compile(
     rf"\s*(?P<meridiem>{MERIDIEM_PATTERN})?$"
 )
 OCLOCK_PATTERN = re.compile(rf"(?ix)^(?P<hour>\d{{1,2}})\s*o'?clock\s*(?P<meridiem>{MERIDIEM_PATTERN})$")
-NUMERIC_DATE_PATTERN = re.compile(r"^(?P<a>\d{1,4})(?P<sep>[/-])(?P<b>\d{1,4})(?:(?P=sep)(?P<c>\d{1,4}))?$")
+NUMERIC_DATE_PATTERN = re.compile(r"^(?P<a>\d{1,4})(?P<sep>[./-])(?P<b>\d{1,4})(?:(?P=sep)(?P<c>\d{1,4}))?$")
 MONTHNAME_PATTERN = re.compile(
     r"(?ix)^"
     r"(?P<month>[a-z]+)"
@@ -366,6 +367,8 @@ def _parse_date(text: str, config: tfhConfig):
 def _parse_numeric_date(text: str):
     match = NUMERIC_DATE_PATTERN.fullmatch(text)
     if not match:
+        return None
+    if not supports_numeric_date_text(text):
         return None
 
     first = int(match.group("a"))

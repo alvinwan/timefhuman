@@ -21,7 +21,7 @@ DURATION_PAST: /(?<![a-z])ago(?![a-z])/
 DURATION_NUMBER: /(?<![a-z])(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?![a-z])/
 DAY_SUFFIX: /(?<![a-z])(th|rd|st|nd)(?![a-z])/
 FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/
-NUMERIC_DATE.2: /\d{1,4}\/\d{1,4}(?:\/\d{1,4})?|\d{1,4}\-\d{1,4}\-\d{1,4}/
+NUMERIC_DATE.2: /\d{1,4}\/\d{1,4}(?:\/\d{1,4})?|\d{1,4}\-\d{1,4}\-\d{1,4}|\d{1,4}\.\d{1,4}\.\d{1,4}/
 ISO_DATETIME.3: /\d{4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?/
 TIMEZONE: /(?<![a-z])((TIMEZONE_MAPPING))(?![a-z])/
 TIMEZONE_OFFSET.2: /[+-]\d{2}:?\d{2}/

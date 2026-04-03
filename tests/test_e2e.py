@@ -18,6 +18,8 @@ def localized_datetime(tz_name, *parts):
     ('July 2019', [datetime.datetime(2019, 7, 1, 0, 0)]),
     ('7-17-18', [datetime.datetime(2018, 7, 17, 0, 0)]),
     ('2018-7-17', [datetime.datetime(2018, 7, 17, 0, 0)]),  # support YMD
+    ('08.07.2013', [datetime.datetime(2013, 8, 7, 0, 0)]),
+    ('2013.08.07', [datetime.datetime(2013, 8, 7, 0, 0)]),
     ('7/2018', [datetime.datetime(2018, 7, 1, 0, 0)]),
     ('Wed 25 Jun', [datetime.datetime(2018, 6, 25, 0, 0)]),
     
@@ -98,7 +100,9 @@ def test_default(now, test_input, expected):
     ('July 2019', [datetime.date(2019, 7, 1)]),
     ('Sunday 7/7/2019', [datetime.date(2019, 7, 7)]),  # fixes gh#27
     ('1/1/95', [datetime.date(1995, 1, 1)]),
+    ('08.07.2013', [datetime.date(2013, 8, 7)]),
     ('Wed 25 Jun', [datetime.date(2018, 6, 25)]),
+    ('1.3.4', []),
     
     # date-only ranges
     ('7/17-7/18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
@@ -215,6 +219,10 @@ def test_custom_config(now, config, test_input, expected):
     ('<!-- REMOVED 08-07-2013 -->', [
         ('08-07-2013', (13, 23), datetime.datetime(2013, 8, 7, 0, 0))
     ]),
+    ('foo 08.07.2013 bar', [
+        ('08.07.2013', (4, 14), datetime.datetime(2013, 8, 7, 0, 0))
+    ]),
+    ('foo 1.3.4 bar', []),
     ("style='width:1px; height:1px;'", []),
     ('telephone (253) 591-5252', []),
     ('Section 7.02B 7a. - e.', []),

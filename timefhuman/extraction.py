@@ -10,6 +10,7 @@ from timefhuman.semantics import (
     UNIT_ALIASES,
     WEEKDAY_ALIASES,
     month_number,
+    supports_numeric_date_text,
     weekday_index,
 )
 from timefhuman.utils import get_month_mapping, get_timezone_words
@@ -204,6 +205,8 @@ def _is_plausible_start_tokens(token: str, next_token: str):
     if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
         return True
     if HYPHENATED_NUMERIC_DATE_PATTERN.fullmatch(token):
+        return True
+    if "." in token and supports_numeric_date_text(token):
         return True
     if "/" in token or ":" in token or "t" in token and "-" in token:
         return True

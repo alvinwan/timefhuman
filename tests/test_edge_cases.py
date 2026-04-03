@@ -98,6 +98,7 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
     assert timefhuman('next Monday', config=config) == [datetime.date(2018, 8, 6)]
     assert timefhuman('next next Monday', config=config) == [datetime.date(2018, 8, 13)]
     assert timefhuman('1/1/95', config=config) == [datetime.date(1995, 1, 1)]
+    assert timefhuman('08.07.2013', config=config) == [datetime.date(2013, 8, 7)]
     assert timefhuman('31/08/2012 to 30/08/2013', config=config) == [(
         datetime.date(2012, 8, 31),
         datetime.date(2013, 8, 30),

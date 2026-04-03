@@ -103,6 +103,13 @@ def normalize_year(value: int):
     return value
 
 
+def supports_numeric_date_text(value: str):
+    if "." not in value:
+        return True
+    parts = value.split(".")
+    return len(parts) == 3 and any(len(part) == 4 for part in parts)
+
+
 def build_date(year: int | None = None, month: int | None = None, day: int | None = None):
     if year is not None and not 1 <= year <= 9999:
         return None
