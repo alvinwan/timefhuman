@@ -102,6 +102,8 @@ See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
 Current benchmark snapshot from [`benchmarks/README.md`](benchmarks/README.md). Short-input parsing and whole-document extraction are measured separately.
 
+Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
+
 | parser | us/input | extracted | correctness |
 | --- | ---: | ---: | ---: |
 | timefhuman | 37.9 | **37/37** | **10/10** |

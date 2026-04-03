@@ -2,6 +2,13 @@
 
 Status as of April 2, 2026.
 
+## Setup
+
+- Hardware: Apple M3 MacBook Air, 16 GB RAM
+- OS: macOS 26.3.1
+- Python: 3.13.3 from `/tmp/timefhuman-bench-venv`
+- Whole-document corpora: local `datefinder` clone at `/tmp/datefinder`
+
 ## Results
 
 - Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
