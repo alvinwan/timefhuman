@@ -9,19 +9,20 @@ Status as of April 2, 2026.
 - `correctness`: exact match on the 10-case exactness subset.
 - `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds and extracted count, formatted as `seconds (count)`.
 - `>15s (n/a)`: exceeded the document benchmark timeout for that dataset.
+- whole-document counts are raw extracted-match counts, so HTML noise can inflate them.
 - `timefhuman` is pinned first; the remaining rows are ordered fastest to slowest.
 
 ### Short-Input Parsing
 
 | parser | us/input | extracted | correctness |
 | --- | ---: | ---: | ---: |
-| timefhuman | 72.6 | **37/37** | **10/10** |
-| metadate.parse_date | **57.6** | 31/37 | 5/10 |
-| datefinder.find_dates | 63.5 | 23/37 | 5/10 |
-| parsedatetime.parseDT | 87.0 | 36/37 | 6/10 |
-| recurrent.parse | 408.0 | 36/37 | 6/10 |
-| ctparse.ctparse | 27077.0 | **37/37** | 3/10 |
-| dateparser.parse | 99538.1 | 20/37 | 6/10 |
+| timefhuman | 94.6 | **37/37** | **10/10** |
+| metadate.parse_date | **83.6** | 31/37 | 5/10 |
+| datefinder.find_dates | 114.5 | 23/37 | 5/10 |
+| parsedatetime.parseDT | 127.9 | 36/37 | 6/10 |
+| recurrent.parse | 521.1 | 36/37 | 6/10 |
+| ctparse.ctparse | 35200.4 | **37/37** | 3/10 |
+| dateparser.parse | 130539.7 | 20/37 | 6/10 |
 
 ### Whole-Document Extraction
 
@@ -29,15 +30,15 @@ Only parsers with a comparable whole-document extraction API are included here.
 
 | parser | core_corpus | seattle_html_76k | test_data_560k |
 | --- | ---: | ---: | ---: |
-| timefhuman | 0.0019 (10) | 0.1004 (49) | **0.3802 (645)** |
-| datefinder.find_dates | **0.0005 (11)** | **0.0770 (57)** | 0.9598 (313) |
-| dateparser.search_dates | 0.2306 (14) | 0.7279 (90) | >15s (n/a) |
+| timefhuman | 0.0032 (11) | 0.1615 (102) | **0.5215 (800)** |
+| datefinder.find_dates | **0.0006 (11)** | **0.0877 (57)** | 1.0846 (313) |
+| dateparser.search_dates | 0.2444 (14) | 0.8960 (90) | >15s (n/a) |
 
 Notes on what the other baselines found that `timefhuman` still misses:
 
 - `core_corpus`: mostly multilingual relative phrases, such as Spanish `ayer`, `mañana`, and French `dans 2 jours`.
-- `seattle_html_76k`: most of `datefinder.find_dates`'s extra hits are HTML/CMS noise rather than user-visible dates:
-  version numbers like `1.3.4` and `1.7.1`, maintenance-comment dates like `REMOVED 08-07-2013`, and URL slug dates like `2013-01-23`.
+- `seattle_html_76k`: `datefinder.find_dates` is now mostly ahead on a few low-value extras:
+  asset version numbers like `1.3.4` and `1.7.1`, plus `Jan 6 2016` as a smaller substring inside the longer `Jan 6 2016 at 10:13AM` timestamp that `timefhuman` already captures.
 - `seattle_html_76k`: most of `dateparser.search_dates`'s extra hits are lower-quality HTML false positives like `01'`, `90`, `50%`, `<h1`, and `set`.
 
 ## Reproduce

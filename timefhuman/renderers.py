@@ -50,8 +50,9 @@ class tfhCollection(tfhDatelike):
     def getter(key):
         def get(self):
             for item in self.items:
-                if getattr(item, key):
-                    return getattr(item, key)
+                value = getattr(item, key, None)
+                if value:
+                    return value
             return None
         return get
 
