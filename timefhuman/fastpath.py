@@ -102,6 +102,11 @@ def _parse_expression(text: str, config: tfhConfig, timezone_mapping, allow_ambi
     if not text:
         return None
 
+    if _prefer_atomic_comma_parse(text):
+        single = _parse_single(text, config, timezone_mapping, allow_ambiguous=allow_ambiguous)
+        if single is not None:
+            return single
+
     if _prefer_collection_parse(text):
         parsers = (_parse_range, _parse_list) if _prefer_range_first(text) else (_parse_list, _parse_range)
         for parser in parsers:
@@ -636,6 +641,11 @@ def _time_score(value: tfhTime):
 def _prefer_collection_parse(text: str):
     lowered = text.lower()
     return "," in text or " or " in lowered or " to " in lowered or " -" in text or "- " in text
+
+
+def _prefer_atomic_comma_parse(text: str):
+    lowered = text.lower()
+    return "," in text and " or " not in lowered and " to " not in lowered and " -" not in text and "- " not in text
 
 
 def _prefer_range_first(text: str):
