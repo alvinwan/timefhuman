@@ -104,7 +104,7 @@ Current benchmark snapshot from [`benchmarks/README.md`](benchmarks/README.md). 
 
 Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
-| parser | short_ms | acc | core_ms | # | acc | seattle_76k_ms | # | acc | test_560k_ms | # |
+| parser | short | acc | core | # | acc | seattle_76k | # | acc | test_560k | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | timefhuman | 0.3 | **23/23** | 0.4 | 10 | **10/10** | 21.6 | 55 | **55/55** | 132.6 | 594 |
 | metadate.parse_date | 0.6 | 9/23 | **0.2** | 10 | 5/10 | **4.2** | 90 | 2/55 | **48.3** | 1538 |

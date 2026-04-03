@@ -417,10 +417,10 @@ def main():
     print("benchmarks")
     print(
         f"{'parser':24} "
-        f"{'short_ms':>10} {'acc':>8} "
-        f"{'core_ms':>10} {'#':>6} {'acc':>8} "
-        f"{'seattle_76k_ms':>15} {'#':>6} {'acc':>8} "
-        f"{'test_560k_ms':>12} {'#':>6}"
+        f"{'short':>10} {'acc':>8} "
+        f"{'core':>10} {'#':>6} {'acc':>8} "
+        f"{'seattle_76k':>15} {'#':>6} {'acc':>8} "
+        f"{'test_560k':>12} {'#':>6}"
     )
 
     def format_correctness(value):

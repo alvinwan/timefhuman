@@ -11,8 +11,8 @@ Status as of April 2, 2026.
 
 ## Results
 
-- `short_ms`: median milliseconds for one full pass over the 23 single-datetime short cases.
-- `core_ms`, `seattle_76k_ms`, `test_560k_ms`: warmed median milliseconds for one full dataset run.
+- `short`: median milliseconds for one full pass over the 23 single-datetime short cases.
+- `core`, `seattle_76k`, `test_560k`: warmed median milliseconds for one full dataset run.
 - `#`: extracted count for the dataset immediately to the left.
 - `acc`: exact match count for the dataset immediately to the left.
 - Whole-document rows are run with a strict 1-second per-call timeout. `>1000ms` means the parser exceeded that cap. `timeout` in an `acc` column means the correctness run hit the same cap.
@@ -20,7 +20,7 @@ Status as of April 2, 2026.
 
 ### Combined Scorecard
 
-| parser | short_ms | acc | core_ms | # | acc | seattle_76k_ms | # | acc | test_560k_ms | # |
+| parser | short | acc | core | # | acc | seattle_76k | # | acc | test_560k | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | timefhuman | 0.3 | **23/23** | 0.4 | [10](matches/timefhuman/core_corpus.md) | **10/10** | 21.6 | [55](matches/timefhuman/seattle_html_76k.md) | **55/55** | 132.6 | [594](matches/timefhuman/test_data_560k.md) |
 | metadate.parse_date | 0.6 | 9/23 | **0.2** | 10 | 5/10 | **4.2** | 90 | 2/55 | **48.3** | 1538 |
