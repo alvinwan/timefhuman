@@ -127,7 +127,9 @@ def test_default(now, test_input, expected):
     ('1.5h', [datetime.timedelta(hours=1, minutes=30)]),
     ('in five minutes', [datetime.timedelta(minutes=5)]), # gh#25
     ('in 3 days', [datetime.timedelta(days=3)]),
+    ('for 3 days', [datetime.timedelta(days=3)]),
     ('past 40 minutes', [datetime.timedelta(minutes=-40)]),
+    ('for the past 40 minutes', [datetime.timedelta(minutes=-40)]),
     ('awk', []),  # should *not become 'a week'
     ('a wk', [datetime.timedelta(days=7)]),
     ('thirty two hours', [datetime.timedelta(hours=32)]),
@@ -234,8 +236,11 @@ def test_custom_config(now, config, test_input, expected):
     ('we start phase two in 3 days', [
         ('in 3 days', (19, 28), datetime.datetime(2018, 8, 7, 14, 0)),
     ]),
+    ('we waited for 3 days', [
+        ('for 3 days', (10, 20), datetime.datetime(2018, 8, 7, 14, 0)),
+    ]),
     ('CR is 0 for the past 40 minutes', [
-        ('past 40 minutes', (16, 31), datetime.datetime(2018, 8, 4, 13, 20)),
+        ('for the past 40 minutes', (8, 31), datetime.datetime(2018, 8, 4, 13, 20)),
     ]),
     ('foo 1.3.4 bar', []),
     ("style='width:1px; height:1px;'", []),

@@ -22,6 +22,7 @@ from timefhuman.semantics import (
     clone_time,
     month_number,
     normalize_year,
+    strip_duration_prefix,
     supports_numeric_date_text,
     timedelta_for_unit,
     weekday_index,
@@ -446,21 +447,7 @@ def _parse_time_component(text: str, allow_houronly: bool):
 
 
 def _parse_duration(text: str):
-    lowered = text.lower()
-    direction = Direction.next
-    if lowered.startswith("for the past "):
-        lowered = lowered[len("for the past ") :].strip()
-        direction = Direction.previous
-    elif lowered.startswith("the past "):
-        lowered = lowered[len("the past ") :].strip()
-        direction = Direction.previous
-    elif lowered.startswith("past "):
-        lowered = lowered[len("past ") :].strip()
-        direction = Direction.previous
-    elif lowered.startswith("in "):
-        lowered = lowered[3:].strip()
-    elif lowered.startswith("for "):
-        lowered = lowered[4:].strip()
+    lowered, direction = strip_duration_prefix(text)
 
     if lowered.endswith(" ago"):
         lowered = lowered[:-4].strip()

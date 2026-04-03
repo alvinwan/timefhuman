@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 
 from timefhuman.renderers import tfhDate, tfhDatetime, tfhTime
-from timefhuman.utils import get_month_mapping
+from timefhuman.utils import Direction, get_month_mapping
 
 
 def _expand_aliases(groups):
@@ -92,6 +92,14 @@ WEEKDAY_ALIASES = _expand_aliases(
         (5, "saturday sat"),
         (6, "sunday sun"),
     )
+)
+DURATION_PREFIX_PATTERNS = (
+    (("for", "the", "past"), Direction.previous),
+    (("for", "past"), Direction.previous),
+    (("the", "past"), Direction.previous),
+    (("past",), Direction.previous),
+    (("in",), Direction.next),
+    (("for",), Direction.next),
 )
 
 
@@ -201,3 +209,33 @@ def timedelta_for_unit(unit: str, amount: float):
     if unit == "years":
         return timedelta(days=365 * amount)
     return timedelta(**{unit: amount})
+
+
+def is_duration_value_token(token: str):
+    lowered = token.lower()
+    return lowered.isdigit() or lowered in NUMBER_WORDS
+
+
+def duration_prefix_length(tokens, index: int = 0):
+    lowered = [token.lower() for token in tokens[index:]]
+    for prefix, _ in DURATION_PREFIX_PATTERNS:
+        prefix_length = len(prefix)
+        if lowered[:prefix_length] != list(prefix):
+            continue
+        value_index = prefix_length
+        if value_index < len(lowered) and is_duration_value_token(lowered[value_index]):
+            return prefix_length
+    return 0
+
+
+def strip_duration_prefix(text: str):
+    lowered = text.lower().strip()
+    tokens = lowered.split()
+    for prefix, direction in DURATION_PREFIX_PATTERNS:
+        prefix_length = len(prefix)
+        if tokens[:prefix_length] != list(prefix):
+            continue
+        value_index = prefix_length
+        if value_index < len(tokens) and is_duration_value_token(tokens[value_index]):
+            return " ".join(tokens[value_index:]), direction
+    return lowered, Direction.next

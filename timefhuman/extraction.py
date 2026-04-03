@@ -9,6 +9,7 @@ from timefhuman.semantics import (
     TIME_NAME_TO_TEMPLATE,
     UNIT_ALIASES,
     WEEKDAY_ALIASES,
+    duration_prefix_length,
     month_number,
     supports_numeric_date_text,
     weekday_index,
@@ -49,22 +50,27 @@ def prefer_extraction(text: str):
         or len(stripped) >= LARGE_DOCUMENT_CHAR_THRESHOLD
     ):
         return True
-    head = stripped.split(None, 1)[0].rstrip(",.?!")
+
+    tokens = [(match.group(0), match.start(), match.end()) for match in TOKEN_PATTERN.finditer(stripped)]
+    head = tokens[0][0].rstrip(",.?!") if tokens else ""
     if head and _is_expression_head(head):
         return False
+    if tokens and _is_plausible_start(tokens, 0):
+        return False
 
-    previous = None
-    count = 0
-    for match in TOKEN_PATTERN.finditer(stripped):
-        token = match.group(0)
-        if previous is not None and _is_plausible_start_tokens(previous.lower(), token.lower()):
-            return count - 1 > 0
-        previous = token
-        count += 1
+    for index in range(1, len(tokens)):
+        prev_token = tokens[index - 1][0].lower()
+        current_token = tokens[index][0].lower()
+        next_token = tokens[index + 1][0].lower() if index + 1 < len(tokens) else ""
+        next_next_token = tokens[index + 2][0].lower() if index + 2 < len(tokens) else ""
+        if _is_plausible_start_tokens(prev_token, current_token, next_token, next_next_token):
+            return index - 1 > 0
 
-    if previous is not None and _is_plausible_start_tokens(previous.lower(), ""):
-        return count - 1 > 0
-    return count > 1
+    last_token = tokens[-1][0].lower()
+    if _is_plausible_start_tokens(last_token, "", "", ""):
+        return len(tokens) - 1 > 0
+
+    return len(tokens) > 1
 
 
 def extract_fast(text: str, parse_candidate):
@@ -190,11 +196,13 @@ def _is_expression_head(token: str):
 def _is_plausible_start(tokens, index: int):
     token = tokens[index][0].lower()
     next_token = tokens[index + 1][0].lower() if index + 1 < len(tokens) else ""
-    return _is_plausible_start_tokens(token, next_token)
+    next_next_token = tokens[index + 2][0].lower() if index + 2 < len(tokens) else ""
+    next_next_next_token = tokens[index + 3][0].lower() if index + 3 < len(tokens) else ""
+    return _is_plausible_start_tokens(token, next_token, next_next_token, next_next_next_token)
 
 
-def _is_plausible_start_tokens(token: str, next_token: str):
-    if token in {"in", "past"} and (next_token.isdigit() or next_token in NUMBER_WORDS):
+def _is_plausible_start_tokens(token: str, next_token: str, next_next_token: str = "", next_next_next_token: str = ""):
+    if duration_prefix_length([token, next_token, next_next_token, next_next_next_token]):
         return True
     if token in DATE_NAME_TO_OFFSET or token in TIME_NAME_TO_TEMPLATE or token in DATE_TIME_NAME_TO_TEMPLATE:
         return True

@@ -112,7 +112,7 @@
 | 105 | July 1, 2010 | datetime.date(2010, 7, 1) | 128929:128941 | ŚâŚ.. 43 43 43 44 44 44 44 44 44 44 July 1, 2010 Section 00 72 00 GENERAL CONDITIONS F |
 | 106 | July 1, 2010 | datetime.date(2010, 7, 1) | 132118:132130 | dress known to the party giving notice. July 1, 2010 Section 00 72 00 GENERAL CONDITIONS F |
 | 107 | July 1, 2010 | datetime.date(2010, 7, 1) | 134925:134937 | al Conditions. 4. General Conditions. July 1, 2010 Section 00 72 00 GENERAL CONDITIONS F |
-| 108 | one year | datetime.timedelta(days=365) | 137861:137869 | urance coverage during the Work and for one year after Final Acceptance. Contractor shal |
+| 108 | for one year | datetime.timedelta(days=365) | 137857:137869 | insurance coverage during the Work and for one year after Final Acceptance. Contractor shal |
 | 109 | July 1, 2010 | datetime.date(2010, 7, 1) | 138031:138043 | rective Work required by Section 5.16. July 1, 2010 Section 00 72 00 GENERAL CONDITIONS F |
 | 110 | 45 Days | datetime.timedelta(days=45) | 140204:140211 | certificates shall specifically require 45 Days prior notice to Owner of cancellation o |
 | 111 | 30 Days | datetime.timedelta(days=30) | 140281:140288 | ellation or any material change, except 30 Days for surplus line insurance. 2.04 PAYM |
@@ -148,7 +148,7 @@
 | 141 | one year | datetime.timedelta(days=365) | 196614:196622 | ce with warranty provisions: If, within one year after the date of Substantial Completio |
 | 142 | one year | datetime.timedelta(days=365) | 196717:196725 | r designated portion thereof, or within one year after the date for commencement of any |
 | 143 | one year | datetime.timedelta(days=365) | 197181:197189 | covery of the condition. This period of one year shall be extended, with respect to port |
-| 144 | one year | datetime.timedelta(days=365) | 197468:197476 | Work repaired or replaced shall run for one year from the date of repair or replacement. |
+| 144 | for one year | datetime.timedelta(days=365) | 197464:197476 | to Work repaired or replaced shall run for one year from the date of repair or replacement. |
 | 145 | one year | datetime.timedelta(days=365) | 198687:198695 | ts. Establishment of the time period of one year as described in Section 5.16D relates o |
 | 146 | July 1, 2010 | datetime.date(2010, 7, 1) | 200130:200142 | the Work in progress wherever located. July 1, 2010 Section 00 72 00 GENERAL CONDITIONS F |
 | 147 | July 1, 2010 | datetime.date(2010, 7, 1) | 203423:203435 | making any substitutions or additions. July 1, 2010 Section 00 72 00 GENERAL CONDITIONS F |
@@ -186,7 +186,7 @@
 | 179 | 30 Day | datetime.timedelta(days=30) | 255253:255259 | ilure to demand arbitration within said 30 Day period shall result in Ownerâs decisi |
 | 180 | July 1, 2010 | datetime.date(2010, 7, 1) | 256349:256361 | be entered, or review of the award may July 1, 2010 Section 00 72 00 GENERAL CONDITIONS F |
 | 181 | July 1, 2010 | datetime.date(2010, 7, 1) | 258799:258811 | source loading schedules and summaries; July 1, 2010 Section 00 72 00 GENERAL CONDITIONS F |
-| 182 | 3 years | datetime.timedelta(days=1095) | 259147:259154 | te, additional financial statements for 3 years preceding execution of the Work; 20. |
+| 182 | for 3 years | datetime.timedelta(days=1095) | 259143:259154 | priate, additional financial statements for 3 years preceding execution of the Work; 20. |
 | 183 | 7 Day | datetime.timedelta(days=7) | 260642:260647 | 01 TERMINATION BY OWNER FOR CAUSE A. 7 Day Notice to Terminate for Cause: Owner ma |
 | 184 | 7 Days | datetime.timedelta(days=7) | 260695:260701 | to Terminate for Cause: Owner may, upon 7 Days written notice to Contractor and to its |
 | 185 | July 1, 2010 | datetime.date(2010, 7, 1) | 261725:261737 | ent due to Subcontractors or for labor; July 1, 2010 Section 00 72 00 GENERAL CONDITIONS F |
@@ -208,7 +208,7 @@
 | 201 | previous Friday | datetime.date(2018, 8, 3) | 281141:281156 | 25 . If a holiday is on a Saturday, the previous Friday will be observed as a holiday. If the h |
 | 202 | Sunday | datetime.date(2018, 8, 5) | 281211:281217 | ed as a holiday. If the holiday is on a Sunday, the following Monday will be observed |
 | 203 | following Monday | datetime.date(2018, 8, 6) | 281223:281239 | day. If the holiday is on a Sunday, the following Monday will be observed as a holiday. AL. â |
-| 204 | one year | datetime.timedelta(days=365) | 293424:293432 | rance coverage during the W ork and for one year after Final Completion. Contractor shal |
+| 204 | for one year | datetime.timedelta(days=365) | 293420:293432 | insurance coverage during the W ork and for one year after Final Completion. Contractor shal |
 | 205 | 30 days | datetime.timedelta(days=30) | 295956:295963 | hroughout the contract and must provide 30 daysâ notice of any cancellation. 2 2.04 |
 | 206 | 7 Days | datetime.timedelta(days=7) | 298654:298660 | Progress Schedule to Contractor within 7 Days of receipt. Review by Owner of Contract |
 | 207 | 2 Days | datetime.timedelta(days=2) | 316875:316881 | ner promptly and in no event later than 2 Days after the first observance of the condi |
@@ -379,7 +379,7 @@
 | 372 | 15-0562S | (datetime.timedelta(seconds=15), datetime.timedelta(seconds=562)) | 470190:470198 | 5 33 - 4 CTP Elevated Safety Platform ES15-0562S CONTRACTORâS STATEMENT OF RESPONSIB |
 | 373 | 1/4/2016 01 | datetime.datetime(2016, 1, 4, 1, 0) | 471416:471428 | s form) Signed by: Date: Project Name: 1/4/2016 01 45 33 - 5 CTP Elevated Safety Platform |
 | 374 | 15-0562S | (datetime.timedelta(seconds=15), datetime.timedelta(seconds=562)) | 471470:471478 | 5 33 - 5 CTP Elevated Safety Platform ES15-0562S SECTION 01 73 00 CUTTING AND PATCHING |
-| 375 | 1 year | datetime.timedelta(days=365) | 472376:472382 | manship performed by the Contractor for 1 year after the date of fabrication. PART 2 |
+| 375 | for 1 year | datetime.timedelta(days=365) | 472372:472382 | workmanship performed by the Contractor for 1 year after the date of fabrication. PART 2 |
 | 376 | 1/4/2016 01 | datetime.datetime(2016, 1, 4, 1, 0) | 472762:472774 | e. PART 3 EXECUTION 3.01 EXAMINATION 1/4/2016 01 73 00 - 1 CTP Elevated Safety Platform |
 | 377 | 15-0562S | (datetime.timedelta(seconds=15), datetime.timedelta(seconds=562)) | 472817:472825 | 00 - 1 CTP Elevated Safety Platform ES15-0562S A. Examine surfaces to be cut and pa |
 | 378 | 1/4/2016 | datetime.date(2016, 1, 4) | 475080:475088 | . Assemblies: Refinish entire unit B. 1/4/2016 Cutting: Cut existing construction by |
