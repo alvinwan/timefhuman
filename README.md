@@ -106,9 +106,9 @@ Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 | parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) | acc |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 1.0 | <ins><strong>14/14</strong></ins> | <ins><strong>42.5</strong></ins> | <ins><strong>56/56</strong></ins> | <ins><strong>279.8</strong></ins> | <ins><strong>26/26</strong></ins> |
-| datefinder.find_dates | <ins><strong>0.4</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 9/14 | 66.5 | 54/56 | 834.9 | 13/26 |
-| dateparser* | 77.5 | 15/27 | 183.5 | 9/14 | 540.3 | 52/56 | >2000ms | timeout |
+| timefhuman | 0.9 | <ins><strong>27/27</strong></ins> | 1.0 | <ins><strong>14/14</strong></ins> | <ins><strong>43.5</strong></ins> | <ins><strong>57/57</strong></ins> | <ins><strong>303.0</strong></ins> | <ins><strong>26/26</strong></ins> |
+| datefinder.find_dates | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 9/14 | 66.2 | 54/57 | 836.5 | 13/26 |
+| dateparser* | 77.3 | 15/27 | 184.2 | 9/14 | 535.0 | 53/57 | >2000ms | timeout |
 
 `datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines such as `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are listed separately in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, grouped accuracy, timeout/error behavior, repro commands, and raw match dumps.
 
