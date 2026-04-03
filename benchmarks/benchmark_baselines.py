@@ -220,7 +220,13 @@ def normalize_exact_result(label, text, func):
     return None
 
 
-def benchmark_document(document_func, text, iterations, timeout_seconds=None):
+def count_document_results(label, result):
+    if label in {"timefhuman", "datefinder.find_dates", "dateparser.search_dates"}:
+        return 0 if not result else len(result)
+    return 0
+
+
+def benchmark_document(label, document_func, text, iterations, timeout_seconds=None):
     if document_func is None:
         return None
 
@@ -237,10 +243,13 @@ def benchmark_document(document_func, text, iterations, timeout_seconds=None):
             signal.alarm(timeout_seconds)
         start = time.perf_counter()
         try:
-            document_func(text)
-            return time.perf_counter() - start
+            result = document_func(text)
+            return {
+                "seconds": time.perf_counter() - start,
+                "count": count_document_results(label, result),
+            }
         except DocumentTimeout:
-            return f">{timeout_seconds}s"
+            return {"timeout": f">{timeout_seconds}s", "count": None}
         except Exception:
             return None
         finally:
@@ -252,16 +261,19 @@ def benchmark_document(document_func, text, iterations, timeout_seconds=None):
 
     try:
         warmup = run_once()
-        if not isinstance(warmup, (int, float)):
+        if not isinstance(warmup, dict) or "seconds" not in warmup:
             return warmup
 
         times = []
         for _ in range(iterations):
-            elapsed = run_once()
-            if not isinstance(elapsed, (int, float)):
-                return elapsed
-            times.append(elapsed)
-        return statistics.median(times)
+            result = run_once()
+            if not isinstance(result, dict) or "seconds" not in result:
+                return result
+            times.append(result["seconds"])
+        return {
+            "seconds": statistics.median(times),
+            "count": warmup["count"],
+        }
     finally:
         if previous_handler is not None:
             signal.signal(signal.SIGALRM, previous_handler)
@@ -309,6 +321,7 @@ def run_document_benchmark(bench, document_datasets):
         text = document_datasets.get(dataset_name)
         document_results[key] = (
             benchmark_document(
+                bench["label"],
                 bench["document_func"],
                 text,
                 iterations,
@@ -327,9 +340,9 @@ def sort_document_rows(rows):
         values = []
         for _, key, _ in DOCUMENT_DATASETS:
             value = row.get(key)
-            if isinstance(value, (int, float)):
-                values.append(value)
-            elif isinstance(value, str) and value.startswith(">"):
+            if isinstance(value, dict) and "seconds" in value:
+                values.append(value["seconds"])
+            elif isinstance(value, dict) and "timeout" in value:
                 values.append(float("inf"))
         aggregate = statistics.median(values) if values else float("inf")
         return (row["label"] != "timefhuman", aggregate)
@@ -361,18 +374,20 @@ def main():
         print(f"{'parser':24} {'core_corpus':>14} {'seattle_html_76k':>18} {'test_data_560k':>16}")
 
         def format_doc(value):
-            if isinstance(value, (int, float)):
-                return f"{value:>18.4f}"
+            if isinstance(value, dict) and "seconds" in value:
+                return f"{value['seconds']:.4f}/{value['count']:>3}"
+            if isinstance(value, dict) and "timeout" in value:
+                return f"{value['timeout']}/n/a"
             if value is None:
-                return f"{'n/a':>18}"
-            return f"{str(value):>18}"
+                return "n/a"
+            return str(value)
 
         for row in document_rows:
             print(
                 f"{row['label']:24} "
-                f"{format_doc(row['core_corpus'])} "
-                f"{format_doc(row['seattle_html_76k'])} "
-                f"{format_doc(row['test_data_560k'])}"
+                f"{format_doc(row['core_corpus']):>14} "
+                f"{format_doc(row['seattle_html_76k']):>18} "
+                f"{format_doc(row['test_data_560k']):>16}"
             )
 
 
