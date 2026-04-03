@@ -31,11 +31,9 @@ COMPACT_TIME_RANGE_PATTERN = re.compile(
 )
 HYPHENATED_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}(?:-\d{1,4})?$")
 PHONE_LIKE_PATTERN = re.compile(r"^\d{3,4}-\d{4}$|^\d{3}-\d{3}-\d{4}$")
-FRACTION_LIKE_PATTERN = re.compile(r"^\d+-\d+/\d+$")
 REFERENCE_LIKE_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,2}-\d{1,2}-\d{3}$")
 BARE_HYPHEN_NUMERIC_PATTERN = re.compile(r"^\d{1,2}-\d{1,2}$")
 SLASH_FRACTION_PATTERN = re.compile(r"^\d+/\d+$")
-ARTICLE_DURATION_PATTERN = re.compile(r"(?i)^(?:a|an)\s+(?:second|minute|hour|day|week|month|year)$")
 COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
 UPPERCASE_COMPACT_SUFFIX_PATTERN = re.compile(r"^\d{1,4}[A-Z]$")
 LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
@@ -355,15 +353,8 @@ def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
 
     if PHONE_LIKE_PATTERN.fullmatch(candidate):
         return True
-    if FRACTION_LIKE_PATTERN.fullmatch(candidate):
-        return True
     if REFERENCE_LIKE_NUMERIC_DATE_PATTERN.fullmatch(candidate):
         return True
-    if ARTICLE_DURATION_PATTERN.fullmatch(candidate):
-        next_token = _next_token(text, end)
-        if next_token and next_token[:1].isalpha() and next_token.lower() not in EXPRESSION_CONNECTORS:
-            return True
-
     if BARE_HYPHEN_NUMERIC_PATTERN.fullmatch(candidate):
         previous_token = _previous_token(text, start)
         next_token = _next_token(text, end)

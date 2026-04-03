@@ -20,6 +20,8 @@ from timefhuman.semantics import (
     WEEKDAY_ALIASES,
     clone_datetime,
     clone_time,
+    is_rejected_fraction_text,
+    is_invalid_ambiguous_date_range,
     month_number,
     normalize_duration_unit,
     normalize_year,
@@ -109,6 +111,8 @@ ORDINAL_POSITION_NAME = {
 def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
     stripped, span_start, span_end = _trimmed_span(text, start_pos)
     if not stripped:
+        return None
+    if is_rejected_fraction_text(stripped):
         return None
 
     expression = _parse_expression(_normalize_space(stripped), config, timezone_mapping, allow_ambiguous=False)
@@ -212,6 +216,8 @@ def _build_range(left_text: str, right_text: str, config: tfhConfig, timezone_ma
     left = _parse_single(left_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     right = _parse_single(right_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     if left is None or right is None:
+        return None
+    if is_invalid_ambiguous_date_range(left, right):
         return None
     if isinstance(left, tfhAmbiguous) and isinstance(right, tfhAmbiguous):
         return None

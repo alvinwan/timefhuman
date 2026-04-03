@@ -1,8 +1,9 @@
 from datetime import date, timedelta
+import re
 
 from dateutil.relativedelta import relativedelta
 
-from timefhuman.renderers import tfhDate, tfhDatetime, tfhTime
+from timefhuman.renderers import tfhAmbiguous, tfhDate, tfhDatelike, tfhDatetime, tfhTime
 from timefhuman.utils import Direction, get_month_mapping
 
 
@@ -127,6 +128,21 @@ def supports_numeric_date_text(value: str):
         return True
     parts = value.split(".")
     return len(parts) == 3 and any(len(part) == 4 for part in parts)
+
+
+MIXED_FRACTION_RANGE_PATTERN = re.compile(r"^\d+-\d+/\d+$")
+
+
+def is_rejected_fraction_text(value: str):
+    return bool(MIXED_FRACTION_RANGE_PATTERN.fullmatch(value.strip()))
+
+
+def is_invalid_ambiguous_date_range(left, right):
+    if not isinstance(left, tfhAmbiguous):
+        return False
+    if not isinstance(right, tfhDatelike):
+        return False
+    return bool((right.date or right.year or right.month or right.day) and not right.time)
 
 
 def build_date(year: int | None = None, month: int | None = None, day: int | None = None):

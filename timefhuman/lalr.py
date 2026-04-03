@@ -23,6 +23,8 @@ from timefhuman.semantics import (
     UNIT_ALIASES,
     clone_datetime,
     clone_time,
+    is_rejected_fraction_text,
+    is_invalid_ambiguous_date_range,
     month_number,
     normalize_year,
     supports_numeric_date_text,
@@ -84,6 +86,8 @@ def parse_lalr_renderers(string: str, config: tfhConfig, start_pos: int = 0):
     stripped, span_start, span_end = _trimmed_span(string, start_pos)
     if not stripped:
         return None
+    if is_rejected_fraction_text(stripped):
+        return None
 
     try:
         tree = get_lalr_parser().parse(stripped)
@@ -122,6 +126,8 @@ class tfhTransformer(Transformer):
 
     def range(self, children):
         assert len(children) == 2
+        if is_invalid_ambiguous_date_range(children[0], children[1]):
+            raise ValueError("Ambiguous-date range")
         if all(isinstance(child, tfhAmbiguous) for child in children):
             raise ValueError("Ambiguous-only range")
         return tfhRange(infer(children))

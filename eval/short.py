@@ -121,6 +121,7 @@ NO_INFERENCE_CASES = [
     ("Wed 25 Jun", [datetime.date(2018, 6, 25)]),
     ("1.3.4", []),
     ("2-319", []),
+    ("8-1/2", []),
 
     # date-only ranges
     ("7/17-7/18", [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
