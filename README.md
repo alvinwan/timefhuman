@@ -100,21 +100,17 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 ## Performance
 
-Current benchmark snapshot from [`benchmarks/README.md`](benchmarks/README.md). All runtime columns are in milliseconds, with adjacent accuracy columns where gold labels exist.
+All runtime columns are in milliseconds. `acc` is the exact match count for the dataset immediately to the left. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
 
 Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
-| parser | short | acc | core | # | acc | seattle_76k | # | acc | test_560k | # |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.3 | **23/23** | 0.4 | 10 | **10/10** | 21.6 | 55 | **55/55** | 132.6 | 594 |
-| metadate.parse_date | 0.6 | 9/23 | **0.2** | 10 | 5/10 | **4.2** | 90 | 2/55 | **48.3** | 1538 |
-| datefinder.find_dates | **0.2** | 9/23 | **0.2** | 11 | 1/10 | 39.5 | 57 | 53/55 | 498.7 | 313 |
-| parsedatetime.parseDT | 0.5 | 11/23 | 2.4 | 1 | 0/10 | 696.0 | 1 | 0/55 | >1000ms | n/a |
-| recurrent.parse | 3.4 | 11/23 | 4.0 | 1 | 0/10 | error | n/a | error | error | n/a |
-| dateparser* | 30.3 | 13/23 | 111.4 | 14 | 1/10 | 327.5 | 90 | 52/55 | >1000ms | n/a |
-| ctparse.ctparse | 76.2 | 5/23 | 125.2 | 1 | 0/10 | >1000ms | n/a | timeout | >1000ms | n/a |
+| parser | short | acc | core | acc | seattle_76k | acc | test_560k |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| timefhuman | 0.3 | **23/23** | 0.4 | **10/10** | 21.6 | **55/55** | 132.6 |
+| datefinder.find_dates | **0.2** | 9/23 | **0.2** | 1/10 | 39.5 | 53/55 | 498.7 |
+| dateparser* | 30.3 | 13/23 | 111.4 | 1/10 | 327.5 | 52/55 | >1000ms |
 
-`#` is the extracted count for the dataset immediately to its left, and each adjacent `acc` column is the gold-match score for that dataset. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns. `metadate.parse_date`, `datefinder.find_dates`, and `dateparser*` all include extra HTML and metadata false positives on these corpora, so speed and raw count alone overstate quality. Details, timeout rules, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
+`datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines such as `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are listed separately in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, timeout/error behavior, repro commands, and raw match dumps.
 
 ## Advanced Usage
 
