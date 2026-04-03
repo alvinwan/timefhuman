@@ -96,7 +96,7 @@ SEATTLE_HTML_76K_MATCHED_TEXT = [
     ("08-07-2013", (33816, 33826), datetime.date(2013, 8, 7)),
     ("7-10-2013", (34028, 34037), datetime.date(2013, 7, 10)),
     ("7-10-2013", (34239, 34248), datetime.date(2013, 7, 10)),
-    ("Jan 6 2016 at 10:13AM", (39904, 39925), datetime.datetime(2016, 1, 6, 10, 13)),
+    ("Wed., Jan 6 2016 at 10:13AM", (39898, 39925), datetime.datetime(2016, 1, 6, 10, 13)),
     ("7-11pm", (45310, 45316), (datetime.time(19, 0), datetime.time(23, 0))),
     ("2013-01-23", (49125, 49135), datetime.date(2013, 1, 23)),
 ]

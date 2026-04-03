@@ -1,4 +1,4 @@
-# dateparser.search_dates · seattle_html_76k
+# dateparser* · seattle_html_76k
 
 - Source: /tmp/datefinder/tests/seattle_weekly.html
 - Total matches: 90

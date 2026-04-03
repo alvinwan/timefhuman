@@ -42,6 +42,7 @@ INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
 LARGE_DOCUMENT_LINE_THRESHOLD = 1024
 LARGE_DOCUMENT_CHAR_THRESHOLD = 262144
+EXTRACTION_TOKEN_LIMIT = 10
 MONTH_WORDS = frozenset(get_month_mapping())
 WEEKDAY_WORDS = frozenset(WEEKDAY_ALIASES)
 DIRECT_START_WORDS = frozenset(DATE_NAME_TO_OFFSET) | frozenset(TIME_NAME_TO_TEMPLATE) | frozenset(
@@ -89,7 +90,7 @@ def _window_tokens(text: str, start_pos: int):
         if not tokens and match.start() != start_pos:
             return []
         tokens.append((match.group(0), match.group(0).lower(), match.start(), match.end()))
-        if len(tokens) >= 8:
+        if len(tokens) >= EXTRACTION_TOKEN_LIMIT:
             break
     return tokens
 
@@ -188,7 +189,7 @@ def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate,
 
 
 def _candidate_end_limit(tokens, start_index: int, text: str):
-    max_end = min(len(tokens), start_index + 8)
+    max_end = min(len(tokens), start_index + EXTRACTION_TOKEN_LIMIT)
     end_index = start_index + 1
     for index in range(start_index + 1, max_end):
         token = tokens[index][0]
@@ -196,6 +197,9 @@ def _candidate_end_limit(tokens, start_index: int, text: str):
         gap = text[tokens[index - 1][3] : tokens[index][2]]
         if "\n" in gap or "\r" in gap:
             return end_index
+        if _is_weekday_period_continuation(tokens, start_index, index):
+            end_index = index + 1
+            continue
         if token in TERMINAL_PUNCTUATION:
             return index + 1
         if token in INLINE_PUNCTUATION or _is_expression_token(token, lowered):
@@ -203,6 +207,17 @@ def _candidate_end_limit(tokens, start_index: int, text: str):
             continue
         break
     return end_index
+def _is_weekday_period_continuation(tokens, start_index: int, index: int):
+    if tokens[index][0] != "." or index <= start_index:
+        return False
+    previous = tokens[index - 1][1].rstrip(".,")
+    if previous not in WEEKDAY_WORDS:
+        return False
+    if index + 1 >= len(tokens):
+        return False
+    next_token = tokens[index + 1][0]
+    next_lower = tokens[index + 1][1]
+    return next_token == "," or _is_expression_token(next_token, next_lower)
 
 
 def _is_expression_token(token: str, lowered: str | None = None):

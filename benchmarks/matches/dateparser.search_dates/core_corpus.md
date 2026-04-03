@@ -1,4 +1,4 @@
-# dateparser.search_dates · core_corpus
+# dateparser* · core_corpus
 
 - Source: /tmp/datefinder/bench/corpus_core.txt
 - Total matches: 14

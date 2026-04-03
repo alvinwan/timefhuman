@@ -29,6 +29,9 @@ DEFAULT_CASES = [
     ("3PM on July 17", [datetime.datetime(2018, 7, 17, 15, 0)]),
     ("July 17 at 3", [datetime.datetime(2018, 7, 17, 3, 0)]),
     ("7/17/18 3:00 p.m.", [datetime.datetime(2018, 7, 17, 15, 0)]),
+    ("Wed., Jan 6 2016 at 10:13AM", [datetime.datetime(2016, 1, 6, 10, 13)]),
+    ("01/13/2016 11 AM", [datetime.datetime(2016, 1, 13, 11, 0)]),
+    ("11:00 a.m., Pacific Time, January 13, 2016", [localized_datetime("US/Pacific", 2016, 1, 13, 11, 0)]),
     ("3 p.m. today", [datetime.datetime(2018, 8, 4, 15, 0)]),
     ("Tomorrow 3p", [datetime.datetime(2018, 8, 5, 15, 0)]),
     ("3p tomorrow", [datetime.datetime(2018, 8, 5, 15, 0)]),
@@ -105,6 +108,9 @@ NO_INFERENCE_CASES = [
     ("5p", [datetime.time(17, 0)]),
     ("3 o'clock pm", [datetime.time(15, 0)]),
     ("5p Eastern Time", [datetime.time(17, 0, tzinfo=pytz.timezone("US/Michigan"))]),
+    ("Wed., Jan 6 2016 at 10:13AM", [datetime.datetime(2016, 1, 6, 10, 13)]),
+    ("01/13/2016 11 AM", [datetime.datetime(2016, 1, 13, 11, 0)]),
+    ("11:00 a.m., Pacific Time, January 13, 2016", [localized_datetime("US/Pacific", 2016, 1, 13, 11, 0)]),
 
     # date only
     ("July 2019", [datetime.date(2019, 7, 1)]),
@@ -242,7 +248,12 @@ MATCHED_TEXT_CASES = [
     ("Section 7.02B 7a. - e.", []),
     ("Meet at 7a.", [("7a", (8, 10), datetime.datetime(2018, 8, 5, 7, 0))]),
     ("Wait 3h please", [("3h", (5, 7), datetime.datetime(2018, 8, 4, 17, 0))]),
-    ("Wed., Jan 6 2016 at 10:13AM", [("Jan 6 2016 at 10:13AM", (6, 27), datetime.datetime(2016, 1, 6, 10, 13))]),
+    ("Wed., Jan 6 2016 at 10:13AM", [("Wed., Jan 6 2016 at 10:13AM", (0, 27), datetime.datetime(2016, 1, 6, 10, 13))]),
+    ("foo 01/13/2016 11 AM bar", [("01/13/2016 11 AM", (4, 20), datetime.datetime(2016, 1, 13, 11, 0))]),
+    (
+        "foo 11:00 a.m., Pacific Time, January 13, 2016 bar",
+        [("11:00 a.m., Pacific Time, January 13, 2016", (4, 46), localized_datetime("US/Pacific", 2016, 1, 13, 11, 0))],
+    ),
     ("90p", []),
     ("4906/0", []),
     ("one-night-only", []),

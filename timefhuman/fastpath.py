@@ -77,6 +77,14 @@ ISO_PATTERN = re.compile(
     r"(?P<hour>\d{1,2}):(?P<minute>\d{2})"
     r"(?::(?P<second>\d{2})(?:\.(?P<millisecond>\d{1,6}))?)?$"
 )
+TIMEZONE_DATE_DATETIME_PATTERN = re.compile(
+    r"(?ix)^"
+    r"(?P<time>.+?)"
+    r"\s*,\s*"
+    r"(?P<timezone>[a-z][a-z .]+?)"
+    r"\s*,\s*"
+    r"(?P<date>.+)$"
+)
 NUMBER_UNIT_PATTERN = re.compile(
     r"(?ix)"
     r"(?P<number>\d+(?:\.\d+)?)"
@@ -231,6 +239,10 @@ def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
     if atomic is not None:
         return atomic
 
+    timezone_datetime = _parse_inline_timezone_datetime(body, config, timezone_mapping)
+    if timezone_datetime is not None:
+        return timezone_datetime
+
     lower_body = body.lower()
     for separator, mode in ((" at ", "date_time"), (" on ", "time_date")):
         if separator in lower_body:
@@ -268,6 +280,19 @@ def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
                 best_score = score
 
     return best
+
+
+def _parse_inline_timezone_datetime(text: str, config: tfhConfig, timezone_mapping):
+    match = TIMEZONE_DATE_DATETIME_PATTERN.fullmatch(text)
+    if not match:
+        return None
+
+    time = _parse_time_component(match.group("time"), allow_houronly=True)
+    timezone = _parse_timezone_segment(match.group("timezone"), timezone_mapping)
+    date = _parse_date(match.group("date"), config)
+    if time is None or timezone is None or date is None:
+        return None
+    return tfhDatetime(date=date, time=time, tz=timezone)
 
 
 def _parse_atomic_datetime(text: str, config: tfhConfig, tzinfo):
@@ -546,6 +571,11 @@ def _strip_trailing_timezone(text: str, timezone_mapping):
     return text, None
 
 
+def _parse_timezone_segment(text: str, timezone_mapping):
+    body, timezone = _strip_trailing_timezone(text.strip().strip(","), timezone_mapping)
+    return timezone if body == "" else None
+
+
 def _parse_modifier_prefix(tokens):
     offset = 0
     index = 0
@@ -557,7 +587,7 @@ def _parse_modifier_prefix(tokens):
 
 def _strip_leading_weekday(text: str):
     parts = text.split(maxsplit=1)
-    if len(parts) == 2 and weekday_index(parts[0].rstrip(",")) is not None:
+    if len(parts) == 2 and weekday_index(parts[0].rstrip(".,")) is not None:
         return parts[1]
     return text
 

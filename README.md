@@ -106,9 +106,9 @@ Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 | parser | short (ms) | acc | core (ms) | acc | seattle_76k (ms) | acc | test_560k (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.6 | **23/23** | 0.8 | **13/13** | 39.2 | **55/55** | 285.4 |
-| datefinder.find_dates | **0.4** | 9/23 | **0.4** | 7/13 | 67.0 | 54/55 | 845.0 |
-| dateparser* | 50.6 | 13/23 | 188.1 | timeout | 564.2 | 52/55 | >1000ms |
+| timefhuman | 0.7 | **26/26** | 0.8 | **13/13** | 62.0 | **55/55** | 385.8 |
+| datefinder.find_dates | **0.4** | 10/26 | **0.4** | 7/13 | 99.8 | 54/55 | >1000ms |
+| dateparser* | 113.7 | 15/26 | >1000ms | timeout | 891.6 | 52/55 | >1000ms |
 
 `datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines such as `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are listed separately in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, timeout/error behavior, repro commands, and raw match dumps.
 
