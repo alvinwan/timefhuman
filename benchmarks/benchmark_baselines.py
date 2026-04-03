@@ -106,11 +106,12 @@ DOCUMENT_DATASETS = (
 
 def build_benches():
     cfg = tfhConfig(now=NOW)
-    match_cfg = tfhConfig(now=NOW, return_matched_text=True)
+    document_cfg = tfhConfig(now=NOW, infer_datetimes=False)
+    match_cfg = tfhConfig(now=NOW, infer_datetimes=False, return_matched_text=True)
     benches = [{
         "label": "timefhuman",
         "func": lambda text: timefhuman(text, config=cfg),
-        "document_func": lambda text: timefhuman(text, config=cfg),
+        "document_func": lambda text: timefhuman(text, config=document_cfg),
         "document_dump_func": lambda text: timefhuman(text, config=match_cfg),
     }]
 

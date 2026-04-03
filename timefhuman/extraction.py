@@ -20,7 +20,9 @@ __all__ = ("extract_fast", "prefer_extraction")
 
 
 MERIDIEM_PATTERN = r"(?:[ap](?:\.?m\.?)?)"
-TOKEN_PATTERN = re.compile(rf"(?ix)\d+(?:[/:.-]\d+)*(?:{MERIDIEM_PATTERN})?|[a-z]+(?:\.[a-z]+\.?)?|\S")
+TOKEN_PATTERN = re.compile(
+    rf"(?ix)\d+(?:[/:.-]\d+)*(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN})?|[a-z]+(?:\.[a-z]+\.?)?|\S"
+)
 DAY_SUFFIX_PATTERN = re.compile(r"(?ix)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
 MERIDIEM_ONLY_PATTERN = re.compile(rf"(?ix)^{MERIDIEM_PATTERN}$")
 COMPACT_TIME_RANGE_PATTERN = re.compile(
