@@ -31,6 +31,9 @@ CORE_CORPUS_MATCHED_TEXT = [
     ("tomorrow at noon", (152, 168), datetime.datetime(2018, 8, 5, 12, 0)),
     ("in 3 days", (188, 197), datetime.timedelta(days=3)),
     ("20 days", (233, 240), datetime.timedelta(days=20)),
+    ("ayer", (254, 258), datetime.date(2018, 8, 3)),
+    ("mañana", (279, 285), datetime.date(2018, 8, 5)),
+    ("dans 2 jours", (307, 319), datetime.timedelta(days=2)),
     ("31/08/2012 to 30/08/2013", (345, 369), (datetime.date(2012, 8, 31), datetime.date(2013, 8, 30))),
     (
         "Tue, 23 Apr 1996 13:28:27 -0400",

@@ -13,6 +13,12 @@ from benchmark_baselines import DOCUMENT_DATASETS, build_benches, load_document_
 OUTPUT_ROOT = Path(__file__).resolve().parent / "matches"
 
 
+def output_label(label: str):
+    if label == "dateparser*":
+        return "dateparser.search_dates"
+    return label
+
+
 def escape(value):
     text = str(value)
     return " ".join(text.split()).replace("|", "\\|")
@@ -42,7 +48,7 @@ def format_match(label, match, text):
             "span": f"{start}:{end}",
             "context": context_snippet(text, start, end),
         }
-    if label == "dateparser.search_dates":
+    if label == "dateparser*":
         matched_text, value = match
         return {
             "match": matched_text,
@@ -54,7 +60,7 @@ def format_match(label, match, text):
 
 
 def write_dump(label, dataset_name, source_path, text, matches):
-    output_dir = OUTPUT_ROOT / label
+    output_dir = OUTPUT_ROOT / output_label(label)
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{dataset_name}.md"
 

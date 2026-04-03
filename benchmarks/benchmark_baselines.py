@@ -1,8 +1,7 @@
 import statistics
 import sys
 import time
-from collections import Counter
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 import signal
 
@@ -310,6 +309,56 @@ def canonicalize_value(value):
     return value
 
 
+def values_equivalent(actual, expected):
+    actual = canonicalize_value(actual)
+    expected = canonicalize_value(expected)
+
+    if actual == expected:
+        return True
+
+    if isinstance(expected, date) and not isinstance(expected, datetime):
+        return isinstance(actual, datetime) and actual.date() == expected
+
+    if isinstance(expected, timedelta):
+        return isinstance(actual, datetime) and actual == NOW + expected
+
+    if isinstance(expected, tuple):
+        return (
+            isinstance(actual, tuple)
+            and len(actual) == len(expected)
+            and all(values_equivalent(actual_item, expected_item) for actual_item, expected_item in zip(actual, expected))
+        )
+
+    return False
+
+
+def count_document_matches(label, matches, expected):
+    actual_items = [normalize_gold_match(label, match) for match in extract_result_items(label, matches)]
+    remaining_actual = list(actual_items)
+    matched_expected = [False] * len(expected)
+    count = 0
+
+    if supports_text_matches(label):
+        for expected_index, (expected_text, _, expected_value) in enumerate(expected):
+            for actual_index, (actual_text, actual_value) in enumerate(remaining_actual):
+                if actual_text == expected_text and values_equivalent(actual_value, expected_value):
+                    matched_expected[expected_index] = True
+                    remaining_actual.pop(actual_index)
+                    count += 1
+                    break
+
+    for expected_index, (_, _, expected_value) in enumerate(expected):
+        if matched_expected[expected_index]:
+            continue
+        for actual_index, (_, actual_value) in enumerate(remaining_actual):
+            if values_equivalent(actual_value, expected_value):
+                remaining_actual.pop(actual_index)
+                count += 1
+                break
+
+    return count
+
+
 def run_document_correctness(bench, document_datasets):
     row = {"label": bench["label"]}
     document_runner = bench.get("document_dump_func") or get_document_runner(bench)
@@ -329,14 +378,7 @@ def run_document_correctness(bench, document_datasets):
             row[key] = {"error": type(exc).__name__}
             continue
 
-        items = [normalize_gold_match(bench["label"], match) for match in extract_result_items(bench["label"], matches)]
-        if supports_text_matches(bench["label"]):
-            actual_counts = Counter(items)
-            expected_counts = Counter((match_text, canonicalize_value(value)) for match_text, _, value in expected)
-        else:
-            actual_counts = Counter(value for _, value in items)
-            expected_counts = Counter(canonicalize_value(value) for _, _, value in expected)
-        matched = sum((actual_counts & expected_counts).values())
+        matched = count_document_matches(bench["label"], matches, expected)
         row[key] = {"matched": matched, "total": len(expected)}
     return row
 

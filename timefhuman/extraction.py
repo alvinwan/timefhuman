@@ -9,6 +9,8 @@ from timefhuman.semantics import (
     TIME_NAME_TO_TEMPLATE,
     UNIT_ALIASES,
     WEEKDAY_ALIASES,
+    duration_prefix_length,
+    is_duration_value_token,
     supports_numeric_date_text,
 )
 from timefhuman.utils import get_month_mapping, get_timezone_words
@@ -19,7 +21,7 @@ __all__ = ("extract_fast", "prefer_extraction")
 
 MERIDIEM_PATTERN = r"(?:[ap](?:\.?m\.?)?)"
 TOKEN_PATTERN = re.compile(
-    rf"(?ix)\d+(?:[/:.-]\d+)*(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN})?|[a-z]+(?:\.[a-z]+\.?)?|\S"
+    rf"(?iu)\d+(?:[/:.-]\d+)*(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN})?|[^\W\d_]+(?:\.[^\W\d_]+\.?)?|\S"
 )
 DAY_SUFFIX_PATTERN = re.compile(r"(?ix)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
 MERIDIEM_ONLY_PATTERN = re.compile(rf"(?ix)^{MERIDIEM_PATTERN}$")
@@ -55,7 +57,7 @@ EXPRESSION_WORDS = (
 )
 START_WORDS = DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA) | frozenset(
     NUMBER_WORDS
-) | frozenset({"in", "for", "the", "past"})
+) | frozenset({"in", "dans", "for", "the", "past"})
 DIRECT_START_PATTERN = "|".join(re.escape(word) for word in sorted(DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA), key=len, reverse=True))
 NUMBER_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(NUMBER_WORDS, key=len, reverse=True))
 UNIT_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(UNIT_ALIASES, key=len, reverse=True))
@@ -66,7 +68,7 @@ START_PATTERN = re.compile(
     rf"(?<![a-z0-9])"
     rf"(?:"
     rf"{DIRECT_START_PATTERN}"
-    rf"|(?:in|past)\s+(?:\d+|{NUMBER_WORD_PATTERN})"
+    rf"|(?:in|dans|past)\s+(?:\d+|{NUMBER_WORD_PATTERN})"
     rf"|for\s+(?:the\s+past\s+|past\s+)?(?:\d+|{NUMBER_WORD_PATTERN})"
     rf"|(?:\d+|{NUMBER_WORD_PATTERN})\s+(?:{MERIDIEM_PATTERN}|{UNIT_WORD_PATTERN}|{WEEKDAY_WORD_PATTERN}|{DATE_WORD_PATTERN})"
     rf"|\d+(?:[/:.-]\d+)+(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN}|s|m|h|d|w|mo)?"
@@ -279,21 +281,11 @@ def _is_plausible_start_tokens(token: str, next_token: str, next_next_token: str
 
 
 def _has_duration_prefix(token: str, next_token: str, next_next_token: str, next_next_next_token: str):
-    if token == "in" or token == "past":
-        return _is_duration_value_token(next_token)
-    if token == "the":
-        return next_token == "past" and _is_duration_value_token(next_next_token)
-    if token != "for":
-        return False
-    if next_token == "the":
-        return next_next_token == "past" and _is_duration_value_token(next_next_next_token)
-    if next_token == "past":
-        return _is_duration_value_token(next_next_token)
-    return _is_duration_value_token(next_token)
+    return duration_prefix_length((token, next_token, next_next_token, next_next_next_token)) > 0
 
 
 def _is_duration_value_token(token: str):
-    return token.isdigit() or token in NUMBER_WORDS
+    return is_duration_value_token(token)
 
 
 def _should_skip_candidate(text: str, candidate: str, start: int, end: int):

@@ -100,15 +100,15 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 ## Performance
 
-All runtime columns are in milliseconds. `acc` is the exact match count for the dataset immediately to the left. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
+All runtime columns are in milliseconds. `acc` is the correctness score for the dataset immediately to the left; document `acc` also counts value-equivalent matches when a baseline returns a different span. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
 
 Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 | parser | short (ms) | acc | core (ms) | acc | seattle_76k (ms) | acc | test_560k (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.3 | **23/23** | 0.4 | **10/10** | 21.6 | **55/55** | 132.6 |
-| datefinder.find_dates | **0.2** | 9/23 | **0.2** | 1/10 | 39.5 | 53/55 | 498.7 |
-| dateparser* | 30.3 | 13/23 | 111.4 | 1/10 | 327.5 | 52/55 | >1000ms |
+| timefhuman | 0.6 | **23/23** | 0.8 | **13/13** | 39.2 | **55/55** | 285.4 |
+| datefinder.find_dates | **0.4** | 9/23 | **0.4** | 7/13 | 67.0 | 54/55 | 845.0 |
+| dateparser* | 50.6 | 13/23 | 188.1 | timeout | 564.2 | 52/55 | >1000ms |
 
 `datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines such as `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are listed separately in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, timeout/error behavior, repro commands, and raw match dumps.
 

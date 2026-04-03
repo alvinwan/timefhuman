@@ -22,7 +22,15 @@ TIME_NAME_TO_TEMPLATE = {
     "evening": _time(18, tfhTime.Meridiem.PM),
     "night": _time(20, tfhTime.Meridiem.PM),
 }
-DATE_NAME_TO_OFFSET = {"today": 0, "tomorrow": 1, "tmw": 1, "yesterday": -1}
+DATE_NAME_TO_OFFSET = {
+    "today": 0,
+    "tomorrow": 1,
+    "tmw": 1,
+    "mañana": 1,
+    "manana": 1,
+    "yesterday": -1,
+    "ayer": -1,
+}
 DATE_TIME_NAME_TO_TEMPLATE = {
     "tonight": tfhDatetime(date=None, time=_time(20, tfhTime.Meridiem.PM)),
 }
@@ -77,6 +85,7 @@ UNIT_ALIASES = _expand_aliases(
         ("minutes", "minute minutes min mins m"),
         ("hours", "hour hours hr hrs h"),
         ("days", "day days d"),
+        ("days", "jour jours"),
         ("weeks", "week weeks wk wks w"),
         ("months", "month months mos mo"),
         ("years", "year years yr yrs y"),
@@ -99,6 +108,7 @@ DURATION_PREFIX_PATTERNS = (
     (("the", "past"), Direction.previous),
     (("past",), Direction.previous),
     (("in",), Direction.next),
+    (("dans",), Direction.next),
     (("for",), Direction.next),
 )
 

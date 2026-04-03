@@ -1,6 +1,6 @@
 # Benchmarks
 
-Status as of April 2, 2026.
+Status as of April 3, 2026.
 
 ## Setup
 
@@ -12,18 +12,19 @@ Status as of April 2, 2026.
 ## Results
 
 - Milliseconds throughout.
-- `acc` is the exact match count for the dataset immediately to the left.
+- `acc` is the correctness score for the dataset immediately to the left.
 - `#` is the extracted count for the dataset immediately to the left.
 - `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
+- Document `acc` prefers exact text+value matches, but still counts value-equivalent matches when a baseline returns a narrower or wider span.
 - Whole-document rows use a 1-second timeout. `timeout` in an `acc` column means the correctness run hit that cap.
 
 ### Main Results
 
 | parser | short (ms) | acc | core (ms) | # | acc | seattle_76k (ms) | # | acc | test_560k (ms) | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.3 | **23/23** | 0.4 | [10](matches/timefhuman/core_corpus.md) | **10/10** | 21.6 | [55](matches/timefhuman/seattle_html_76k.md) | **55/55** | 132.6 | [594](matches/timefhuman/test_data_560k.md) |
-| datefinder.find_dates | **0.2** | 9/23 | **0.2** | [11](matches/datefinder.find_dates/core_corpus.md) | 1/10 | 39.5 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 53/55 | 498.7 | [313](matches/datefinder.find_dates/test_data_560k.md) |
-| dateparser* | 30.3 | 13/23 | 111.4 | [14](matches/dateparser.search_dates/core_corpus.md) | 1/10 | 327.5 | [90](matches/dateparser.search_dates/seattle_html_76k.md) | 52/55 | >1000ms | n/a |
+| timefhuman | 0.6 | **23/23** | 0.8 | [13](matches/timefhuman/core_corpus.md) | **13/13** | 39.2 | [55](matches/timefhuman/seattle_html_76k.md) | **55/55** | 285.4 | [593](matches/timefhuman/test_data_560k.md) |
+| datefinder.find_dates | **0.4** | 9/23 | **0.4** | [11](matches/datefinder.find_dates/core_corpus.md) | 7/13 | 67.0 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/55 | 845.0 | [313](matches/datefinder.find_dates/test_data_560k.md) |
+| dateparser* | 50.6 | 13/23 | 188.1 | [14](matches/dateparser.search_dates/core_corpus.md) | timeout | 564.2 | [90](matches/dateparser.search_dates/seattle_html_76k.md) | 52/55 | >1000ms | n/a |
 
 ### Lower-Accuracy Baselines
 
@@ -31,10 +32,10 @@ Seattle accuracy below `50/55`.
 
 | parser | short (ms) | acc | core (ms) | # | acc | seattle_76k (ms) | # | acc | test_560k (ms) | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| metadate.parse_date | 0.6 | 9/23 | **0.2** | 10 | 5/10 | **4.2** | 90 | 2/55 | **48.3** | 1538 |
-| parsedatetime.parseDT | 0.5 | 11/23 | 2.4 | 1 | 0/10 | 696.0 | 1 | 0/55 | >1000ms | n/a |
-| recurrent.parse | 3.4 | 11/23 | 4.0 | 1 | 0/10 | error | n/a | error | error | n/a |
-| ctparse.ctparse | 76.2 | 5/23 | 125.2 | 1 | 0/10 | >1000ms | n/a | timeout | >1000ms | n/a |
+| metadate.parse_date | 0.8 | 9/23 | **0.3** | 10 | 6/13 | **7.1** | 90 | 2/55 | **83.3** | 1538 |
+| parsedatetime.parseDT | 0.8 | 11/23 | 4.2 | 1 | 0/13 | >1000ms | n/a | timeout | >1000ms | n/a |
+| recurrent.parse | 5.6 | 11/23 | 6.7 | 1 | 0/13 | error | n/a | error | >1000ms | n/a |
+| ctparse.ctparse | 129.0 | 5/23 | 210.6 | 1 | 1/13 | >1000ms | n/a | timeout | >1000ms | n/a |
 
 Notes:
 

@@ -9,14 +9,14 @@
 MONTHNAME: /(?<![a-z])(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)(?![a-z])/
 WEEKDAY: /(?<![a-z])(monday|mon|tuesday|tues|tue|tu|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)(?![a-z])/
 MERIDIEM: /(?<![a-z])([ap](\.?m\.?)?)(?![a-z])/
-DATENAME: /(?<![a-z])(today|tomorrow|tmw|yesterday)(?![a-z])/
+DATENAME: /(?<![a-z])(today|tomorrow|tmw|mañana|manana|yesterday|ayer)(?![a-z])/
 TIMENAME: /(?<![a-z])(noon|midday|midnight|morning|afternoon|evening|night)(?![a-z])/
 DATETIMENAME: /(?<![a-z])(tonight)(?![a-z])/
 MONTHNAME_DATE.2: /(?<![a-z])(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)(?![a-z])\s+\d{1,4}(?:st|nd|rd|th)?(?:\s*,?\s*\d{2,4})?/
 DAY_ORDINAL.2: /\d{1,2}(?:st|nd|rd|th)/
-DURATION_UNIT: /(?<![a-z])(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|weeks|week|wks|wk|months|month|mos|years|year)(?![a-z])/
+DURATION_UNIT: /(?<![a-z])(seconds|second|secs|sec|minutes|mins|min|hours|hour|hrs|hr|h|days|day|jour|jours|weeks|week|wks|wk|months|month|mos|years|year)(?![a-z])/
 DURATION_UNIT_LETTER: /(?<=\d)(s|m|h|d|w|mo|y)(?![a-z])/
-DURATION_FUTURE: /(?<![a-z])in(?![a-z])/
+DURATION_FUTURE: /(?<![a-z])(in|dans)(?![a-z])/
 DURATION_PAST: /(?<![a-z])ago(?![a-z])/
 DURATION_PREFIX_PAST.2: /(?<![a-z])past(?![a-z])/
 DURATION_NUMBER: /(?<![a-z])(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?![a-z])/
