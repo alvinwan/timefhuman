@@ -332,7 +332,17 @@ def values_equivalent(actual, expected):
     return False
 
 
-def count_document_matches(label, matches, expected):
+def flatten_value_members(value):
+    value = canonicalize_value(value)
+    if isinstance(value, tuple):
+        members = []
+        for item in value:
+            members.extend(flatten_value_members(item))
+        return members
+    return [value]
+
+
+def count_document_group_matches(label, matches, expected):
     actual_items = [normalize_gold_match(label, match) for match in extract_result_items(label, matches)]
     remaining_actual = list(actual_items)
     matched_expected = [False] * len(expected)
@@ -359,27 +369,58 @@ def count_document_matches(label, matches, expected):
     return count
 
 
+def count_document_member_matches(label, matches, expected):
+    actual_members = []
+    for _, value in extract_result_items(label, matches):
+        actual_members.extend(flatten_value_members(value))
+
+    expected_members = []
+    for _, _, value in expected:
+        expected_members.extend(flatten_value_members(value))
+
+    remaining_actual = list(actual_members)
+    count = 0
+    for expected_value in expected_members:
+        for actual_index, actual_value in enumerate(remaining_actual):
+            if values_equivalent(actual_value, expected_value):
+                remaining_actual.pop(actual_index)
+                count += 1
+                break
+
+    return {
+        "matched": count,
+        "total": len(expected_members),
+    }
+
+
 def run_document_correctness(bench, document_datasets):
     row = {"label": bench["label"]}
     document_runner = bench.get("document_dump_func") or get_document_runner(bench)
     for dataset_name in GOLD_DOCUMENT_DATASETS:
         key = f"{dataset_name}_correctness"
+        group_key = f"{dataset_name}_group_correctness"
         text = document_datasets.get(dataset_name)
         expected = CORPORA[dataset_name]["expected"]
         if document_runner is None or text is None or expected is None:
             row[key] = None
+            row[group_key] = None
             continue
         try:
             matches = _timeout_call(DOCUMENT_TIMEOUT_SECONDS, document_runner, text)
         except BenchmarkTimeout:
             row[key] = {"timeout": f">{DOCUMENT_TIMEOUT_SECONDS}s"}
+            row[group_key] = {"timeout": f">{DOCUMENT_TIMEOUT_SECONDS}s"}
             continue
         except Exception as exc:
             row[key] = {"error": type(exc).__name__}
+            row[group_key] = {"error": type(exc).__name__}
             continue
 
-        matched = count_document_matches(bench["label"], matches, expected)
-        row[key] = {"matched": matched, "total": len(expected)}
+        row[key] = count_document_member_matches(bench["label"], matches, expected)
+        row[group_key] = {
+            "matched": count_document_group_matches(bench["label"], matches, expected),
+            "total": len(expected),
+        }
     return row
 
 
@@ -460,8 +501,8 @@ def main():
     print(
         f"{'parser':24} "
         f"{'short (ms)':>10} {'acc':>8} "
-        f"{'core (ms)':>10} {'#':>6} {'acc':>8} "
-        f"{'seattle_76k (ms)':>15} {'#':>6} {'acc':>8} "
+        f"{'core (ms)':>10} {'#':>6} {'acc':>8} {'group':>8} "
+        f"{'seattle_76k (ms)':>15} {'#':>6} {'acc':>8} {'group':>8} "
         f"{'test_560k (ms)':>15} {'#':>6}"
     )
 
@@ -513,9 +554,11 @@ def main():
             f"{format_doc_ms(row['core_corpus']):>10} "
             f"{format_doc_count(row['core_corpus']):>6} "
             f"{format_correctness(row['core_corpus_correctness']):>8} "
+            f"{format_correctness(row['core_corpus_group_correctness']):>8} "
             f"{format_doc_ms(row['seattle_html_76k']):>15} "
             f"{format_doc_count(row['seattle_html_76k']):>6} "
             f"{format_correctness(row['seattle_html_76k_correctness']):>8} "
+            f"{format_correctness(row['seattle_html_76k_group_correctness']):>8} "
             f"{format_doc_ms(row['test_data_560k']):>12} "
             f"{format_doc_count(row['test_data_560k']):>6}"
         )

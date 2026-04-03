@@ -100,15 +100,15 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 ## Performance
 
-All runtime columns are in milliseconds. `acc` is the correctness score for the dataset immediately to the left; document `acc` also counts value-equivalent matches when a baseline returns a different span. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
+All runtime columns are in milliseconds. `acc` is the correctness score for the dataset immediately to the left. For the document corpora, `acc` is member-level coverage, so ranges and lists still count as correct when a baseline finds the individual members separately. [`benchmarks/README.md`](benchmarks/README.md) also reports grouped correctness. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
 
 Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 | parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 0.9 | <ins><strong>13/13</strong></ins> | <ins><strong>39.9</strong></ins> | <ins><strong>55/55</strong></ins> | <ins><strong>269.8</strong></ins> |
-| datefinder.find_dates | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 7/13 | 66.6 | 54/55 | 839.1 |
-| dateparser* | 87.7 | 15/27 | 188.4 | timeout | 548.3 | 52/55 | >1000ms |
+| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 1.0 | <ins><strong>14/14</strong></ins> | <ins><strong>39.5</strong></ins> | <ins><strong>56/56</strong></ins> | <ins><strong>267.7</strong></ins> |
+| datefinder.find_dates | <ins><strong>0.4</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 9/14 | 66.7 | 54/56 | 838.1 |
+| dateparser* | 87.0 | 15/27 | 186.4 | timeout | 552.1 | 52/56 | >1000ms |
 
 `datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines such as `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are listed separately in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, timeout/error behavior, repro commands, and raw match dumps.
 
