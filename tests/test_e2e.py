@@ -105,6 +105,7 @@ def test_default(now, test_input, expected):
     ('July 17-18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]), # distribute month
     ('June 11-16, 2026', [(datetime.date(2026, 6, 11), datetime.date(2026, 6, 16))]),
     ('June 11-16 2026', [(datetime.date(2026, 6, 11), datetime.date(2026, 6, 16))]),
+    ('31/08/2012 to 30/08/2013', [(datetime.date(2012, 8, 31), datetime.date(2013, 8, 30))]),
     
     # time-only ranges
     ('3p -4p', [(datetime.time(15, 0), datetime.time(16, 0))]),
@@ -202,7 +203,25 @@ def test_custom_config(now, config, test_input, expected):
     ('s 1/1/24 C', [
         ('1/1/24', (2, 8), datetime.datetime(2024, 1, 1, 0, 0))
     ]),
+    ('running from 7-11pm and featuring resident DJs', [
+        ('7-11pm', (13, 19), (
+            datetime.datetime(2018, 8, 4, 19, 0),
+            datetime.datetime(2018, 8, 4, 23, 0),
+        ))
+    ]),
+    ('foo 08-07-2013 bar', [
+        ('08-07-2013', (4, 14), datetime.datetime(2013, 8, 7, 0, 0))
+    ]),
+    ('<!-- REMOVED 08-07-2013 -->', [
+        ('08-07-2013', (13, 23), datetime.datetime(2013, 8, 7, 0, 0))
+    ]),
+    ('90p', []),
+    ('4906/0', []),
+    ('Tue, 23 Apr 1996 13:28:27 -0400', [
+        ('Tue, 23 Apr 1996 13:28:27 -0400', (0, 31), datetime.datetime(
+            1996, 4, 23, 13, 28, 27, tzinfo=datetime.timezone(datetime.timedelta(hours=-4))
+        ))
+    ]),
 ])
 def test_matched_text(now, test_input, expected):  # gh#9
     assert timefhuman(test_input, tfhConfig(now=now, return_matched_text=True)) == expected
-

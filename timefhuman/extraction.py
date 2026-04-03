@@ -25,6 +25,7 @@ MERIDIEM_ONLY_PATTERN = re.compile(rf"(?ix)^{MERIDIEM_PATTERN}$")
 COMPACT_TIME_RANGE_PATTERN = re.compile(
     rf"(?ix)^\d{{1,2}}(?::\d{{2}})?(?:{MERIDIEM_PATTERN})?-\d{{1,2}}(?::\d{{2}})?(?:{MERIDIEM_PATTERN})?$"
 )
+HYPHENATED_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}(?:-\d{1,4})?$")
 EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
@@ -195,6 +196,8 @@ def _is_plausible_start_tokens(token: str, next_token: str):
     if token in NUMBER_WORDS and next_token in UNIT_ALIASES:
         return True
     if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
+        return True
+    if HYPHENATED_NUMERIC_DATE_PATTERN.fullmatch(token):
         return True
     if "/" in token or ":" in token or "t" in token and "-" in token:
         return True

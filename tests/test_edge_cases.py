@@ -176,36 +176,6 @@ def test_prefixed_or_punctuated_text_skips_lalr_fallback(now, monkeypatch):
     assert calls == 0
 
 
-def test_compact_time_range_is_extracted_from_prose(now):
-    text = "running from 7-11pm and featuring resident DJs"
-    assert timefhuman(text, tfhConfig(now=now, return_matched_text=True)) == [
-        (
-            "7-11pm",
-            (13, 19),
-            (
-                datetime.datetime(2018, 8, 4, 19, 0),
-                datetime.datetime(2018, 8, 4, 23, 0),
-            ),
-        ),
-    ]
-
-
-def test_corpus_regressions_do_not_crash():
-    config = tfhConfig(now=localized_datetime('UTC', 2026, 3, 18, 12, 0), return_matched_text=True)
-
-    assert timefhuman("90p", config=config) == []
-    assert timefhuman("4906/0", config=config) == []
-    assert timefhuman("31/08/2012 to 30/08/2013", config=tfhConfig(now=config.now, infer_datetimes=False)) == [(
-        datetime.date(2012, 8, 31),
-        datetime.date(2013, 8, 30),
-    )]
-    assert timefhuman("Tue, 23 Apr 1996 13:28:27 -0400", config=config) == [
-        ("Tue, 23 Apr 1996 13:28:27 -0400", (0, 31), datetime.datetime(
-            1996, 4, 23, 13, 28, 27, tzinfo=datetime.timezone(datetime.timedelta(hours=-4))
-        ))
-    ]
-
-
 def test_large_multiline_documents_prefer_extraction(now, monkeypatch):
     doc = "1/1/95 header text\n" + ("plain filler line without dates\n" * 1100) + "How does 5p mon sound?\n"
     calls = 0
