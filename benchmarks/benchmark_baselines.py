@@ -318,11 +318,30 @@ def run_document_benchmark(bench, document_datasets):
     return document_results
 
 
+def sort_short_rows(rows):
+    return sorted(rows, key=lambda row: (row["label"] != "timefhuman", row["us_per_input"]))
+
+
+def sort_document_rows(rows):
+    def sort_key(row):
+        values = []
+        for _, key, _ in DOCUMENT_DATASETS:
+            value = row.get(key)
+            if isinstance(value, (int, float)):
+                values.append(value)
+            elif isinstance(value, str) and value.startswith(">"):
+                values.append(float("inf"))
+        aggregate = statistics.median(values) if values else float("inf")
+        return (row["label"] != "timefhuman", aggregate)
+
+    return sorted(rows, key=sort_key)
+
+
 def main():
     benches = build_benches()
     document_datasets = load_document_datasets()
-    short_rows = [row for row in (run_short_benchmark(bench) for bench in benches) if row is not None]
-    document_rows = [run_document_benchmark(bench, document_datasets) for bench in benches if bench["document_func"] is not None]
+    short_rows = sort_short_rows([row for row in (run_short_benchmark(bench) for bench in benches) if row is not None])
+    document_rows = sort_document_rows([run_document_benchmark(bench, document_datasets) for bench in benches if bench["document_func"] is not None])
 
     print("short-input parsing")
     print(
