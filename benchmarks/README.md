@@ -38,7 +38,6 @@ Only parsers with a comparable whole-document extraction API are included here.
 Notes on what the other baselines found that `timefhuman` still misses:
 
 - `core_corpus`: mostly multilingual relative phrases, such as Spanish `ayer`, `mañana`, and French `dans 2 jours`.
-- `seattle_html_76k`: raw counts include HTML metadata. `timefhuman` keeps comment dates and URL dates, so the totals are not a pure measure of user-visible prose extraction.
 - `seattle_html_76k`: `datefinder.find_dates`'s extra unique hits are mainly low-value metadata matches, such as asset version numbers like `1.3.4` and `1.7.1`, plus `Jan 6 2016` as a smaller substring inside the longer `Jan 6 2016 at 10:13AM` timestamp that `timefhuman` already captures.
 - `seattle_html_76k`: most of `dateparser.search_dates`'s extra hits are low-quality HTML false positives like `01'`, `90`, `50%`, `<h1`, and `set`.
 
