@@ -106,19 +106,19 @@ Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 | parser | us/input | extracted | correctness |
 | --- | ---: | ---: | ---: |
-| timefhuman | 37.9 | **37/37** | **10/10** |
-| datefinder.find_dates | **24.7** | 23/37 | 5/10 |
-| metadate.parse_date | 33.6 | 31/37 | 5/10 |
-| parsedatetime.parseDT | 48.4 | 36/37 | 6/10 |
-| recurrent.parse | 188.5 | 36/37 | 6/10 |
-| ctparse.ctparse | 12222.2 | **37/37** | 3/10 |
-| dateparser.parse | 45066.8 | 20/37 | 6/10 |
+| timefhuman | 39.3 | **37/37** | **10/10** |
+| datefinder.find_dates | **27.8** | 23/37 | 5/10 |
+| metadate.parse_date | 32.9 | 31/37 | 5/10 |
+| parsedatetime.parseDT | 44.2 | 36/37 | 6/10 |
+| recurrent.parse | 204.5 | 36/37 | 6/10 |
+| ctparse.ctparse | 12088.1 | **37/37** | 3/10 |
+| dateparser.parse | 44743.5 | 20/37 | 6/10 |
 
 | parser | core_corpus | seattle_html_76k | test_data_560k |
 | --- | ---: | ---: | ---: |
-| timefhuman | 0.0011 (10) | 0.0808 (59) | **0.3378 (716)** |
-| datefinder.find_dates | **0.0002 (11)** | **0.0400 (57)** | 0.4943 (313) |
-| dateparser.search_dates | 0.1105 (14) | 0.3299 (90) | >15s (n/a) |
+| timefhuman | 0.0011 (10) | **0.0334 (59)** | **0.1917 (716)** |
+| datefinder.find_dates | **0.0002 (11)** | 0.0402 (57) | 0.5053 (313) |
+| dateparser.search_dates | 0.1134 (14) | 0.3276 (90) | >15s (n/a) |
 
 Whole-document extracted counts are raw matches. `datefinder.find_dates` and `dateparser.search_dates` include extra HTML and metadata false positives on these corpora, so count alone overstates their quality. Details, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
 
