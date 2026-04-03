@@ -26,6 +26,10 @@ COMPACT_TIME_RANGE_PATTERN = re.compile(
     rf"(?ix)^\d{{1,2}}(?::\d{{2}})?(?:{MERIDIEM_PATTERN})?-\d{{1,2}}(?::\d{{2}})?(?:{MERIDIEM_PATTERN})?$"
 )
 HYPHENATED_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}(?:-\d{1,4})?$")
+PHONE_LIKE_PATTERN = re.compile(r"^\d{3,4}-\d{4}$|^\d{3}-\d{3}-\d{4}$")
+COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
+UPPERCASE_COMPACT_SUFFIX_PATTERN = re.compile(r"^\d{1,4}[A-Z]$")
+LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
 EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
@@ -102,6 +106,8 @@ def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate)
         if not candidate or candidate == last_candidate:
             continue
         last_candidate = candidate
+        if _should_skip_candidate(text, tokens, start_index, candidate, start, end):
+            continue
 
         expression = parse_candidate(candidate, start)
         if expression is not None:
@@ -208,4 +214,39 @@ def _is_plausible_start_tokens(token: str, next_token: str):
             MERIDIEM_ONLY_PATTERN.fullmatch(next_token)
         )
 
+    return False
+
+
+def _should_skip_candidate(text: str, tokens, start_index: int, candidate: str, start: int, end: int):
+    if PHONE_LIKE_PATTERN.fullmatch(candidate):
+        return True
+
+    if not COMPACT_ALNUM_PATTERN.fullmatch(candidate):
+        return False
+
+    before = text[start - 1] if start > 0 else ""
+    after = text[end] if end < len(text) else ""
+    if before.isalnum() or after.isalnum():
+        return True
+
+    if UPPERCASE_COMPACT_SUFFIX_PATTERN.fullmatch(candidate):
+        return True
+
+    if LOWERCASE_SHORT_TIME_PATTERN.fullmatch(candidate):
+        previous_token = tokens[start_index - 1][0] if start_index > 0 else ""
+        if _looks_like_identifier_token(previous_token):
+            return True
+
+    return False
+
+
+def _looks_like_identifier_token(token: str):
+    if not token:
+        return False
+    if any(char.isdigit() for char in token):
+        return True
+    if token.isupper() and len(token) <= 4:
+        return True
+    if any(separator in token for separator in "._/-"):
+        return True
     return False

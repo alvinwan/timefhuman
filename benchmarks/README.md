@@ -16,13 +16,13 @@ Status as of April 2, 2026.
 
 | parser | us/input | extracted | correctness |
 | --- | ---: | ---: | ---: |
-| timefhuman | 94.6 | **37/37** | **10/10** |
-| metadate.parse_date | **83.6** | 31/37 | 5/10 |
-| datefinder.find_dates | 114.5 | 23/37 | 5/10 |
-| parsedatetime.parseDT | 127.9 | 36/37 | 6/10 |
-| recurrent.parse | 521.1 | 36/37 | 6/10 |
-| ctparse.ctparse | 35200.4 | **37/37** | 3/10 |
-| dateparser.parse | 130539.7 | 20/37 | 6/10 |
+| timefhuman | **49.9** | **37/37** | **10/10** |
+| datefinder.find_dates | 64.5 | 23/37 | 5/10 |
+| metadate.parse_date | 65.2 | 31/37 | 5/10 |
+| parsedatetime.parseDT | 78.3 | 36/37 | 6/10 |
+| recurrent.parse | 468.2 | 36/37 | 6/10 |
+| ctparse.ctparse | 27484.4 | **37/37** | 3/10 |
+| dateparser.parse | 96329.5 | 20/37 | 6/10 |
 
 ### Whole-Document Extraction
 
@@ -30,14 +30,15 @@ Only parsers with a comparable whole-document extraction API are included here.
 
 | parser | core_corpus | seattle_html_76k | test_data_560k |
 | --- | ---: | ---: | ---: |
-| timefhuman | 0.0032 (11) | 0.1615 (102) | **0.5215 (800)** |
-| datefinder.find_dates | **0.0006 (11)** | **0.0877 (57)** | 1.0846 (313) |
-| dateparser.search_dates | 0.2444 (14) | 0.8960 (90) | >15s (n/a) |
+| timefhuman | 0.0022 (11) | 0.1127 (59) | **0.4091 (718)** |
+| datefinder.find_dates | **0.0003 (11)** | **0.0592 (57)** | 0.7323 (313) |
+| dateparser.search_dates | 0.1713 (14) | 0.5225 (90) | >15s (n/a) |
 
 Notes on what the other baselines found that `timefhuman` still misses:
 
 - `core_corpus`: mostly multilingual relative phrases, such as Spanish `ayer`, `mañana`, and French `dans 2 jours`.
-- `seattle_html_76k`: `datefinder.find_dates` is now mostly ahead on a few low-value extras:
+- `seattle_html_76k`: after filtering obvious false positives like `1p` from `1px`, `7a` section IDs, and `591-5252` phone numbers, `timefhuman` is still slightly above `datefinder.find_dates` on raw count because it keeps in-scope comment dates and URL dates.
+- `seattle_html_76k`: `datefinder.find_dates` is still ahead on a few low-value extras:
   asset version numbers like `1.3.4` and `1.7.1`, plus `Jan 6 2016` as a smaller substring inside the longer `Jan 6 2016 at 10:13AM` timestamp that `timefhuman` already captures.
 - `seattle_html_76k`: most of `dateparser.search_dates`'s extra hits are lower-quality HTML false positives like `01'`, `90`, `50%`, `<h1`, and `set`.
 

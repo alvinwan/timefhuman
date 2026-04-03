@@ -215,6 +215,15 @@ def test_custom_config(now, config, test_input, expected):
     ('<!-- REMOVED 08-07-2013 -->', [
         ('08-07-2013', (13, 23), datetime.datetime(2013, 8, 7, 0, 0))
     ]),
+    ("style='width:1px; height:1px;'", []),
+    ('telephone (253) 591-5252', []),
+    ('Section 7.02B 7a. - e.', []),
+    ('Meet at 7a.', [
+        ('7a', (8, 10), datetime.datetime(2018, 8, 5, 7, 0))
+    ]),
+    ('Wait 3h please', [
+        ('3h', (5, 7), datetime.datetime(2018, 8, 4, 17, 0))
+    ]),
     ('90p', []),
     ('4906/0', []),
     ('Tue, 23 Apr 1996 13:28:27 -0400', [

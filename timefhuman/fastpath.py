@@ -90,7 +90,7 @@ def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 
         return None
 
     expression = _parse_expression(_normalize_space(stripped), config, timezone_mapping, allow_ambiguous=False)
-    if expression is None:
+    if expression is None or _is_ambiguous_only(expression):
         return None
 
     expression.matched_text_pos = (span_start, span_end)
@@ -177,7 +177,8 @@ def _build_range(left_text: str, right_text: str, config: tfhConfig, timezone_ma
     right = _parse_single(right_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     if left is None or right is None:
         return None
-    return tfhRange(infer([left, right]))
+    result = tfhRange(infer([left, right]))
+    return None if _is_ambiguous_only(result) else result
 
 
 def _parse_range_or_single(text: str, config: tfhConfig, timezone_mapping, allow_ambiguous: bool):
@@ -199,6 +200,14 @@ def _parse_single(text: str, config: tfhConfig, timezone_mapping, allow_ambiguou
         return tfhAmbiguous(int(text))
 
     return None
+
+
+def _is_ambiguous_only(expression):
+    if isinstance(expression, tfhAmbiguous):
+        return True
+    if isinstance(expression, (tfhList, tfhRange)):
+        return all(_is_ambiguous_only(item) for item in expression.items)
+    return False
 
 
 def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
