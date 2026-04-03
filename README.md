@@ -100,33 +100,22 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 ## Performance
 
-Current benchmark snapshot from [`benchmarks/README.md`](benchmarks/README.md). Correctness and performance are reported separately.
+Current benchmark snapshot from [`benchmarks/README.md`](benchmarks/README.md). Each dataset shows runtime next to the matching accuracy for that dataset when gold labels exist.
 
 Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
-| parser | short_correct | core_corpus | seattle_html_76k |
-| --- | ---: | ---: | ---: |
-| timefhuman | **23/23** | **10/10** | **55/55** |
-| datefinder.find_dates | 9/23 | 1/10 | 53/55 |
-| dateparser.search_dates | n/a | 1/10 | 52/55 |
-| metadate.parse_date | 9/23 | 5/10 | 2/55 |
-| dateparser.parse | 13/23 | 0/10 | >1s |
-| parsedatetime.parseDT | 11/23 | 0/10 | 0/55 |
-| recurrent.parse | 11/23 | 0/10 | n/a |
-| ctparse.ctparse | 5/23 | 0/10 | >1s |
+| parser | short | acc | core_corpus | acc | seattle_html_76k | acc | test_data_560k |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| timefhuman | 15.9 | **23/23** | 0.0004 (10) | **10/10** | 0.0218 (55) | **55/55** | 0.1347 (594) |
+| metadate.parse_date | 26.1 | 9/23 | **0.0002** (10) | 5/10 | **0.0043** (90) | 2/55 | **0.0496** (1538) |
+| datefinder.find_dates | **9.1** | 9/23 | 0.0002 (11) | 1/10 | 0.0397 (57) | 53/55 | 0.4964 (313) |
+| dateparser.search_dates | n/a | n/a | 0.1107 (14) | 1/10 | 0.3214 (90) | 52/55 | >1s (n/a) |
+| parsedatetime.parseDT | 20.2 | 11/23 | 0.0024 (1) | 0/10 | 0.6959 (1) | 0/55 | >1s (n/a) |
+| recurrent.parse | 140.0 | 11/23 | 0.0038 (1) | 0/10 | n/a | n/a | n/a |
+| dateparser.parse | 1307.0 | 13/23 | 0.1212 (0) | 0/10 | >1s (n/a) | >1s | >1s (n/a) |
+| ctparse.ctparse | 3263.8 | 5/23 | 0.1263 (1) | 0/10 | >1s (n/a) | >1s | >1s (n/a) |
 
-| parser | short_us/input | core_corpus | seattle_html_76k | test_data_560k |
-| --- | ---: | ---: | ---: | ---: |
-| timefhuman | 14.4 | 0.0004 (10) | 0.0223 (55) | 0.1351 (594) |
-| metadate.parse_date | 21.1 | **0.0002** (10) | **0.0042** (90) | **0.0483** (1538) |
-| datefinder.find_dates | **10.7** | 0.0003 (11) | 0.0396 (57) | 0.4977 (313) |
-| dateparser.search_dates | n/a | 0.1109 (14) | 0.3285 (90) | >1s (n/a) |
-| parsedatetime.parseDT | 20.3 | 0.0024 (1) | 0.6956 (1) | >1s (n/a) |
-| recurrent.parse | 146.4 | 0.0040 (1) | n/a | n/a |
-| dateparser.parse | 1290.9 | 0.1215 (0) | >1s (n/a) | >1s (n/a) |
-| ctparse.ctparse | 3320.6 | 0.1246 (1) | >1s (n/a) | >1s (n/a) |
-
-Whole-document cells are median seconds with extracted-counts in parentheses. `metadate.parse_date`, `datefinder.find_dates`, and `dateparser.search_dates` all include extra HTML and metadata false positives on these corpora, so speed and raw count alone overstate quality. Details, timeout rules, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
+`short` is median `us/input`; document cells are median seconds with extracted-counts in parentheses; each adjacent `acc` column is the gold-match score for the dataset immediately to its left. `metadate.parse_date`, `datefinder.find_dates`, and `dateparser.search_dates` all include extra HTML and metadata false positives on these corpora, so speed and raw count alone overstate quality. Details, timeout rules, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Advanced Usage
 

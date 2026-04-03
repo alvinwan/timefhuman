@@ -319,18 +319,19 @@ def run_document_correctness(bench, document_datasets):
     row = {"label": bench["label"]}
     document_runner = bench.get("document_dump_func") or get_document_runner(bench)
     for dataset_name in GOLD_DOCUMENT_DATASETS:
+        key = f"{dataset_name}_correctness"
         text = document_datasets.get(dataset_name)
         expected = CORPORA[dataset_name]["expected"]
         if document_runner is None or text is None or expected is None:
-            row[dataset_name] = None
+            row[key] = None
             continue
         try:
             matches = _timeout_call(DOCUMENT_TIMEOUT_SECONDS, document_runner, text)
         except BenchmarkTimeout:
-            row[dataset_name] = {"timeout": f">{DOCUMENT_TIMEOUT_SECONDS}s"}
+            row[key] = {"timeout": f">{DOCUMENT_TIMEOUT_SECONDS}s"}
             continue
         except Exception:
-            row[dataset_name] = None
+            row[key] = None
             continue
 
         items = [normalize_gold_match(bench["label"], match) for match in extract_result_items(bench["label"], matches)]
@@ -341,7 +342,7 @@ def run_document_correctness(bench, document_datasets):
             actual_counts = Counter(value for _, value in items)
             expected_counts = Counter(canonicalize_value(value) for _, _, value in expected)
         matched = sum((actual_counts & expected_counts).values())
-        row[dataset_name] = {"matched": matched, "total": len(expected)}
+        row[key] = {"matched": matched, "total": len(expected)}
     return row
 
 
@@ -359,20 +360,6 @@ def run_document_perf(bench, document_datasets):
             ) if text is not None else None
         )
     return document_results
-
-
-def sort_correctness_rows(rows):
-    def score(row):
-        total = 0.0
-        if row["short_correctness"] is not None:
-            total += row["short_correctness"] / len(EXACT_CASES)
-        for dataset_name in GOLD_DOCUMENT_DATASETS:
-            value = row.get(dataset_name)
-            if isinstance(value, dict) and "matched" in value:
-                total += value["matched"] / value["total"]
-        return total
-
-    return sorted(rows, key=lambda row: (row["label"] != "timefhuman", -score(row)))
 
 
 def sort_perf_rows(rows):
@@ -395,6 +382,19 @@ def sort_perf_rows(rows):
     return sorted(rows, key=sort_key)
 
 
+def merge_rows(correctness_rows, perf_rows):
+    correctness_by_label = {row["label"]: row for row in correctness_rows}
+    perf_by_label = {row["label"]: row for row in perf_rows}
+    labels = [row["label"] for row in sort_perf_rows(perf_rows)]
+    merged = []
+    for label in labels:
+        row = {"label": label}
+        row.update(correctness_by_label.get(label, {}))
+        row.update(perf_by_label.get(label, {}))
+        merged.append(row)
+    return merged
+
+
 def main():
     benches = build_benches()
     document_datasets = load_document_datasets()
@@ -410,11 +410,16 @@ def main():
         perf_row.update(run_document_perf(bench, document_datasets))
         perf_rows.append(perf_row)
 
-    correctness_rows = sort_correctness_rows(correctness_rows)
-    perf_rows = sort_perf_rows(perf_rows)
+    rows = merge_rows(correctness_rows, perf_rows)
 
-    print("correctness")
-    print(f"{'parser':24} {'short_correct':>14} {'core_corpus':>14} {'seattle_html_76k':>18}")
+    print("benchmarks")
+    print(
+        f"{'parser':24} "
+        f"{'short':>14} {'acc':>8} "
+        f"{'core_corpus':>14} {'acc':>8} "
+        f"{'seattle_html_76k':>18} {'acc':>8} "
+        f"{'test_data_560k':>16}"
+    )
 
     def format_correctness(value):
         if isinstance(value, dict) and "matched" in value:
@@ -429,18 +434,6 @@ def main():
         if value is None:
             return "n/a"
         return f"{value}/{total}"
-
-    for row in correctness_rows:
-        print(
-            f"{row['label']:24} "
-            f"{format_short_count(row['short_correctness'], len(EXACT_CASES)):>14} "
-            f"{format_correctness(row['core_corpus']):>14} "
-            f"{format_correctness(row['seattle_html_76k']):>18}"
-        )
-
-    print()
-    print("performance")
-    print(f"{'parser':24} {'short_us/input':>14} {'core_corpus':>14} {'seattle_html_76k':>18} {'test_data_560k':>16}")
 
     def format_perf_short(value):
         if isinstance(value, (int, float)):
@@ -458,12 +451,15 @@ def main():
             return "n/a"
         return str(value)
 
-    for row in perf_rows:
+    for row in rows:
         print(
             f"{row['label']:24} "
             f"{format_perf_short(row['short_us_per_input']):>14} "
+            f"{format_short_count(row['short_correctness'], len(EXACT_CASES)):>8} "
             f"{format_doc(row['core_corpus']):>14} "
+            f"{format_correctness(row['core_corpus_correctness']):>8} "
             f"{format_doc(row['seattle_html_76k']):>18} "
+            f"{format_correctness(row['seattle_html_76k_correctness']):>8} "
             f"{format_doc(row['test_data_560k']):>16}"
         )
 
