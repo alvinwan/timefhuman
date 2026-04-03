@@ -14,42 +14,46 @@ Status as of April 2, 2026.
 - Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
 - Shared benchmark inputs live in `eval/short.py`, and the checked-in fully gold `core_corpus` lives in `eval/corpora.py`.
 - `seattle_html_76k` is also a checked-in gold corpus; the HTML stays external and is loaded from `/tmp/datefinder` or `.eval_corpora/`.
-- `extracted`: returned any result on all 43 default-mode short cases from `eval/short.py`.
-- `correctness`: exact match on the 23 single-datetime cases within that same default-mode suite.
-- `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds and extracted count, formatted as `seconds (count)`.
-- whole-document counts link to checked-in raw match dumps under `benchmarks/matches/`.
+- `short_correct`: exact match on the 23 single-datetime cases within that same suite.
+- `core_corpus`, `seattle_html_76k` in the correctness table: gold-corpus match counts. Parsers with matched-text APIs are scored on `(matched text, normalized value)`. Parsers without span APIs are scored on normalized value only after running on the full document.
+- `short_us/input`: median over 7 full-suite passes of the 23 single-datetime short cases.
+- `core_corpus`, `seattle_html_76k`, `test_data_560k` in the performance table: warmed median seconds and extracted count, formatted as `seconds (count)`.
+- Whole-document rows are run with a strict 1-second per-call timeout. `>1s` means the parser exceeded that cap.
+- Whole-document counts link to checked-in raw match dumps under `benchmarks/matches/`.
 - `timefhuman` whole-document extraction uses `infer_datetimes=False`, so linked dumps keep raw dates, times, and timedeltas while explicit datetimes stay datetimes.
-- `>15s (n/a)`: exceeded the document benchmark timeout for that dataset.
-- whole-document counts are raw extracted-match counts, so HTML noise can inflate them.
-- `timefhuman` is pinned first; the remaining rows are ordered fastest to slowest.
+- `timefhuman` is pinned first; the remaining rows are ordered by overall score in the correctness table and overall speed in the performance table.
 
-### Short-Input Parsing
+### Correctness
 
-| parser | us/input | extracted | correctness |
+| parser | short_correct | core_corpus | seattle_html_76k |
 | --- | ---: | ---: | ---: |
-| timefhuman | 38.9 | **43/43** | **23/23** |
-| datefinder.find_dates | **27.7** | 27/43 | 9/23 |
-| metadate.parse_date | 33.1 | 37/43 | 9/23 |
-| parsedatetime.parseDT | 43.3 | 42/43 | 11/23 |
-| recurrent.parse | 198.5 | 42/43 | 11/23 |
-| ctparse.ctparse | 11542.1 | **43/43** | 5/23 |
-| dateparser.parse | 39729.0 | 25/43 | 13/23 |
+| timefhuman | **23/23** | **10/10** | **55/55** |
+| datefinder.find_dates | 9/23 | 1/10 | 53/55 |
+| dateparser.search_dates | n/a | 1/10 | 52/55 |
+| metadate.parse_date | 9/23 | 5/10 | 2/55 |
+| dateparser.parse | 13/23 | 0/10 | >1s |
+| parsedatetime.parseDT | 11/23 | 0/10 | 0/55 |
+| recurrent.parse | 11/23 | 0/10 | n/a |
+| ctparse.ctparse | 5/23 | 0/10 | >1s |
 
-### Whole-Document Extraction
+### Performance
 
-Only parsers with a comparable whole-document extraction API are included here.
+| parser | short_us/input | core_corpus | seattle_html_76k | test_data_560k |
+| --- | ---: | ---: | ---: | ---: |
+| timefhuman | 14.4 | 0.0004 ([10](matches/timefhuman/core_corpus.md)) | 0.0223 ([55](matches/timefhuman/seattle_html_76k.md)) | 0.1351 ([594](matches/timefhuman/test_data_560k.md)) |
+| metadate.parse_date | 21.1 | **0.0002** (10) | **0.0042** (90) | **0.0483** (1538) |
+| datefinder.find_dates | **10.7** | 0.0003 ([11](matches/datefinder.find_dates/core_corpus.md)) | 0.0396 ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.4977 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
+| dateparser.search_dates | n/a | 0.1109 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.3285 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >1s (n/a) |
+| parsedatetime.parseDT | 20.3 | 0.0024 (1) | 0.6956 (1) | >1s (n/a) |
+| recurrent.parse | 146.4 | 0.0040 (1) | n/a | n/a |
+| dateparser.parse | 1290.9 | 0.1215 (0) | >1s (n/a) | >1s (n/a) |
+| ctparse.ctparse | 3320.6 | 0.1246 (1) | >1s (n/a) | >1s (n/a) |
 
-| parser | core_corpus | seattle_html_76k | test_data_560k |
-| --- | ---: | ---: | ---: |
-| timefhuman | 0.0004 ([10](matches/timefhuman/core_corpus.md)) | **0.0223** ([55](matches/timefhuman/seattle_html_76k.md)) | **0.1328** ([594](matches/timefhuman/test_data_560k.md)) |
-| datefinder.find_dates | **0.0002** ([11](matches/datefinder.find_dates/core_corpus.md)) | 0.0393 ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.5039 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
-| dateparser.search_dates | 0.1115 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.3315 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >15s (n/a) |
+Notes:
 
-Notes on what the other baselines found that `timefhuman` still misses:
-
-- `core_corpus`: `datefinder.find_dates`'s extra hits are mainly multilingual relative words such as Spanish `ayer` and `mañana`, plus component-level substring matches like `31/08/2012`, `30/08/2013`, and `23 Apr 1996` instead of the full range or full timestamp.
-- `seattle_html_76k`: `datefinder.find_dates`'s extra unique hits are mainly low-value metadata matches, such as asset version numbers like `1.3.4` and `1.7.1`, plus `Jan 6 2016` as a smaller substring inside the longer `Jan 6 2016 at 10:13AM` timestamp that `timefhuman` already captures.
-- `seattle_html_76k`: most of `dateparser.search_dates`'s extra hits are low-quality HTML false positives like `01'`, `90`, `50%`, `<h1`, and `set`.
+- `metadate.parse_date`, `datefinder.find_dates`, and `dateparser.search_dates` all pick up extra HTML or metadata false positives on the document corpora, so speed and raw count alone overstate quality.
+- `datefinder.find_dates`'s extra unique Seattle hits are mainly low-value metadata matches such as asset version numbers like `1.3.4` and `1.7.1`, plus `Jan 6 2016` as a smaller substring inside the longer `Jan 6 2016 at 10:13AM` timestamp that `timefhuman` already captures.
+- `dateparser.search_dates`'s extra Seattle hits are mostly low-quality HTML false positives like `01'`, `90`, `50%`, `<h1`, and `set`.
 
 ## Reproduce
 
