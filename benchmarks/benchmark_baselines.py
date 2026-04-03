@@ -375,9 +375,9 @@ def main():
 
         def format_doc(value):
             if isinstance(value, dict) and "seconds" in value:
-                return f"{value['seconds']:.4f}/{value['count']:>3}"
+                return f"{value['seconds']:.4f} ({value['count']})"
             if isinstance(value, dict) and "timeout" in value:
-                return f"{value['timeout']}/n/a"
+                return f"{value['timeout']} (n/a)"
             if value is None:
                 return "n/a"
             return str(value)

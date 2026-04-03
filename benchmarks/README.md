@@ -7,8 +7,8 @@ Status as of April 2, 2026.
 - Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
 - `extracted`: returned any result on the 37-case short-input corpus.
 - `correctness`: exact match on the 10-case exactness subset.
-- `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds and extracted count, formatted as `seconds/count`.
-- `>15s/n/a`: exceeded the document benchmark timeout for that dataset.
+- `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds and extracted count, formatted as `seconds (count)`.
+- `>15s (n/a)`: exceeded the document benchmark timeout for that dataset.
 - `timefhuman` is pinned first; the remaining rows are ordered fastest to slowest.
 
 ### Short-Input Parsing
@@ -29,9 +29,9 @@ Only parsers with a comparable whole-document extraction API are included here.
 
 | parser | core_corpus | seattle_html_76k | test_data_560k |
 | --- | ---: | ---: | ---: |
-| timefhuman | 0.0016/10 | 0.0983/48 | **0.3628/637** |
-| datefinder.find_dates | **0.0006/11** | **0.0792/57** | 0.9695/313 |
-| dateparser.search_dates | 0.2412/14 | 0.7354/90 | >15s/n/a |
+| timefhuman | 0.0016 (10) | 0.0983 (48) | **0.3628 (637)** |
+| datefinder.find_dates | **0.0006 (11)** | **0.0792 (57)** | 0.9695 (313) |
+| dateparser.search_dates | 0.2412 (14) | 0.7354 (90) | >15s (n/a) |
 
 ## Reproduce
 
