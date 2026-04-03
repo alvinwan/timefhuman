@@ -18,15 +18,15 @@ Status as of April 3, 2026.
 - `sea_560k` accuracy is measured against the checked-in sampled gold set, not an exhaustive annotation of the whole corpus.
 - `#` is the extracted count for the dataset immediately to the left.
 - `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
-- Whole-document rows use a 1-second timeout. `timeout` in an `acc` column means the correctness run hit that cap.
+- Whole-document rows use a 2-second timeout. `timeout` in an `acc` column means the correctness run hit that cap.
 
 ### Main Results
 
 | parser | short (ms) | acc | core (ms) | # | acc | group | sea_76k (ms) | # | acc | group | sea_560k (ms) | # | acc | group |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 1.0 | [13](matches/timefhuman/core_corpus.md) | <ins><strong>14/14</strong></ins> | <ins><strong>13/13</strong></ins> | <ins><strong>49.3</strong></ins> | [55](matches/timefhuman/seattle_html_76k.md) | <ins><strong>56/56</strong></ins> | <ins><strong>55/55</strong></ins> | <ins><strong>401.3</strong></ins> | [554](matches/timefhuman/test_data_560k.md) | <ins><strong>26/26</strong></ins> | <ins><strong>12/12</strong></ins> |
-| datefinder.find_dates | <ins><strong>0.7</strong></ins> | 10/27 | <ins><strong>0.6</strong></ins> | [11](matches/datefinder.find_dates/core_corpus.md) | 9/14 | 7/13 | 93.0 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/56 | 54/55 | >1000ms | [313](matches/datefinder.find_dates/test_data_560k.md) | timeout | timeout |
-| dateparser* | 117.7 | 15/27 | 266.6 | [14](matches/dateparser/core_corpus.md) | timeout | timeout | 806.3 | [90](matches/dateparser/seattle_html_76k.md) | 52/56 | 52/55 | >1000ms | n/a | timeout | timeout |
+| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 1.0 | [13](matches/timefhuman/core_corpus.md) | <ins><strong>14/14</strong></ins> | <ins><strong>13/13</strong></ins> | <ins><strong>42.5</strong></ins> | [55](matches/timefhuman/seattle_html_76k.md) | <ins><strong>56/56</strong></ins> | <ins><strong>55/55</strong></ins> | <ins><strong>279.8</strong></ins> | [554](matches/timefhuman/test_data_560k.md) | <ins><strong>26/26</strong></ins> | <ins><strong>12/12</strong></ins> |
+| datefinder.find_dates | <ins><strong>0.4</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | [11](matches/datefinder.find_dates/core_corpus.md) | 9/14 | 7/13 | 66.5 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/56 | 54/55 | 834.9 | [313](matches/datefinder.find_dates/test_data_560k.md) | 13/26 | 0/12 |
+| dateparser* | 77.5 | 15/27 | 183.5 | [14](matches/dateparser/core_corpus.md) | 9/14 | 7/13 | 540.3 | [90](matches/dateparser/seattle_html_76k.md) | 52/56 | 52/55 | >2000ms | n/a | timeout | timeout |
 
 ### Lower-Accuracy Baselines
 
@@ -34,10 +34,10 @@ Seattle accuracy below `50/55`.
 
 | parser | short (ms) | acc | core (ms) | # | acc | group | sea_76k (ms) | # | acc | group | sea_560k (ms) | # | acc | group |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| metadate.parse_date | 1.6 | 10/27 | 0.5 | 10 | 8/14 | 6/13 | 9.7 | 90 | 2/56 | 2/55 | 117.6 | 1538 | 4/26 | 1/12 |
-| parsedatetime.parseDT | 1.5 | 13/27 | 5.8 | 1 | 0/14 | 0/13 | >1000ms | n/a | timeout | timeout | >1000ms | n/a | timeout | timeout |
-| recurrent.parse | 11.0 | 13/27 | 9.9 | 1 | 0/14 | 0/13 | error | n/a | error | error | >1000ms | n/a | timeout | timeout |
-| ctparse.ctparse | 313.6 | 6/27 | 294.3 | 1 | 1/14 | 1/13 | >1000ms | n/a | timeout | timeout | >1000ms | n/a | timeout | timeout |
+| metadate.parse_date | 1.1 | 10/27 | 0.3 | 10 | 8/14 | 6/13 | 6.8 | 90 | 2/56 | 2/55 | 77.8 | 1538 | 4/26 | 1/12 |
+| parsedatetime.parseDT | 1.1 | 13/27 | 4.1 | 1 | 0/14 | 0/13 | 1164.8 | 1 | 0/56 | 0/55 | >2000ms | n/a | timeout | timeout |
+| recurrent.parse | 7.5 | 13/27 | 6.6 | 1 | 0/14 | 0/13 | error | n/a | error | error | error | n/a | error | error |
+| ctparse.ctparse | 211.6 | 6/27 | 207.6 | 1 | 1/14 | 1/13 | >2000ms | n/a | timeout | timeout | >2000ms | n/a | timeout | timeout |
 
 Notes:
 

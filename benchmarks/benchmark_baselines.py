@@ -59,7 +59,7 @@ EXACT_CASES = [
 SHORT_PERF_INPUTS = [text for text, _ in EXACT_CASES]
 SHORT_SAMPLES = 7
 SHORT_TIMEOUT_SECONDS = 1
-DOCUMENT_TIMEOUT_SECONDS = 1
+DOCUMENT_TIMEOUT_SECONDS = 2
 DOCUMENT_DATASETS = (
     ("core_corpus", "core_corpus", 7),
     ("seattle_html_76k", "seattle_html_76k", 5),
