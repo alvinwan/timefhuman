@@ -33,7 +33,7 @@ PHONE_LIKE_PATTERN = re.compile(r"^\d{3,4}-\d{4}$|^\d{3}-\d{3}-\d{4}$")
 COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
 UPPERCASE_COMPACT_SUFFIX_PATTERN = re.compile(r"^\d{1,4}[A-Z]$")
 LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
-EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago"})
+EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago", "the"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
 LARGE_DOCUMENT_LINE_THRESHOLD = 1024
@@ -194,6 +194,8 @@ def _is_plausible_start(tokens, index: int):
 
 
 def _is_plausible_start_tokens(token: str, next_token: str):
+    if token in {"in", "past"} and (next_token.isdigit() or next_token in NUMBER_WORDS):
+        return True
     if token in DATE_NAME_TO_OFFSET or token in TIME_NAME_TO_TEMPLATE or token in DATE_TIME_NAME_TO_TEMPLATE:
         return True
     if token in MODIFIER_TO_OFFSET and (weekday_index(next_token) is not None or month_number(next_token) is not None):

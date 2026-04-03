@@ -108,6 +108,7 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
     assert timefhuman('2022-12-27T09:15:01.002', config=infer_config) == [datetime.datetime(2022, 12, 27, 9, 15, 1, 2)]
     assert timefhuman('July 17, 2018 at 3p.m.', config=infer_config) == [datetime.datetime(2018, 7, 17, 15, 0)]
     assert timefhuman('2 hours and 30 minutes', config=config) == [datetime.timedelta(hours=2, minutes=30)]
+    assert timefhuman('past 40 minutes', config=config) == [datetime.timedelta(minutes=-40)]
     assert timefhuman('30-40 mins', config=config) == [(datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))]
     assert timefhuman('1 or 2 days', config=config) == [[datetime.timedelta(days=1), datetime.timedelta(days=2)]]
     assert timefhuman('3-4p', config=config) == [(datetime.time(15, 0), datetime.time(16, 0))]

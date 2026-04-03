@@ -465,7 +465,7 @@
 | 458 | 5:00 pm | datetime.time(17, 0) | 506630:506637 | worked outside the hours of 5:00 am and 5:00 pm (or such other hours as may be agreed u |
 | 459 | 10 hours | datetime.timedelta(seconds=36000) | 506774:506782 | d in excess of eight (8) hours per day (10 hours per day for a 4 x 10 workweek) and on S |
 | 460 | 8 hours | datetime.timedelta(seconds=28800) | 507104:507111 | raight-time rate until they have worked 8 hours in a day (10 in a 4 x 10 workweek) or 4 |
-| 461 | a day | datetime.timedelta(days=1) | 507115:507120 | rate until they have worked 8 hours in a day (10 in a 4 x 10 workweek) or 40 hours d |
+| 461 | in a day | datetime.timedelta(days=1) | 507112:507120 | ime rate until they have worked 8 hours in a day (10 in a 4 x 10 workweek) or 40 hours d |
 | 462 | 40 hours | datetime.timedelta(days=1, seconds=57600) | 507150:507158 | s in a day (10 in a 4 x 10 workweek) or 40 hours during that workweek.) All hours worked |
 | 463 | Monday | datetime.date(2018, 8, 6) | 507199:507205 | during that workweek.) All hours worked Monday through Saturday over twelve (12) hours |
 | 464 | Saturday | datetime.date(2018, 8, 4) | 507214:507222 | kweek.) All hours worked Monday through Saturday over twelve (12) hours and all hours wo |
@@ -473,9 +473,9 @@
 | 466 | 3/1/2016 | datetime.date(2016, 3, 1) | 508030:508038 | it Code Key â Effective 9/2/2015 thru 3/1/2016 Overtime Codes Continued 2. 3. F. T |
 | 467 | Sunday | datetime.date(2018, 8, 5) | 508336:508342 | rate of wage. G. All hours worked on Sunday shall be paid at two times the hourly r |
 | 468 | Sunday | datetime.date(2018, 8, 5) | 508541:508547 | g holiday pay. H. All hours worked on Sunday shall be paid at two times the hourly r |
-| 469 | one week | datetime.timedelta(days=7) | 508891:508899 | and all hours worked over sixty (60) in one week shall be paid at double the hourly rate |
+| 469 | in one week | datetime.timedelta(days=7) | 508888:508899 | ys and all hours worked over sixty (60) in one week shall be paid at double the hourly rate |
 | 470 | 12 hours | datetime.timedelta(seconds=43200) | 509071:509079 | rly rate of wage. All hours worked over 12 hours in a day or on Sundays and holidays sha |
-| 471 | a day | datetime.timedelta(days=1) | 509083:509088 | wage. All hours worked over 12 hours in a day or on Sundays and holidays shall be pai |
+| 471 | in a day | datetime.timedelta(days=1) | 509080:509088 | of wage. All hours worked over 12 hours in a day or on Sundays and holidays shall be pai |
 | 472 | Monday | datetime.date(2018, 8, 6) | 509224:509230 | (2) hours after eight (8) regular hours Monday through Friday and the first eight (8) |
 | 473 | Friday | datetime.date(2018, 8, 10) | 509239:509245 | eight (8) regular hours Monday through Friday and the first eight (8) hours on Saturd |
 | 474 | Saturday | datetime.date(2018, 8, 4) | 509279:509287 | Friday and the first eight (8) hours on Saturday shall be paid at one and one-half times |
@@ -535,7 +535,7 @@
 | 528 | Monday | datetime.date(2018, 8, 6) | 514992:514998 | pay, except that if the job is down on Monday through Friday due to weather condition |
 | 529 | Friday | datetime.date(2018, 8, 10) | 515007:515013 | at if the job is down on Monday through Friday due to weather conditions or other cond |
 | 530 | Saturday | datetime.date(2018, 8, 4) | 515125:515133 | e employer, the first ten (10) hours on Saturday may be worked at the straight time rate |
-| 531 | a day | datetime.timedelta(days=1) | 515225:515230 | hours worked over twelve (12) hours in a day and all hours worked on Sunday and Holi |
+| 531 | in a day | datetime.timedelta(days=1) | 515222:515230 | All hours worked over twelve (12) hours in a day and all hours worked on Sunday and Holi |
 | 532 | Sunday | datetime.date(2018, 8, 5) | 515255:515261 | hours in a day and all hours worked on Sunday and Holidays shall be paid at two (2) t |
 | 533 | Saturday | datetime.date(2018, 8, 4) | 515494:515502 | ourly rate of wage. All hours worked on Saturday, Sundays and holidays shall be paid at |
 | 534 | Monday | datetime.date(2018, 8, 6) | 516007:516013 | (2) hours after eight (8) regular hours Monday through Friday of overtime on a regular |

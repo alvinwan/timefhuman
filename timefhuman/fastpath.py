@@ -448,7 +448,16 @@ def _parse_time_component(text: str, allow_houronly: bool):
 def _parse_duration(text: str):
     lowered = text.lower()
     direction = Direction.next
-    if lowered.startswith("in "):
+    if lowered.startswith("for the past "):
+        lowered = lowered[len("for the past ") :].strip()
+        direction = Direction.previous
+    elif lowered.startswith("the past "):
+        lowered = lowered[len("the past ") :].strip()
+        direction = Direction.previous
+    elif lowered.startswith("past "):
+        lowered = lowered[len("past ") :].strip()
+        direction = Direction.previous
+    elif lowered.startswith("in "):
         lowered = lowered[3:].strip()
     elif lowered.startswith("for "):
         lowered = lowered[4:].strip()

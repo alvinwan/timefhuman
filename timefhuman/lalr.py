@@ -138,6 +138,8 @@ class tfhTransformer(Transformer):
                     direction = Direction.previous
                 elif child.type == 'DURATION_FUTURE':
                     direction = Direction.next
+                elif child.type == 'DURATION_PREFIX_PAST':
+                    direction = Direction.previous
             else:
                 total += child.to_object(config)
                 if unit is None:

@@ -18,6 +18,7 @@ DURATION_UNIT: /(?<![a-z])(seconds|second|secs|sec|minutes|mins|min|hours|hour|h
 DURATION_UNIT_LETTER: /(?<=\d)(s|m|h|d|w|mo|y)(?![a-z])/
 DURATION_FUTURE: /(?<![a-z])in(?![a-z])/
 DURATION_PAST: /(?<![a-z])ago(?![a-z])/
+DURATION_PREFIX_PAST.2: /(?<![a-z])past(?![a-z])/
 DURATION_NUMBER: /(?<![a-z])(an|a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?![a-z])/
 DAY_SUFFIX: /(?<![a-z])(th|rd|st|nd)(?![a-z])/
 FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/
@@ -81,7 +82,7 @@ time: hour COLON minute (COLON second ("." millisecond)?)? meridiem?
     | hour ("o'clock")? meridiem
     | timename
 
-duration: (DURATION_FUTURE | "for")? duration_part (("and" | ",")? duration_part)* DURATION_PAST?
+duration: (DURATION_FUTURE | DURATION_PREFIX_PAST | "for" ("the")? DURATION_PREFIX_PAST?)? duration_part (("and" | ",")? duration_part)* DURATION_PAST?
 duration_part: duration_number (duration_unit | duration_unit_letter)
              | duration_numbername " " duration_unit
 duration_number: FLOAT_NUMBER | INT
