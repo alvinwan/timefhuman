@@ -11,6 +11,7 @@ from timefhuman.semantics import (
     WEEKDAY_ALIASES,
     duration_prefix_length,
     is_duration_value_token,
+    normalize_duration_unit,
     supports_numeric_date_text,
 )
 from timefhuman.utils import get_month_mapping, get_timezone_words
@@ -30,7 +31,6 @@ COMPACT_TIME_RANGE_PATTERN = re.compile(
 )
 HYPHENATED_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}(?:-\d{1,4})?$")
 PHONE_LIKE_PATTERN = re.compile(r"^\d{3,4}-\d{4}$|^\d{3}-\d{3}-\d{4}$")
-CODE_LIKE_NUMERIC_RANGE_PATTERN = re.compile(r"^\d{1,2}-\d{3}$")
 FRACTION_LIKE_PATTERN = re.compile(r"^\d+-\d+/\d+$")
 REFERENCE_LIKE_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,2}-\d{1,2}-\d{3}$")
 BARE_HYPHEN_NUMERIC_PATTERN = re.compile(r"^\d{1,2}-\d{1,2}$")
@@ -39,10 +39,6 @@ ARTICLE_DURATION_PATTERN = re.compile(r"(?i)^(?:a|an)\s+(?:second|minute|hour|da
 COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
 UPPERCASE_COMPACT_SUFFIX_PATTERN = re.compile(r"^\d{1,4}[A-Z]$")
 LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
-DIMENSION_LIKE_PATTERN = re.compile(r"(?i)^\d+\s+[a-z]$")
-WEEKDAY_FOLLOWED_BY_DATE_PATTERN = re.compile(
-    r"(?ix)^[\s\W]+[a-z]{3,9}\s+\d{1,2}(?:st|nd|rd|th)?(?:\s+\d{4})?(?:\s+at\s+\d{1,2}(?::\d{2})?(?:[ap](?:\.?m\.?)?)?)?"
-)
 EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago", "the", "between"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
@@ -290,32 +286,39 @@ def _is_expression_head(token: str):
     if token.isupper() and 2 <= len(token) <= 4:
         return True
     return False
+def _is_month_token(token: str):
+    return token.lower() in MONTH_WORDS
 
 
 def _is_plausible_start(tokens, index: int):
-    token = tokens[index][1]
-    next_token = tokens[index + 1][1] if index + 1 < len(tokens) else ""
-    next_next_token = tokens[index + 2][1] if index + 2 < len(tokens) else ""
-    next_next_next_token = tokens[index + 3][1] if index + 3 < len(tokens) else ""
+    token = tokens[index][0]
+    next_token = tokens[index + 1][0] if index + 1 < len(tokens) else ""
+    next_next_token = tokens[index + 2][0] if index + 2 < len(tokens) else ""
+    next_next_next_token = tokens[index + 3][0] if index + 3 < len(tokens) else ""
     return _is_plausible_start_tokens(token, next_token, next_next_token, next_next_next_token)
 
 
 def _is_plausible_start_tokens(token: str, next_token: str, next_next_token: str = "", next_next_next_token: str = ""):
-    if _has_duration_prefix(token, next_token, next_next_token, next_next_next_token):
+    lowered = token.lower()
+    next_lower = next_token.lower()
+    next_next_lower = next_next_token.lower()
+    next_next_next_lower = next_next_next_token.lower()
+
+    if _has_duration_prefix(lowered, next_lower, next_next_lower, next_next_next_lower):
         return True
-    if token == "between":
+    if lowered == "between":
         return _is_expression_head(next_token) or _has_duration_prefix(
-            next_token, next_next_token, next_next_next_token, ""
+            next_lower, next_next_lower, next_next_next_lower, ""
         )
-    if token in DIRECT_START_WORDS:
+    if _is_expression_head(token):
         return True
-    if token in MODIFIER_TO_OFFSET and (next_token in WEEKDAY_WORDS or next_token in MONTH_WORDS):
+    if lowered in MODIFIER_TO_OFFSET and (next_lower in WEEKDAY_WORDS or _is_month_token(next_token)):
         return True
-    if token in POSITION_TO_DELTA and next_token in WEEKDAY_WORDS:
+    if lowered in POSITION_TO_DELTA and next_lower in WEEKDAY_WORDS:
         return True
-    if DAY_SUFFIX_PATTERN.fullmatch(token) and next_token in WEEKDAY_WORDS and next_next_token in {"of", "in"}:
+    if DAY_SUFFIX_PATTERN.fullmatch(lowered) and next_lower in WEEKDAY_WORDS and next_next_lower in {"of", "in"}:
         return True
-    if token in NUMBER_WORDS and next_token in UNIT_ALIASES:
+    if lowered in NUMBER_WORDS and normalize_duration_unit(next_token) is not None:
         return True
     if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
         return True
@@ -327,9 +330,12 @@ def _is_plausible_start_tokens(token: str, next_token: str, next_next_token: str
         return True
     if re.fullmatch(rf"(?ix)\d+(?:{MERIDIEM_PATTERN})", token):
         return True
-    if token.isdigit():
-        return next_token in UNIT_ALIASES or next_token in WEEKDAY_ALIASES or next_token in DATE_NAME_TO_OFFSET or bool(
-            MERIDIEM_ONLY_PATTERN.fullmatch(next_token)
+    if lowered.isdigit():
+        return (
+            normalize_duration_unit(next_token) is not None
+            or next_lower in WEEKDAY_ALIASES
+            or next_lower in DATE_NAME_TO_OFFSET
+            or bool(MERIDIEM_ONLY_PATTERN.fullmatch(next_lower))
         )
 
     return False
@@ -346,12 +352,8 @@ def _is_duration_value_token(token: str):
 def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
     before = text[start - 1] if start > 0 else ""
     after = text[end] if end < len(text) else ""
-    lowered_candidate = candidate.lower()
-    candidate_words = lowered_candidate.split()
 
     if PHONE_LIKE_PATTERN.fullmatch(candidate):
-        return True
-    if CODE_LIKE_NUMERIC_RANGE_PATTERN.fullmatch(candidate):
         return True
     if FRACTION_LIKE_PATTERN.fullmatch(candidate):
         return True
@@ -360,11 +362,6 @@ def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
     if ARTICLE_DURATION_PATTERN.fullmatch(candidate):
         next_token = _next_token(text, end)
         if next_token and next_token[:1].isalpha() and next_token.lower() not in EXPRESSION_CONNECTORS:
-            return True
-
-    if len(candidate_words) == 2 and candidate_words[0] == "following" and candidate_words[1] in MONTH_WORDS:
-        next_token = _next_token(text, end).lower().strip(".,:;)")
-        if next_token and next_token[:1].isalpha() and next_token not in EXPRESSION_WORDS:
             return True
 
     if BARE_HYPHEN_NUMERIC_PATTERN.fullmatch(candidate):
@@ -380,12 +377,6 @@ def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
             return True
 
     if candidate.isalpha() and (before == "-" or after == "-"):
-        return True
-
-    if DIMENSION_LIKE_PATTERN.fullmatch(candidate) and (before == ":" or after == ":"):
-        return True
-
-    if candidate.rstrip(".,").lower() in WEEKDAY_WORDS and WEEKDAY_FOLLOWED_BY_DATE_PATTERN.match(text[end : end + 32]):
         return True
 
     if not COMPACT_ALNUM_PATTERN.fullmatch(candidate):

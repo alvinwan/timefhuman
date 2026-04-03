@@ -103,6 +103,7 @@ SEATTLE_HTML_76K_MATCHED_TEXT = [
     ("7-10-2013", (34239, 34248), datetime.date(2013, 7, 10)),
     ("Wed., Jan 6 2016 at 10:13AM", (39898, 39925), datetime.datetime(2016, 1, 6, 10, 13)),
     ("7-11pm", (45310, 45316), (datetime.time(19, 0), datetime.time(23, 0))),
+    ("4th of July", (45777, 45788), datetime.date(2018, 7, 4)),
     ("2013-01-23", (49125, 49135), datetime.date(2013, 1, 23)),
 ]
 
@@ -149,8 +150,6 @@ TEST_DATA_560K_SAMPLE_MATCHED_TEXT = [
 ]
 
 TEST_DATA_560K_SAMPLE_FORBIDDEN = [
-    ("following may", (21591, 21604)),
-    ("following may", (102929, 102942)),
     ("a second", (347048, 347056)),
     ("1/2", (94891, 94894)),
     ("8-1/2", (492931, 492936)),

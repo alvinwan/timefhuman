@@ -12,7 +12,7 @@ from timefhuman.semantics import (
     MODIFIER_TO_OFFSET,
     NUMBER_WORDS,
     build_date,
-    build_numeric_date,
+    build_numeric_date_parts,
     build_time,
     POSITION_TO_DELTA,
     TIME_NAME_TO_TEMPLATE,
@@ -21,6 +21,7 @@ from timefhuman.semantics import (
     clone_datetime,
     clone_time,
     month_number,
+    normalize_duration_unit,
     normalize_year,
     strip_duration_prefix,
     supports_numeric_date_text,
@@ -66,6 +67,14 @@ DAY_YEAR_PATTERN = re.compile(
     r"(?P<suffix>st|nd|rd|th)?"
     r"(?:\s*,\s*|\s+)"
     r"(?P<year>\d{2,4})$"
+)
+DAY_OF_MONTH_PATTERN = re.compile(
+    r"(?ix)^"
+    r"(?P<day>\d{1,2})"
+    r"(?P<suffix>st|nd|rd|th)"
+    r"\s+of\s+"
+    r"(?P<month>[a-z]+)"
+    r"(?:\s*,?\s*(?P<year>\d{2,4}))?$"
 )
 DAY_SUFFIX_PATTERN = re.compile(r"(?ix)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
 POSITION_WEEKDAY_MONTH_PATTERN = re.compile(
@@ -159,6 +168,8 @@ def _parse_list(text: str, config: tfhConfig, timezone_mapping):
             items.append(item)
 
         if items:
+            if all(isinstance(item, tfhAmbiguous) for item in items):
+                continue
             result = tfhList(infer(items))
             if tzinfo:
                 result.tz = tzinfo
@@ -201,6 +212,8 @@ def _build_range(left_text: str, right_text: str, config: tfhConfig, timezone_ma
     left = _parse_single(left_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     right = _parse_single(right_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     if left is None or right is None:
+        return None
+    if isinstance(left, tfhAmbiguous) and isinstance(right, tfhAmbiguous):
         return None
     left_missing_year = _datelike_missing_year(left)
     right_missing_year = _datelike_missing_year(right)
@@ -409,15 +422,15 @@ def _parse_date(text: str, config: tfhConfig):
     if lower in DATE_NAME_TO_OFFSET:
         return tfhDate.from_object(config.now.date() + timedelta(days=DATE_NAME_TO_OFFSET[lower]))
 
-    match = POSITION_WEEKDAY_MONTH_PATTERN.fullmatch(lower)
+    match = POSITION_WEEKDAY_MONTH_PATTERN.fullmatch(text)
     if match:
         weekday = _parse_weekday_name(match.group("weekday"))
         month = _parse_month_name(match.group("month"))
         if weekday is None or month is None:
             return None
-        return tfhDate(month=month, delta=POSITION_TO_DELTA[match.group("position")](weekdays[weekday]))
+        return tfhDate(month=month, delta=POSITION_TO_DELTA[match.group("position").lower()](weekdays[weekday]))
 
-    match = ORDINAL_POSITION_WEEKDAY_MONTH_PATTERN.fullmatch(lower)
+    match = ORDINAL_POSITION_WEEKDAY_MONTH_PATTERN.fullmatch(text)
     if match:
         weekday = _parse_weekday_name(match.group("weekday"))
         month = _parse_month_name(match.group("month"))
@@ -425,12 +438,14 @@ def _parse_date(text: str, config: tfhConfig):
             return None
         return tfhDate(month=month, delta=POSITION_TO_DELTA[ORDINAL_POSITION_NAME[match.group("ordinal")]](weekdays[weekday]))
 
-    tokens = lower.split()
-    offset, remainder = _parse_modifier_prefix(tokens)
+    tokens = text.split()
+    lowered_tokens = [token.lower() for token in tokens]
+    offset, lowered_remainder = _parse_modifier_prefix(lowered_tokens)
+    remainder = tokens[len(tokens) - len(lowered_remainder):]
     if len(remainder) == 1:
         weekday = _parse_weekday_name(remainder[0])
         if weekday is not None:
-            if tokens[: len(tokens) - 1]:
+            if lowered_tokens[: len(lowered_tokens) - 1]:
                 weekday_offset = offset
             else:
                 weekday_offset = direction_to_offset(config.direction)
@@ -438,7 +453,7 @@ def _parse_date(text: str, config: tfhConfig):
             return tfhDate.from_object(value)
 
         month = _parse_month_name(remainder[0])
-        if month is not None and tokens[: len(tokens) - 1]:
+        if month is not None and lowered_tokens[: len(lowered_tokens) - 1]:
             return tfhDate(month=month, delta=relativedelta(years=offset))
 
     stripped = _strip_leading_weekday(text) if len(tokens) >= 2 else text
@@ -475,15 +490,7 @@ def _parse_numeric_date(text: str):
         return None
     if not supports_numeric_date_text(text):
         return None
-    if match.group("c") is None and int(match.group("b")) > 31 and len(match.group("b")) not in (2, 4):
-        return None
-    third = match.group("c")
-    if third is not None and len(third) not in (2, 4):
-        return None
-
-    first = int(match.group("a"))
-    second = int(match.group("b"))
-    return build_numeric_date(first, second, int(third) if third is not None else None)
+    return build_numeric_date_parts(match.group("a"), match.group("b"), match.group("c"))
 
 
 def _parse_monthname_date(text: str):
@@ -507,6 +514,16 @@ def _parse_monthname_date(text: str):
 
 
 def _parse_day_month_or_year(text: str):
+    match = DAY_OF_MONTH_PATTERN.fullmatch(text)
+    if match:
+        month = _parse_month_name(match.group("month"))
+        if month is None:
+            return None
+        year = match.group("year")
+        if year is not None:
+            return build_date(day=int(match.group("day")), month=month, year=normalize_year(int(year)))
+        return build_date(day=int(match.group("day")), month=month)
+
     match = DAY_MONTH_PATTERN.fullmatch(text)
     if match:
         month = _parse_month_name(match.group("month"))
@@ -554,10 +571,13 @@ def _parse_time_component(text: str, allow_houronly: bool):
 
 
 def _parse_duration(text: str):
-    lowered, direction = strip_duration_prefix(text)
+    body, direction = strip_duration_prefix(text)
+    body = body.strip()
+    lowered = body.lower()
 
     if lowered.endswith(" ago"):
-        lowered = lowered[:-4].strip()
+        body = body[:-4].strip()
+        lowered = body.lower()
         direction = Direction.previous
 
     position = 0
@@ -572,16 +592,18 @@ def _parse_duration(text: str):
         if position >= len(lowered):
             break
 
-        numeric_match = NUMBER_UNIT_PATTERN.match(lowered, position)
+        numeric_match = NUMBER_UNIT_PATTERN.match(body, position)
         if numeric_match:
             amount = float(numeric_match.group("number"))
-            normalized_unit = UNIT_ALIASES[numeric_match.group("unit")]
+            normalized_unit = normalize_duration_unit(numeric_match.group("unit"))
+            if normalized_unit is None:
+                return None
             total += timedelta_for_unit(normalized_unit, amount)
             unit = unit or normalized_unit
             position = numeric_match.end()
             continue
 
-        word_match = re.match(r"[a-z]+(?:\s+[a-z]+)*", lowered[position:])
+        word_match = re.match(r"(?i)[a-z]+(?:\s+[a-z]+)*", body[position:])
         if not word_match:
             return None
 
@@ -601,7 +623,7 @@ def _parse_duration(text: str):
 
 
 def _consume_word_duration(segment: str):
-    tokens = segment.split()
+    tokens = [token.lower() for token in segment.split()]
     if len(tokens) < 2:
         return None
 

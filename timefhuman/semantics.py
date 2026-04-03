@@ -91,6 +91,7 @@ UNIT_ALIASES = _expand_aliases(
         ("years", "year years yr yrs y"),
     )
 )
+CASE_SENSITIVE_SINGLE_LETTER_DURATION_UNITS = frozenset({"s", "m", "h", "d", "w", "y"})
 WEEKDAY_ALIASES = _expand_aliases(
     (
         (0, "monday mon"),
@@ -167,6 +168,16 @@ def build_numeric_date(first: int, second: int, third: int | None = None):
     return None
 
 
+def build_numeric_date_parts(first: str, second: str, third: str | None = None):
+    if third is None:
+        if int(second) > 31 and len(second) not in (2, 4):
+            return None
+    elif len(third) not in (2, 4):
+        return None
+
+    return build_numeric_date(int(first), int(second), int(third) if third is not None else None)
+
+
 def build_time(
     hour: int,
     minute: int = 0,
@@ -226,6 +237,15 @@ def is_duration_value_token(token: str):
     return lowered.isdigit() or lowered in NUMBER_WORDS
 
 
+def normalize_duration_unit(token: str):
+    lowered = token.lower()
+    if lowered not in UNIT_ALIASES:
+        return None
+    if len(token) == 1 and lowered in CASE_SENSITIVE_SINGLE_LETTER_DURATION_UNITS and token != lowered:
+        return None
+    return UNIT_ALIASES[lowered]
+
+
 def duration_prefix_length(tokens, index: int = 0):
     lowered = [token.lower() for token in tokens[index:]]
     for prefix, _ in DURATION_PREFIX_PATTERNS:
@@ -239,13 +259,14 @@ def duration_prefix_length(tokens, index: int = 0):
 
 
 def strip_duration_prefix(text: str):
-    lowered = text.lower().strip()
-    tokens = lowered.split()
+    stripped = text.strip()
+    tokens = stripped.split()
+    lowered = [token.lower() for token in tokens]
     for prefix, direction in DURATION_PREFIX_PATTERNS:
         prefix_length = len(prefix)
-        if tokens[:prefix_length] != list(prefix):
+        if lowered[:prefix_length] != list(prefix):
             continue
         value_index = prefix_length
-        if value_index < len(tokens) and is_duration_value_token(tokens[value_index]):
+        if value_index < len(tokens) and is_duration_value_token(lowered[value_index]):
             return " ".join(tokens[value_index:]), direction
-    return lowered, Direction.next
+    return stripped, Direction.next
