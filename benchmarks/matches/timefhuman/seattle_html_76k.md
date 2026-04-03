@@ -1,7 +1,7 @@
 # timefhuman · seattle_html_76k
 
 - Source: /tmp/datefinder/tests/seattle_weekly.html
-- Total matches: 55
+- Total matches: 56
 
 | # | match | normalized | span | context |
 | ---: | --- | --- | --- | --- |
@@ -59,4 +59,5 @@
 | 52 | 7-10-2013 | datetime.date(2013, 7, 10) | 34239:34248 | id=84420">Deals</a> --> <!-- REMOVED 7-10-2013 SHARWARD--><!--<a onclick="_gaq.push([' |
 | 53 | Wed., Jan 6 2016 at 10:13AM | datetime.datetime(2016, 1, 6, 10, 13) | 39898:39925 | rf </span> <span class="bylineDate">Wed., Jan 6 2016 at 10:13AM</span> </div> <!-- SOCIAL MEDIA SH |
 | 54 | 7-11pm | (datetime.time(19, 0), datetime.time(23, 0)) | 45310:45316 | mertime hump day reprieve, running from 7-11pm and featuring resident DJs Xan Lucero a |
-| 55 | 2013-01-23 | datetime.date(2013, 1, 23) | 49125:49135 | data-src="http://www.seattleweekly.com/2013-01-23/news/israel-keyes-in-plane-sight/" clas |
+| 55 | 4th of July | datetime.date(2018, 7, 4) | 45777:45788 | out a parking lot in SoDo the day after 4th of July, with temps in the 90's, but nothing wa |
+| 56 | 2013-01-23 | datetime.date(2013, 1, 23) | 49125:49135 | data-src="http://www.seattleweekly.com/2013-01-23/news/israel-keyes-in-plane-sight/" clas |
