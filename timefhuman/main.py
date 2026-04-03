@@ -14,7 +14,10 @@ __all__ = ("timefhuman", "tfhConfig", "Direction", "DEFAULT_CONFIG")
 
 
 DEFAULT_CONFIG = tfhConfig()
-RAW_TOKEN_PATTERN = re.compile(r"\d+(?:[/:.-]\d+)*(?:[ap](?:\.?m\.?)?)?|[a-z]+(?:\.[a-z]+\.?)?|\S", re.IGNORECASE)
+RAW_TOKEN_PATTERN = re.compile(
+    r"\d+(?:[/:.-]\d+)*(?:st|nd|rd|th)?(?:[ap](?:\.?m\.?)?)?|[a-z]+(?:\.[a-z]+\.?)?|\S",
+    re.IGNORECASE,
+)
 
 
 def _build_candidate_parsers(config: tfhConfig):
