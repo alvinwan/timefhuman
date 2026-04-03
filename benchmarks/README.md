@@ -19,7 +19,7 @@ Status as of April 2, 2026.
 
 ### Main Results
 
-| parser | short | acc | core | # | acc | seattle_76k | # | acc | test_560k | # |
+| parser | short (ms) | acc | core (ms) | # | acc | seattle_76k (ms) | # | acc | test_560k (ms) | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | timefhuman | 0.3 | **23/23** | 0.4 | [10](matches/timefhuman/core_corpus.md) | **10/10** | 21.6 | [55](matches/timefhuman/seattle_html_76k.md) | **55/55** | 132.6 | [594](matches/timefhuman/test_data_560k.md) |
 | datefinder.find_dates | **0.2** | 9/23 | **0.2** | [11](matches/datefinder.find_dates/core_corpus.md) | 1/10 | 39.5 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 53/55 | 498.7 | [313](matches/datefinder.find_dates/test_data_560k.md) |
@@ -29,7 +29,7 @@ Status as of April 2, 2026.
 
 Seattle accuracy below `50/55`.
 
-| parser | short | acc | core | # | acc | seattle_76k | # | acc | test_560k | # |
+| parser | short (ms) | acc | core (ms) | # | acc | seattle_76k (ms) | # | acc | test_560k (ms) | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | metadate.parse_date | 0.6 | 9/23 | **0.2** | 10 | 5/10 | **4.2** | 90 | 2/55 | **48.3** | 1538 |
 | parsedatetime.parseDT | 0.5 | 11/23 | 2.4 | 1 | 0/10 | 696.0 | 1 | 0/55 | >1000ms | n/a |

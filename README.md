@@ -104,7 +104,7 @@ All runtime columns are in milliseconds. `acc` is the exact match count for the 
 
 Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
-| parser | short | acc | core | acc | seattle_76k | acc | test_560k |
+| parser | short (ms) | acc | core (ms) | acc | seattle_76k (ms) | acc | test_560k (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | timefhuman | 0.3 | **23/23** | 0.4 | **10/10** | 21.6 | **55/55** | 132.6 |
 | datefinder.find_dates | **0.2** | 9/23 | **0.2** | 1/10 | 39.5 | 53/55 | 498.7 |
