@@ -122,6 +122,8 @@ NO_INFERENCE_CASES = [
     ("1.3.4", []),
     ("2-319", []),
     ("8-1/2", []),
+    ("70Y", []),
+    ("3A", []),
 
     # date-only ranges
     ("7/17-7/18", [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
@@ -258,6 +260,8 @@ MATCHED_TEXT_CASES = [
     ("style='width:1px; height:1px;'", []),
     ("telephone (253) 591-5252", []),
     ("648 H", []),
+    ("foo 70Y bar", []),
+    ("foo 3A bar", []),
     ("Section 7.02B 7a. - e.", []),
     ("Meet at 7a.", [("7a", (8, 10), datetime.datetime(2018, 8, 5, 7, 0))]),
     ("Wait 3h please", [("3h", (5, 7), datetime.datetime(2018, 8, 4, 17, 0))]),

@@ -35,7 +35,6 @@ REFERENCE_LIKE_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,2}-\d{1,2}-\d{3}$")
 BARE_HYPHEN_NUMERIC_PATTERN = re.compile(r"^\d{1,2}-\d{1,2}$")
 SLASH_FRACTION_PATTERN = re.compile(r"^\d+/\d+$")
 COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
-UPPERCASE_COMPACT_SUFFIX_PATTERN = re.compile(r"^\d{1,4}[A-Z]$")
 LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
 EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago", "the", "between"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
@@ -374,9 +373,6 @@ def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
         return False
 
     if before.isalnum() or after.isalnum():
-        return True
-
-    if UPPERCASE_COMPACT_SUFFIX_PATTERN.fullmatch(candidate):
         return True
 
     if LOWERCASE_SHORT_TIME_PATTERN.fullmatch(candidate):

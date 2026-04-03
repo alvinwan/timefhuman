@@ -262,6 +262,10 @@ def normalize_duration_unit(token: str):
     return UNIT_ALIASES[lowered]
 
 
+def is_rejected_compact_meridiem_text(value: str):
+    return bool(re.fullmatch(r"\d+[AP]", value.strip()))
+
+
 def duration_prefix_length(tokens, index: int = 0):
     lowered = [token.lower() for token in tokens[index:]]
     for prefix, _ in DURATION_PREFIX_PATTERNS:

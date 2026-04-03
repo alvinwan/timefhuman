@@ -23,8 +23,9 @@ from timefhuman.semantics import (
     UNIT_ALIASES,
     clone_datetime,
     clone_time,
-    is_rejected_fraction_text,
     is_invalid_ambiguous_date_range,
+    is_rejected_compact_meridiem_text,
+    is_rejected_fraction_text,
     month_number,
     normalize_year,
     supports_numeric_date_text,
@@ -327,7 +328,10 @@ class tfhTransformer(Transformer):
         return {'time': result}
 
     def meridiem(self, children):
-        meridiem = children[0].value.lower()
+        raw_value = children[0].value
+        if raw_value in {"A", "P"}:
+            raise ValueError(f"Invalid meridiem: {raw_value}")
+        meridiem = raw_value.lower()
         if meridiem.startswith('a'):
             return {'meridiem': tfhTime.Meridiem.AM}
         if meridiem.startswith('p'):

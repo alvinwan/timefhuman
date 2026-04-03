@@ -20,8 +20,9 @@ from timefhuman.semantics import (
     WEEKDAY_ALIASES,
     clone_datetime,
     clone_time,
-    is_rejected_fraction_text,
     is_invalid_ambiguous_date_range,
+    is_rejected_compact_meridiem_text,
+    is_rejected_fraction_text,
     month_number,
     normalize_duration_unit,
     normalize_year,
@@ -550,6 +551,8 @@ def _parse_day_month_or_year(text: str):
 def _parse_time_component(text: str, allow_houronly: bool):
     text = _normalize_space(text)
     if not text:
+        return None
+    if is_rejected_compact_meridiem_text(text):
         return None
     lowered = text.lower()
     if lowered in TIME_NAME_TO_TEMPLATE:
