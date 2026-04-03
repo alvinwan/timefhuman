@@ -20,22 +20,22 @@ Status as of April 3, 2026.
 
 ### Main Results
 
-| parser | short (ms) | acc | core (ms) | # | acc | seattle_76k (ms) | # | acc | test_560k (ms) | # |
+| parser | short (ms) | acc | core (ms) | # | acc | [sea_76k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L6) | # | acc | [sea_560k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L7) | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 1.0 | **26/26** | 1.3 | [13](matches/timefhuman/core_corpus.md) | **13/13** | 50.4 | [55](matches/timefhuman/seattle_html_76k.md) | **55/55** | 315.3 | [576](matches/timefhuman/test_data_560k.md) |
-| datefinder.find_dates | **0.5** | 10/26 | **0.5** | [11](matches/datefinder.find_dates/core_corpus.md) | 7/13 | 72.7 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/55 | 933.2 | [313](matches/datefinder.find_dates/test_data_560k.md) |
-| dateparser* | 88.0 | 15/26 | 215.8 | [14](matches/dateparser/core_corpus.md) | timeout | 653.0 | [90](matches/dateparser/seattle_html_76k.md) | 52/55 | >1000ms | n/a |
+| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 0.9 | [13](matches/timefhuman/core_corpus.md) | <ins><strong>13/13</strong></ins> | <ins><strong>39.9</strong></ins> | [55](matches/timefhuman/seattle_html_76k.md) | <ins><strong>55/55</strong></ins> | <ins><strong>269.8</strong></ins> | [572](matches/timefhuman/test_data_560k.md) |
+| datefinder.find_dates | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | [11](matches/datefinder.find_dates/core_corpus.md) | 7/13 | 66.6 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/55 | 839.1 | [313](matches/datefinder.find_dates/test_data_560k.md) |
+| dateparser* | 87.7 | 15/27 | 188.4 | [14](matches/dateparser/core_corpus.md) | timeout | 548.3 | [90](matches/dateparser/seattle_html_76k.md) | 52/55 | >1000ms | n/a |
 
 ### Lower-Accuracy Baselines
 
 Seattle accuracy below `50/55`.
 
-| parser | short (ms) | acc | core (ms) | # | acc | seattle_76k (ms) | # | acc | test_560k (ms) | # |
+| parser | short (ms) | acc | core (ms) | # | acc | [sea_76k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L6) | # | acc | [sea_560k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L7) | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| metadate.parse_date | 1.5 | 10/26 | **0.4** | 10 | 6/13 | **8.4** | 90 | 2/55 | **97.2** | 1538 |
-| parsedatetime.parseDT | 1.2 | 13/26 | 4.1 | 1 | 0/13 | >1000ms | n/a | timeout | >1000ms | n/a |
-| recurrent.parse | 8.5 | 13/26 | 8.0 | 1 | 0/13 | error | n/a | error | >1000ms | n/a |
-| ctparse.ctparse | 255.2 | 6/26 | 241.1 | 1 | 1/13 | >1000ms | n/a | timeout | >1000ms | n/a |
+| metadate.parse_date | <ins><strong>1.1</strong></ins> | 10/27 | <ins><strong>0.3</strong></ins> | 10 | <ins><strong>6/13</strong></ins> | <ins><strong>7.0</strong></ins> | 90 | <ins><strong>2/55</strong></ins> | <ins><strong>83.7</strong></ins> | 1538 |
+| parsedatetime.parseDT | <ins><strong>1.1</strong></ins> | <ins><strong>13/27</strong></ins> | 4.2 | 1 | 0/13 | >1000ms | n/a | timeout | >1000ms | n/a |
+| recurrent.parse | 7.6 | <ins><strong>13/27</strong></ins> | 6.8 | 1 | 0/13 | error | n/a | error | >1000ms | n/a |
+| ctparse.ctparse | 220.3 | 6/27 | 210.0 | 1 | 1/13 | >1000ms | n/a | timeout | >1000ms | n/a |
 
 Notes:
 

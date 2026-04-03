@@ -80,14 +80,7 @@ ISO_PATTERN = re.compile(
     r"(?P<hour>\d{1,2}):(?P<minute>\d{2})"
     r"(?::(?P<second>\d{2})(?:\.(?P<millisecond>\d{1,6}))?)?$"
 )
-TIMEZONE_DATE_DATETIME_PATTERN = re.compile(
-    r"(?ix)^"
-    r"(?P<time>.+?)"
-    r"\s*,\s*"
-    r"(?P<timezone>[a-z][a-z .]+?)"
-    r"\s*,\s*"
-    r"(?P<date>.+)$"
-)
+BETWEEN_RANGE_PATTERN = re.compile(r"(?is)^between\s+(?P<left>.+?)\s+and\s+(?P<right>.+)$")
 NUMBER_UNIT_PATTERN = re.compile(
     r"(?ix)"
     r"(?P<number>\d+(?:\.\d+)?)"
@@ -176,6 +169,13 @@ def _parse_list(text: str, config: tfhConfig, timezone_mapping):
 
 def _parse_range(text: str, config: tfhConfig, timezone_mapping):
     body, tzinfo = _strip_trailing_timezone(text, timezone_mapping)
+
+    between_match = BETWEEN_RANGE_PATTERN.fullmatch(body)
+    if between_match:
+        result = _build_range(between_match.group("left"), between_match.group("right"), config, timezone_mapping)
+        if result and tzinfo:
+            result.tz = tzinfo
+        return result
 
     if " to " in body.lower():
         parts = re.split(r"(?i)\s+to\s+", body, maxsplit=1)
@@ -292,16 +292,37 @@ def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
 
 
 def _parse_inline_timezone_datetime(text: str, config: tfhConfig, timezone_mapping):
-    match = TIMEZONE_DATE_DATETIME_PATTERN.fullmatch(text)
-    if not match:
+    comma_indices = [index for index, char in enumerate(text) if char == ","]
+    for comma_index in comma_indices:
+        left = text[:comma_index].strip()
+        right = text[comma_index + 1 :].strip()
+        if not left or not right:
+            continue
+
+        date = _parse_date(right, config)
+        if date is None:
+            continue
+
+        time_with_timezone = _parse_time_with_inline_timezone(left, timezone_mapping)
+        if time_with_timezone is None:
+            continue
+
+        time, timezone = time_with_timezone
+        return tfhDatetime(date=date, time=time, tz=timezone)
+
+    return None
+
+
+def _parse_time_with_inline_timezone(text: str, timezone_mapping):
+    body, timezone = _strip_trailing_timezone(text.strip().rstrip(","), timezone_mapping)
+    if timezone is None:
         return None
 
-    time = _parse_time_component(match.group("time"), allow_houronly=True)
-    timezone = _parse_timezone_segment(match.group("timezone"), timezone_mapping)
-    date = _parse_date(match.group("date"), config)
-    if time is None or timezone is None or date is None:
+    time = _parse_time_component(body.rstrip(", ").strip(), allow_houronly=True)
+    if time is None:
         return None
-    return tfhDatetime(date=date, time=time, tz=timezone)
+
+    return time, timezone
 
 
 def _parse_atomic_datetime(text: str, config: tfhConfig, tzinfo):

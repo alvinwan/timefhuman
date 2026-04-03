@@ -104,11 +104,11 @@ All runtime columns are in milliseconds. `acc` is the correctness score for the 
 
 Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
-| parser | short (ms) | acc | core (ms) | acc | seattle_76k (ms) | acc | test_560k (ms) |
+| parser | short (ms) | acc | core (ms) | acc | [sea_76k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L6) | acc | [sea_560k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L7) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 1.0 | **26/26** | 1.3 | **13/13** | 50.4 | **55/55** | 315.3 |
-| datefinder.find_dates | **0.5** | 10/26 | **0.5** | 7/13 | 72.7 | 54/55 | 933.2 |
-| dateparser* | 88.0 | 15/26 | 215.8 | timeout | 653.0 | 52/55 | >1000ms |
+| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 0.9 | <ins><strong>13/13</strong></ins> | <ins><strong>39.9</strong></ins> | <ins><strong>55/55</strong></ins> | <ins><strong>269.8</strong></ins> |
+| datefinder.find_dates | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 7/13 | 66.6 | 54/55 | 839.1 |
+| dateparser* | 87.7 | 15/27 | 188.4 | timeout | 548.3 | 52/55 | >1000ms |
 
 `datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines such as `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are listed separately in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, timeout/error behavior, repro commands, and raw match dumps.
 

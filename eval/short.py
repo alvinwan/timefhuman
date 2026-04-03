@@ -32,6 +32,7 @@ DEFAULT_CASES = [
     ("Wed., Jan 6 2016 at 10:13AM", [datetime.datetime(2016, 1, 6, 10, 13)]),
     ("01/13/2016 11 AM", [datetime.datetime(2016, 1, 13, 11, 0)]),
     ("11:00 a.m., Pacific Time, January 13, 2016", [localized_datetime("US/Pacific", 2016, 1, 13, 11, 0)]),
+    ("5:00 p.m. Pacific Time, January 8, 2016", [localized_datetime("US/Pacific", 2016, 1, 8, 17, 0)]),
     ("3 p.m. today", [datetime.datetime(2018, 8, 4, 15, 0)]),
     ("Tomorrow 3p", [datetime.datetime(2018, 8, 5, 15, 0)]),
     ("3p tomorrow", [datetime.datetime(2018, 8, 5, 15, 0)]),
@@ -186,6 +187,7 @@ NO_INFERENCE_CASES = [
     ("3rd Monday in February", [datetime.date(2018, 2, 19)]),
     ("1st Monday in September", [datetime.date(2018, 9, 3)]),
     ("4th Thursday of November", [datetime.date(2018, 11, 22)]),
+    ("between 9:00 a.m. and 3:30 p.m.", [(datetime.time(9, 0), datetime.time(15, 30))]),
 
     # support for vernacular datetimes
     ("afternoon", [datetime.time(15, 0)]),
@@ -258,6 +260,14 @@ MATCHED_TEXT_CASES = [
     (
         "foo 11:00 a.m., Pacific Time, January 13, 2016 bar",
         [("11:00 a.m., Pacific Time, January 13, 2016", (4, 46), localized_datetime("US/Pacific", 2016, 1, 13, 11, 0))],
+    ),
+    (
+        "foo 5:00 p.m. Pacific Time, January 8, 2016 bar",
+        [("5:00 p.m. Pacific Time, January 8, 2016", (4, 43), localized_datetime("US/Pacific", 2016, 1, 8, 17, 0))],
+    ),
+    (
+        "Deliveries shall be between 9:00 a.m. and 3:30 p.m. daily.",
+        [("between 9:00 a.m. and 3:30 p.m", (20, 50), (datetime.datetime(2018, 8, 5, 9, 0), datetime.datetime(2018, 8, 5, 15, 30)))],
     ),
     (
         "Rev.: 07/2/07, 08/27/07, 01/16/08, 03/7/08, 09/11/08, 01/19/09, 06/15/09, 01/6/11, 03/17/11, 10/03/11",

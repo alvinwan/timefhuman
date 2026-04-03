@@ -38,7 +38,7 @@ DIMENSION_LIKE_PATTERN = re.compile(r"(?i)^\d+\s+[a-z]$")
 WEEKDAY_FOLLOWED_BY_DATE_PATTERN = re.compile(
     r"(?ix)^[\s\W]+[a-z]{3,9}\s+\d{1,2}(?:st|nd|rd|th)?(?:\s+\d{4})?(?:\s+at\s+\d{1,2}(?::\d{2})?(?:[ap](?:\.?m\.?)?)?)?"
 )
-EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago", "the"})
+EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago", "the", "between"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
 LARGE_DOCUMENT_LINE_THRESHOLD = 1024
@@ -59,7 +59,7 @@ EXPRESSION_WORDS = (
 )
 START_WORDS = DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA) | frozenset(
     NUMBER_WORDS
-) | frozenset({"in", "dans", "for", "the", "past"})
+) | frozenset({"in", "dans", "for", "the", "past", "between"})
 DIRECT_START_PATTERN = "|".join(re.escape(word) for word in sorted(DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA), key=len, reverse=True))
 NUMBER_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(NUMBER_WORDS, key=len, reverse=True))
 UNIT_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(UNIT_ALIASES, key=len, reverse=True))
@@ -72,6 +72,7 @@ START_PATTERN = re.compile(
     rf"{DIRECT_START_PATTERN}"
     rf"|(?:in|dans|past)\s+(?:\d+|{NUMBER_WORD_PATTERN})"
     rf"|for\s+(?:the\s+past\s+|past\s+)?(?:\d+|{NUMBER_WORD_PATTERN})"
+    rf"|between\s+\S+"
     rf"|(?:\d+|{NUMBER_WORD_PATTERN})\s+(?:{MERIDIEM_PATTERN}|{UNIT_WORD_PATTERN}|{WEEKDAY_WORD_PATTERN}|{DATE_WORD_PATTERN})"
     rf"|\d+(?:[/:.-]\d+)+(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN}|s|m|h|d|w|mo)?"
     rf"|\d+(?:st|nd|rd|th)"
@@ -290,6 +291,10 @@ def _is_plausible_start(tokens, index: int):
 def _is_plausible_start_tokens(token: str, next_token: str, next_next_token: str = "", next_next_next_token: str = ""):
     if _has_duration_prefix(token, next_token, next_next_token, next_next_next_token):
         return True
+    if token == "between":
+        return _is_expression_head(next_token) or _has_duration_prefix(
+            next_token, next_next_token, next_next_next_token, ""
+        )
     if token in DIRECT_START_WORDS:
         return True
     if token in MODIFIER_TO_OFFSET and (next_token in WEEKDAY_WORDS or next_token in MONTH_WORDS):
