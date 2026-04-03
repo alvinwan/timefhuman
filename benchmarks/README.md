@@ -20,7 +20,7 @@ Status as of April 3, 2026.
 
 ### Main Results
 
-| parser | short (ms) | acc | core (ms) | # | acc | [sea_76k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L6) | # | acc | [sea_560k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L7) | # |
+| parser | short (ms) | acc | core (ms) | # | acc | sea_76k (ms) | # | acc | sea_560k (ms) | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 0.9 | [13](matches/timefhuman/core_corpus.md) | <ins><strong>13/13</strong></ins> | <ins><strong>39.9</strong></ins> | [55](matches/timefhuman/seattle_html_76k.md) | <ins><strong>55/55</strong></ins> | <ins><strong>269.8</strong></ins> | [572](matches/timefhuman/test_data_560k.md) |
 | datefinder.find_dates | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | [11](matches/datefinder.find_dates/core_corpus.md) | 7/13 | 66.6 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/55 | 839.1 | [313](matches/datefinder.find_dates/test_data_560k.md) |
@@ -30,7 +30,7 @@ Status as of April 3, 2026.
 
 Seattle accuracy below `50/55`.
 
-| parser | short (ms) | acc | core (ms) | # | acc | [sea_76k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L6) | # | acc | [sea_560k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L7) | # |
+| parser | short (ms) | acc | core (ms) | # | acc | sea_76k (ms) | # | acc | sea_560k (ms) | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | metadate.parse_date | <ins><strong>1.1</strong></ins> | 10/27 | <ins><strong>0.3</strong></ins> | 10 | <ins><strong>6/13</strong></ins> | <ins><strong>7.0</strong></ins> | 90 | <ins><strong>2/55</strong></ins> | <ins><strong>83.7</strong></ins> | 1538 |
 | parsedatetime.parseDT | <ins><strong>1.1</strong></ins> | <ins><strong>13/27</strong></ins> | 4.2 | 1 | 0/13 | >1000ms | n/a | timeout | >1000ms | n/a |

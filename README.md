@@ -104,7 +104,7 @@ All runtime columns are in milliseconds. `acc` is the correctness score for the 
 
 Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
-| parser | short (ms) | acc | core (ms) | acc | [sea_76k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L6) | acc | [sea_560k (ms)](https://github.com/datefinder/datefinder/blob/main/bench/benchmark_results.md#L7) |
+| parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 0.9 | <ins><strong>13/13</strong></ins> | <ins><strong>39.9</strong></ins> | <ins><strong>55/55</strong></ins> | <ins><strong>269.8</strong></ins> |
 | datefinder.find_dates | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 7/13 | 66.6 | 54/55 | 839.1 |
