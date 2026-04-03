@@ -39,7 +39,6 @@ Notes on what the other baselines found that `timefhuman` still misses:
 - `seattle_html_76k`: most of `datefinder.find_dates`'s extra hits are HTML/CMS noise rather than user-visible dates:
   version numbers like `1.3.4` and `1.7.1`, maintenance-comment dates like `REMOVED 08-07-2013`, and URL slug dates like `2013-01-23`.
 - `seattle_html_76k`: most of `dateparser.search_dates`'s extra hits are lower-quality HTML false positives like `01'`, `90`, `50%`, `<h1`, and `set`.
-- `seattle_html_76k`: the real prose miss we found was `7-11pm`; that is now handled by `timefhuman`, which is why the Seattle count increased from `48` to `49`.
 
 ## Reproduce
 
