@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 import os
 from pathlib import Path
+import signal
 
 from timefhuman import timefhuman
 from timefhuman.main import tfhConfig
@@ -21,6 +22,11 @@ try:
     import dateparser
 except ImportError:
     dateparser = None
+
+try:
+    from dateparser.search import search_dates as dateparser_search_dates
+except ImportError:
+    dateparser_search_dates = None
 
 try:
     import metadate
@@ -111,6 +117,13 @@ def build_benches():
             "label": "dateparser.parse",
             "func": lambda text: dateparser.parse(text, settings={"RELATIVE_BASE": NOW}),
             "document_func": None,
+        })
+    if dateparser_search_dates:
+        benches.append({
+            "label": "dateparser.search_dates",
+            "func": None,
+            "document_func": lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW}),
+            "document_timeout_seconds": 15,
         })
     if parsedatetime:
         calendar = parsedatetime.Calendar()
@@ -207,29 +220,58 @@ def normalize_exact_result(label, text, func):
     return None
 
 
-def benchmark_document(document_func, text, iterations):
+def benchmark_document(document_func, text, iterations, timeout_seconds=None):
     if document_func is None:
         return None
 
-    try:
-        document_func(text)
-    except Exception:
-        return None
+    class DocumentTimeout(Exception):
+        pass
 
-    times = []
-    for _ in range(iterations):
+    def alarm_handler(signum, frame):
+        raise DocumentTimeout()
+
+    previous_handler = signal.getsignal(signal.SIGALRM) if timeout_seconds else None
+
+    def run_once():
+        if timeout_seconds:
+            signal.alarm(timeout_seconds)
         start = time.perf_counter()
         try:
             document_func(text)
+            return time.perf_counter() - start
+        except DocumentTimeout:
+            return f">{timeout_seconds}s"
         except Exception:
             return None
-        times.append(time.perf_counter() - start)
-    return statistics.median(times)
+        finally:
+            if timeout_seconds:
+                signal.alarm(0)
+
+    if timeout_seconds:
+        signal.signal(signal.SIGALRM, alarm_handler)
+
+    try:
+        warmup = run_once()
+        if not isinstance(warmup, (int, float)):
+            return warmup
+
+        times = []
+        for _ in range(iterations):
+            elapsed = run_once()
+            if not isinstance(elapsed, (int, float)):
+                return elapsed
+            times.append(elapsed)
+        return statistics.median(times)
+    finally:
+        if previous_handler is not None:
+            signal.signal(signal.SIGALRM, previous_handler)
 
 
 def run_short_benchmark(bench):
     label = bench["label"]
     func = bench["func"]
+    if func is None:
+        return None
     for text in INPUTS[:5]:
         try:
             func(text)
@@ -265,14 +307,21 @@ def run_document_benchmark(bench, document_datasets):
     document_results = {"label": bench["label"]}
     for dataset_name, key, iterations in DOCUMENT_DATASETS:
         text = document_datasets.get(dataset_name)
-        document_results[key] = benchmark_document(bench["document_func"], text, iterations) if text is not None else None
+        document_results[key] = (
+            benchmark_document(
+                bench["document_func"],
+                text,
+                iterations,
+                bench.get("document_timeout_seconds"),
+            ) if text is not None else None
+        )
     return document_results
 
 
 def main():
     benches = build_benches()
     document_datasets = load_document_datasets()
-    short_rows = [run_short_benchmark(bench) for bench in benches]
+    short_rows = [row for row in (run_short_benchmark(bench) for bench in benches) if row is not None]
     document_rows = [run_document_benchmark(bench, document_datasets) for bench in benches if bench["document_func"] is not None]
 
     print("short-input parsing")
@@ -293,7 +342,11 @@ def main():
         print(f"{'parser':24} {'core_corpus':>14} {'seattle_html_76k':>18} {'test_data_560k':>16}")
 
         def format_doc(value):
-            return f"{value:>18.4f}" if value is not None else f"{'n/a':>18}"
+            if isinstance(value, (int, float)):
+                return f"{value:>18.4f}"
+            if value is None:
+                return f"{'n/a':>18}"
+            return f"{str(value):>18}"
 
         for row in document_rows:
             print(
