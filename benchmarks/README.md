@@ -14,27 +14,28 @@ Status as of April 2, 2026.
 - Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
 - Shared benchmark inputs live in `eval/short.py`, and the checked-in fully gold `core_corpus` lives in `eval/corpora.py`.
 - `seattle_html_76k` is also a checked-in gold corpus; the HTML stays external and is loaded from `/tmp/datefinder` or `.eval_corpora/`.
-- `short`: median `us/input` over 7 full-suite passes of the 23 single-datetime short cases.
-- `acc`: exact match count for the column immediately to the left.
-- `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds and extracted count, formatted as `seconds (count)`.
-- `core_corpus acc`, `seattle_html_76k acc`: gold-corpus match counts. Parsers with matched-text APIs are scored on `(matched text, normalized value)`. Parsers without span APIs are scored on normalized value only after running on the full document.
-- Whole-document rows are run with a strict 1-second per-call timeout. `>1s` means the parser exceeded that cap.
+- `short_ms`: median milliseconds for one full pass over the 23 single-datetime short cases.
+- `core_ms`, `seattle_76k_ms`, `test_560k_ms`: warmed median milliseconds for one full dataset run.
+- `#`: extracted count for the dataset immediately to the left.
+- `acc`: exact match count for the dataset immediately to the left.
+- `core` and `seattle` accuracy are gold-corpus match counts. Parsers with matched-text APIs are scored on `(matched text, normalized value)`. Parsers without span APIs are scored on normalized value only after running on the full document.
+- Whole-document rows are run with a strict 1-second per-call timeout. `>1000ms` means the parser exceeded that cap. `timeout` in an `acc` column means the correctness run hit the same cap.
 - Whole-document counts link to checked-in raw match dumps under `benchmarks/matches/`.
 - `timefhuman` whole-document extraction uses `infer_datetimes=False`, so linked dumps keep raw dates, times, and timedeltas while explicit datetimes stay datetimes.
-- `timefhuman` is pinned first; the remaining rows are ordered by overall speed.
+- `timefhuman` is pinned first; the remaining rows are ordered by `core_ms`.
 
 ### Combined Scorecard
 
-| parser | short | acc | core_corpus | acc | seattle_html_76k | acc | test_data_560k |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 15.9 | **23/23** | 0.0004 ([10](matches/timefhuman/core_corpus.md)) | **10/10** | 0.0218 ([55](matches/timefhuman/seattle_html_76k.md)) | **55/55** | 0.1347 ([594](matches/timefhuman/test_data_560k.md)) |
-| metadate.parse_date | 26.1 | 9/23 | **0.0002** (10) | 5/10 | **0.0043** (90) | 2/55 | **0.0496** (1538) |
-| datefinder.find_dates | **9.1** | 9/23 | 0.0002 ([11](matches/datefinder.find_dates/core_corpus.md)) | 1/10 | 0.0397 ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 53/55 | 0.4964 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
-| dateparser.search_dates | n/a | n/a | 0.1107 ([14](matches/dateparser.search_dates/core_corpus.md)) | 1/10 | 0.3214 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | 52/55 | >1s (n/a) |
-| parsedatetime.parseDT | 20.2 | 11/23 | 0.0024 (1) | 0/10 | 0.6959 (1) | 0/55 | >1s (n/a) |
-| recurrent.parse | 140.0 | 11/23 | 0.0038 (1) | 0/10 | n/a | n/a | n/a |
-| dateparser.parse | 1307.0 | 13/23 | 0.1212 (0) | 0/10 | >1s (n/a) | >1s | >1s (n/a) |
-| ctparse.ctparse | 3263.8 | 5/23 | 0.1263 (1) | 0/10 | >1s (n/a) | >1s | >1s (n/a) |
+| parser | short_ms | acc | core_ms | # | acc | seattle_76k_ms | # | acc | test_560k_ms | # |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| timefhuman | 0.3 | **23/23** | 0.4 | [10](matches/timefhuman/core_corpus.md) | **10/10** | 22.6 | [55](matches/timefhuman/seattle_html_76k.md) | **55/55** | 133.0 | [594](matches/timefhuman/test_data_560k.md) |
+| metadate.parse_date | 0.5 | 9/23 | **0.2** | 10 | 5/10 | **4.6** | 90 | 2/55 | **49.5** | 1538 |
+| datefinder.find_dates | **0.2** | 9/23 | **0.2** | [11](matches/datefinder.find_dates/core_corpus.md) | 1/10 | 39.8 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 53/55 | 497.3 | [313](matches/datefinder.find_dates/test_data_560k.md) |
+| parsedatetime.parseDT | 0.5 | 11/23 | 2.4 | 1 | 0/10 | 696.9 | 1 | 0/55 | >1000ms | n/a |
+| recurrent.parse | 3.4 | 11/23 | 4.0 | 1 | 0/10 | n/a | n/a | n/a | n/a | n/a |
+| dateparser.search_dates | n/a | n/a | 111.7 | [14](matches/dateparser.search_dates/core_corpus.md) | 1/10 | 326.6 | [90](matches/dateparser.search_dates/seattle_html_76k.md) | 52/55 | >1000ms | n/a |
+| dateparser.parse | 31.5 | 13/23 | 120.8 | 0 | 0/10 | >1000ms | n/a | timeout | >1000ms | n/a |
+| ctparse.ctparse | 75.2 | 5/23 | 124.8 | 1 | 0/10 | >1000ms | n/a | timeout | >1000ms | n/a |
 
 Notes:
 

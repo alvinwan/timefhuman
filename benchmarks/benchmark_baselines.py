@@ -364,20 +364,20 @@ def run_document_perf(bench, document_datasets):
 
 def sort_perf_rows(rows):
     def sort_key(row):
-        values = []
-        short = row.get("short_us_per_input")
-        if isinstance(short, (int, float)):
-            values.append(short)
-        elif isinstance(short, str) and short.startswith(">"):
-            values.append(float("inf"))
-        for dataset_name, _, _ in DOCUMENT_DATASETS:
-            value = row.get(dataset_name)
-            if isinstance(value, dict) and "seconds" in value:
-                values.append(value["seconds"])
-            elif isinstance(value, dict) and "timeout" in value:
-                values.append(float("inf"))
-        aggregate = statistics.median(values) if values else float("inf")
-        return (row["label"] != "timefhuman", aggregate)
+        core = row.get("core_corpus")
+        if isinstance(core, dict) and "seconds" in core:
+            key = core["seconds"]
+        elif isinstance(core, dict) and "timeout" in core:
+            key = float("inf")
+        else:
+            short = row.get("short_ms")
+            if isinstance(short, (int, float)):
+                key = short / 1000.0
+            elif isinstance(row.get("short_timeout"), str):
+                key = float("inf")
+            else:
+                key = float("inf")
+        return (row["label"] != "timefhuman", key)
 
     return sorted(rows, key=sort_key)
 
@@ -406,7 +406,12 @@ def main():
         correctness_row.update(run_document_correctness(bench, document_datasets))
         correctness_rows.append(correctness_row)
 
-        perf_row = {"label": bench["label"], "short_us_per_input": benchmark_short_perf(bench["func"])}
+        short_perf = benchmark_short_perf(bench["func"])
+        perf_row = {
+            "label": bench["label"],
+            "short_ms": None if not isinstance(short_perf, (int, float)) else short_perf * len(SHORT_PERF_INPUTS) / 1000.0,
+            "short_timeout": short_perf if isinstance(short_perf, str) else None,
+        }
         perf_row.update(run_document_perf(bench, document_datasets))
         perf_rows.append(perf_row)
 
@@ -415,17 +420,17 @@ def main():
     print("benchmarks")
     print(
         f"{'parser':24} "
-        f"{'short':>14} {'acc':>8} "
-        f"{'core_corpus':>14} {'acc':>8} "
-        f"{'seattle_html_76k':>18} {'acc':>8} "
-        f"{'test_data_560k':>16}"
+        f"{'short_ms':>10} {'acc':>8} "
+        f"{'core_ms':>10} {'#':>6} {'acc':>8} "
+        f"{'seattle_76k_ms':>15} {'#':>6} {'acc':>8} "
+        f"{'test_560k_ms':>12} {'#':>6}"
     )
 
     def format_correctness(value):
         if isinstance(value, dict) and "matched" in value:
             return f"{value['matched']}/{value['total']}"
         if isinstance(value, dict) and "timeout" in value:
-            return value["timeout"]
+            return "timeout"
         if value is None:
             return "n/a"
         return str(value)
@@ -435,32 +440,41 @@ def main():
             return "n/a"
         return f"{value}/{total}"
 
-    def format_perf_short(value):
+    def format_perf_short(row):
+        value = row["short_ms"]
         if isinstance(value, (int, float)):
             return f"{value:.1f}"
-        if isinstance(value, str):
-            return value
+        if isinstance(row["short_timeout"], str):
+            return row["short_timeout"].replace(">1s", ">1000ms")
         return "n/a"
 
-    def format_doc(value):
+    def format_doc_ms(value):
         if isinstance(value, dict) and "seconds" in value:
-            return f"{value['seconds']:.4f} ({value['count']})"
+            return f"{value['seconds'] * 1000.0:.1f}"
         if isinstance(value, dict) and "timeout" in value:
-            return f"{value['timeout']} (n/a)"
+            return value["timeout"].replace(">1s", ">1000ms")
         if value is None:
             return "n/a"
         return str(value)
 
+    def format_doc_count(value):
+        if isinstance(value, dict) and "seconds" in value:
+            return str(value["count"])
+        return "n/a"
+
     for row in rows:
         print(
             f"{row['label']:24} "
-            f"{format_perf_short(row['short_us_per_input']):>14} "
+            f"{format_perf_short(row):>10} "
             f"{format_short_count(row['short_correctness'], len(EXACT_CASES)):>8} "
-            f"{format_doc(row['core_corpus']):>14} "
+            f"{format_doc_ms(row['core_corpus']):>10} "
+            f"{format_doc_count(row['core_corpus']):>6} "
             f"{format_correctness(row['core_corpus_correctness']):>8} "
-            f"{format_doc(row['seattle_html_76k']):>18} "
+            f"{format_doc_ms(row['seattle_html_76k']):>15} "
+            f"{format_doc_count(row['seattle_html_76k']):>6} "
             f"{format_correctness(row['seattle_html_76k_correctness']):>8} "
-            f"{format_doc(row['test_data_560k']):>16}"
+            f"{format_doc_ms(row['test_data_560k']):>12} "
+            f"{format_doc_count(row['test_data_560k']):>6}"
         )
 
 
