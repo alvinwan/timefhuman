@@ -1,7 +1,7 @@
 # timefhuman · test_data_560k
 
 - Source: /tmp/datefinder/tests/test_data.txt
-- Total matches: 718
+- Total matches: 716
 
 | # | match | normalized | span | context |
 | ---: | --- | --- | --- | --- |
@@ -716,10 +716,8 @@
 | 709 | 08-24-101 | datetime.date(101, 8, 24) | 552003:552012 | 39.12 RCW, RCW 43.22.051 and 43.22.270. 08-24-101, Â§ 296-127-018, filed 12/2/08, effecti |
 | 710 | 12/2/08 | datetime.date(2008, 12, 2) | 552036:552043 | 2.270. 08-24-101, Â§ 296-127-018, filed 12/2/08, effective 1/2/09. Statutory Authority: |
 | 711 | 1/2/09 | datetime.date(2009, 1, 2) | 552055:552061 | § 296-127-018, filed 12/2/08, effective 1/2/09. Statutory Authority: Chapters 39.04 an |
-| 712 | 92-01-104 | (datetime.date(92, 1, 1), datetime.date(104, 1, 1)) | 552132:552141 | 39.04 and 39.12 RCW and RCW 43.22.270. 92-01-104 and 92-08-101, Â§ 296-127-018, filed 12 |
-| 713 | 92-08-101 | (datetime.date(92, 8, 1), datetime.date(101, 8, 1)) | 552146:552155 | 12 RCW and RCW 43.22.270. 92-01-104 and 92-08-101, Â§ 296-127-018, filed 12/18/91 and 4/1 |
-| 714 | 12/18/91 | datetime.date(1991, 12, 18) | 552179:552187 | 04 and 92-08-101, Â§ 296-127-018, filed 12/18/91 and 4/1/92, effective 8/31/92.] Supple |
-| 715 | 4/1/92 | datetime.date(1992, 4, 1) | 552192:552198 | 101, Â§ 296-127-018, filed 12/18/91 and 4/1/92, effective 8/31/92.] Supplemental to W |
-| 716 | 8/31/92 | datetime.date(1992, 8, 31) | 552210:552217 | 8, filed 12/18/91 and 4/1/92, effective 8/31/92.] Supplemental to Wage Rates 09/02/201 |
-| 717 | 09/02/2015 | datetime.date(2015, 9, 2) | 552248:552258 | e 8/31/92.] Supplemental to Wage Rates 09/02/2015 Edition, Published August 3rd, 2015 11 |
-| 718 | August 3rd, 2015 11 | datetime.datetime(2015, 8, 3, 11, 0) | 552278:552298 | age Rates 09/02/2015 Edition, Published August 3rd, 2015 11 |
+| 712 | 12/18/91 | datetime.date(1991, 12, 18) | 552179:552187 | 04 and 92-08-101, Â§ 296-127-018, filed 12/18/91 and 4/1/92, effective 8/31/92.] Supple |
+| 713 | 4/1/92 | datetime.date(1992, 4, 1) | 552192:552198 | 101, Â§ 296-127-018, filed 12/18/91 and 4/1/92, effective 8/31/92.] Supplemental to W |
+| 714 | 8/31/92 | datetime.date(1992, 8, 31) | 552210:552217 | 8, filed 12/18/91 and 4/1/92, effective 8/31/92.] Supplemental to Wage Rates 09/02/201 |
+| 715 | 09/02/2015 | datetime.date(2015, 9, 2) | 552248:552258 | e 8/31/92.] Supplemental to Wage Rates 09/02/2015 Edition, Published August 3rd, 2015 11 |
+| 716 | August 3rd, 2015 11 | datetime.datetime(2015, 8, 3, 11, 0) | 552278:552298 | age Rates 09/02/2015 Edition, Published August 3rd, 2015 11 |

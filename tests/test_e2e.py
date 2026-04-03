@@ -225,6 +225,10 @@ def test_custom_config(now, config, test_input, expected):
     ('foo January 4th, 2017 at 8:00pm bar', [
         ('January 4th, 2017 at 8:00pm', (4, 31), datetime.datetime(2017, 1, 4, 20, 0))
     ]),
+    ('foo 2024-11-09 tomorrow at noon bar', [
+        ('2024-11-09', (4, 14), datetime.datetime(2024, 11, 9, 0, 0)),
+        ('tomorrow at noon', (15, 31), datetime.datetime(2018, 8, 5, 12, 0)),
+    ]),
     ('foo 1.3.4 bar', []),
     ("style='width:1px; height:1px;'", []),
     ('telephone (253) 591-5252', []),

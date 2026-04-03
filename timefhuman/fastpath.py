@@ -83,6 +83,7 @@ NUMBER_UNIT_PATTERN = re.compile(
     r"(?P<unit>seconds?|secs?|sec|minutes?|mins?|min|hours?|hour|hrs?|hr|days?|day|weeks?|week|wks?|wk|months?|month|mos|years?|year|yrs?|yr|mo|[smhdwy])"
 )
 NUMERIC_TIMEZONE_OFFSET_PATTERN = re.compile(r"^(?P<body>.*\S)\s+(?P<sign>[+-])(?P<hour>\d{2})(?::?(?P<minute>\d{2}))$")
+HYPHENATED_NUMERIC_DATE_TOKEN_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}-\d{1,4}$")
 
 
 def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
@@ -163,7 +164,7 @@ def _parse_range(text: str, config: tfhConfig, timezone_mapping):
 
     indices = [index for index, char in enumerate(body) if char == "-"]
     preferred = [index for index in indices if _looks_like_range_hyphen(body, index)]
-    for index in preferred + [item for item in indices if item not in preferred]:
+    for index in preferred:
         result = _build_range(body[:index], body[index + 1 :], config, timezone_mapping)
         if result:
             if tzinfo:
@@ -598,6 +599,16 @@ def _normalize_space(text: str):
 
 
 def _looks_like_range_hyphen(text: str, index: int):
+    token_start = index
+    while token_start > 0 and not text[token_start - 1].isspace():
+        token_start -= 1
+    token_end = index + 1
+    while token_end < len(text) and not text[token_end].isspace():
+        token_end += 1
+    token = text[token_start:token_end]
+    if HYPHENATED_NUMERIC_DATE_TOKEN_PATTERN.fullmatch(token):
+        return False
+
     left = text[index - 1] if index > 0 else ""
     right = text[index + 1] if index + 1 < len(text) else ""
     if left == " " or right == " ":

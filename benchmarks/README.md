@@ -18,13 +18,13 @@ Status as of April 2, 2026.
 
 | parser | us/input | extracted | correctness |
 | --- | ---: | ---: | ---: |
-| timefhuman | 49.5 | **37/37** | **10/10** |
-| datefinder.find_dates | **43.2** | 23/37 | 5/10 |
-| metadate.parse_date | 66.8 | 31/37 | 5/10 |
-| parsedatetime.parseDT | 69.0 | 36/37 | 6/10 |
-| recurrent.parse | 354.3 | 36/37 | 6/10 |
-| ctparse.ctparse | 22960.8 | **37/37** | 3/10 |
-| dateparser.parse | 80565.8 | 20/37 | 6/10 |
+| timefhuman | 71.0 | **37/37** | **10/10** |
+| datefinder.find_dates | **53.4** | 23/37 | 5/10 |
+| metadate.parse_date | 57.1 | 31/37 | 5/10 |
+| parsedatetime.parseDT | 76.6 | 36/37 | 6/10 |
+| recurrent.parse | 369.3 | 36/37 | 6/10 |
+| ctparse.ctparse | 25516.4 | **37/37** | 3/10 |
+| dateparser.parse | 90710.5 | 20/37 | 6/10 |
 
 ### Whole-Document Extraction
 
@@ -32,9 +32,9 @@ Only parsers with a comparable whole-document extraction API are included here.
 
 | parser | core_corpus | seattle_html_76k | test_data_560k |
 | --- | ---: | ---: | ---: |
-| timefhuman | 0.0018 ([10](matches/timefhuman/core_corpus.md)) | 0.1027 ([59](matches/timefhuman/seattle_html_76k.md)) | **0.3737** ([718](matches/timefhuman/test_data_560k.md)) |
-| datefinder.find_dates | **0.0004** ([11](matches/datefinder.find_dates/core_corpus.md)) | **0.0605** ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.7216 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
-| dateparser.search_dates | 0.2030 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.6165 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >15s (n/a) |
+| timefhuman | 0.0018 ([10](matches/timefhuman/core_corpus.md)) | 0.1180 ([59](matches/timefhuman/seattle_html_76k.md)) | **0.4729** ([716](matches/timefhuman/test_data_560k.md)) |
+| datefinder.find_dates | **0.0005** ([11](matches/datefinder.find_dates/core_corpus.md)) | **0.0704** ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.9139 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
+| dateparser.search_dates | 0.2537 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.9980 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >15s (n/a) |
 
 Notes on what the other baselines found that `timefhuman` still misses:
 
