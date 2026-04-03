@@ -200,6 +200,7 @@ CUSTOM_CONFIG_CASES = [
 
 
 MATCHED_TEXT_CASES = [
+    # sentence and prose extraction
     ("September 30, 2019.", [("September 30, 2019", (0, 18), datetime.datetime(2019, 9, 30, 0, 0))]),
     (
         "How does 5p mon sound? Or maybe 4p tu?",
@@ -241,8 +242,11 @@ MATCHED_TEXT_CASES = [
     ("Section 7.02B 7a. - e.", []),
     ("Meet at 7a.", [("7a", (8, 10), datetime.datetime(2018, 8, 5, 7, 0))]),
     ("Wait 3h please", [("3h", (5, 7), datetime.datetime(2018, 8, 4, 17, 0))]),
+    ("Wed., Jan 6 2016 at 10:13AM", [("Jan 6 2016 at 10:13AM", (6, 27), datetime.datetime(2016, 1, 6, 10, 13))]),
     ("90p", []),
     ("4906/0", []),
+    ("one-night-only", []),
+    ("W:648 H:432", []),
     (
         "Tue, 23 Apr 1996 13:28:27 -0400",
         [(

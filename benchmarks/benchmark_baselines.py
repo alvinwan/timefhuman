@@ -10,7 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from eval.corpora import CORE_CORPUS_TEXT
+from eval.corpora import load_corpus_text
 from eval.short import DEFAULT_CASES
 from timefhuman import timefhuman
 from timefhuman.main import tfhConfig
@@ -52,7 +52,6 @@ except ImportError:
 
 
 NOW = datetime(2018, 8, 4, 14, 0)
-DATEFINDER_ROOT = Path(os.environ.get("DATEFINDER_ROOT", "/tmp/datefinder"))
 INPUTS = [text for text, _ in DEFAULT_CASES]
 EXACT_CASES = [
     (text, expected[0])
@@ -128,17 +127,11 @@ def build_benches():
 
 
 def load_document_datasets():
-    datasets = {"core_corpus": CORE_CORPUS_TEXT}
-
-    if not DATEFINDER_ROOT.exists():
-        return datasets
-
-    seattle_path = DATEFINDER_ROOT / "tests" / "seattle_weekly.html"
-    test_data_path = DATEFINDER_ROOT / "tests" / "test_data.txt"
-    if seattle_path.exists():
-        datasets["seattle_html_76k"] = seattle_path.read_text(errors="ignore")
-    if test_data_path.exists():
-        datasets["test_data_560k"] = test_data_path.read_text(errors="ignore")
+    datasets = {}
+    for dataset_name, _, _ in DOCUMENT_DATASETS:
+        text = load_corpus_text(dataset_name)
+        if text is not None:
+            datasets[dataset_name] = text
     return datasets
 
 

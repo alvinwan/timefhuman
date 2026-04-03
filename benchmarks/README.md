@@ -7,12 +7,13 @@ Status as of April 2, 2026.
 - Hardware: Apple M3 MacBook Air, 16 GB RAM
 - OS: macOS 26.3.1
 - Python: 3.13.3 from `/tmp/timefhuman-bench-venv`
-- Whole-document corpora: local `datefinder` clone at `/tmp/datefinder`
+- Whole-document corpora: either a local `datefinder` clone at `/tmp/datefinder` or cached downloads under `.eval_corpora/`
 
 ## Results
 
 - Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
 - Shared benchmark inputs live in `eval/short.py`, and the checked-in fully gold `core_corpus` lives in `eval/corpora.py`.
+- `seattle_html_76k` is also a checked-in gold corpus; the HTML stays external and is loaded from `/tmp/datefinder` or `.eval_corpora/`.
 - `extracted`: returned any result on all 43 default-mode short cases from `eval/short.py`.
 - `correctness`: exact match on the 23 single-datetime cases within that same default-mode suite.
 - `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds and extracted count, formatted as `seconds (count)`.
@@ -26,13 +27,13 @@ Status as of April 2, 2026.
 
 | parser | us/input | extracted | correctness |
 | --- | ---: | ---: | ---: |
-| timefhuman | 41.3 | **43/43** | **23/23** |
-| datefinder.find_dates | **27.2** | 27/43 | 9/23 |
-| metadate.parse_date | 33.2 | 37/43 | 9/23 |
-| parsedatetime.parseDT | 45.5 | 42/43 | 11/23 |
-| recurrent.parse | 207.9 | 42/43 | 11/23 |
-| ctparse.ctparse | 11515.8 | **43/43** | 5/23 |
-| dateparser.parse | 40193.4 | 25/43 | 13/23 |
+| timefhuman | 38.9 | **43/43** | **23/23** |
+| datefinder.find_dates | **27.7** | 27/43 | 9/23 |
+| metadate.parse_date | 33.1 | 37/43 | 9/23 |
+| parsedatetime.parseDT | 43.3 | 42/43 | 11/23 |
+| recurrent.parse | 198.5 | 42/43 | 11/23 |
+| ctparse.ctparse | 11542.1 | **43/43** | 5/23 |
+| dateparser.parse | 39729.0 | 25/43 | 13/23 |
 
 ### Whole-Document Extraction
 
@@ -40,9 +41,9 @@ Only parsers with a comparable whole-document extraction API are included here.
 
 | parser | core_corpus | seattle_html_76k | test_data_560k |
 | --- | ---: | ---: | ---: |
-| timefhuman | 0.0004 ([10](matches/timefhuman/core_corpus.md)) | **0.0221** ([59](matches/timefhuman/seattle_html_76k.md)) | **0.1349** ([594](matches/timefhuman/test_data_560k.md)) |
-| datefinder.find_dates | **0.0002** ([11](matches/datefinder.find_dates/core_corpus.md)) | 0.0398 ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.4968 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
-| dateparser.search_dates | 0.1132 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.3356 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >15s (n/a) |
+| timefhuman | 0.0004 ([10](matches/timefhuman/core_corpus.md)) | **0.0223** ([55](matches/timefhuman/seattle_html_76k.md)) | **0.1328** ([594](matches/timefhuman/test_data_560k.md)) |
+| datefinder.find_dates | **0.0002** ([11](matches/datefinder.find_dates/core_corpus.md)) | 0.0393 ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.5039 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
+| dateparser.search_dates | 0.1115 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.3315 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >15s (n/a) |
 
 Notes on what the other baselines found that `timefhuman` still misses:
 
@@ -58,8 +59,13 @@ Run tests:
 /tmp/timefhuman-bench-venv/bin/python -m pytest -q
 ```
 
+Download the external corpora if you are not using a local `datefinder` clone at `/tmp/datefinder`.
+
+```bash
+/tmp/timefhuman-bench-venv/bin/python -m eval.download_corpora
+```
+
 Run the combined baseline benchmark.
-This expects a local clone of `datefinder` at `/tmp/datefinder` to populate the whole-document table.
 
 ```bash
 /tmp/timefhuman-bench-venv/bin/python benchmarks/benchmark_baselines.py

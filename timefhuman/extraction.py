@@ -31,6 +31,10 @@ PHONE_LIKE_PATTERN = re.compile(r"^\d{3,4}-\d{4}$|^\d{3}-\d{3}-\d{4}$")
 COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
 UPPERCASE_COMPACT_SUFFIX_PATTERN = re.compile(r"^\d{1,4}[A-Z]$")
 LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
+DIMENSION_LIKE_PATTERN = re.compile(r"(?i)^\d+\s+[a-z]$")
+WEEKDAY_FOLLOWED_BY_DATE_PATTERN = re.compile(
+    r"(?ix)^[\s\W]+[a-z]{3,9}\s+\d{1,2}(?:st|nd|rd|th)?(?:\s+\d{4})?(?:\s+at\s+\d{1,2}(?::\d{2})?(?:[ap](?:\.?m\.?)?)?)?"
+)
 EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago", "the"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
@@ -293,14 +297,24 @@ def _is_duration_value_token(token: str):
 
 
 def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
+    before = text[start - 1] if start > 0 else ""
+    after = text[end] if end < len(text) else ""
+
     if PHONE_LIKE_PATTERN.fullmatch(candidate):
+        return True
+
+    if candidate.isalpha() and (before == "-" or after == "-"):
+        return True
+
+    if DIMENSION_LIKE_PATTERN.fullmatch(candidate) and (before == ":" or after == ":"):
+        return True
+
+    if candidate.rstrip(".,").lower() in WEEKDAY_WORDS and WEEKDAY_FOLLOWED_BY_DATE_PATTERN.match(text[end : end + 32]):
         return True
 
     if not COMPACT_ALNUM_PATTERN.fullmatch(candidate):
         return False
 
-    before = text[start - 1] if start > 0 else ""
-    after = text[end] if end < len(text) else ""
     if before.isalnum() or after.isalnum():
         return True
 
