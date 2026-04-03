@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta, weekdays
 import pytz
 
 from timefhuman.inference import infer
-from timefhuman.renderers import tfhAmbiguous, tfhDatetime, tfhDate, tfhList, tfhRange, tfhTime, tfhTimedelta
+from timefhuman.renderers import tfhAmbiguous, tfhDatelike, tfhDatetime, tfhDate, tfhList, tfhRange, tfhTime, tfhTimedelta
 from timefhuman.semantics import (
     DATE_NAME_TO_OFFSET,
     DATE_TIME_NAME_TO_TEMPLATE,
@@ -202,7 +202,11 @@ def _build_range(left_text: str, right_text: str, config: tfhConfig, timezone_ma
     right = _parse_single(right_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     if left is None or right is None:
         return None
-    result = tfhRange(infer([left, right]))
+    left_missing_year = _datelike_missing_year(left)
+    right_missing_year = _datelike_missing_year(right)
+    items = infer([left, right])
+    _adjust_cross_year_range(items, left_missing_year, right_missing_year, config.now.year)
+    result = tfhRange(items)
     return None if _is_ambiguous_only(result) else result
 
 
@@ -233,6 +237,37 @@ def _is_ambiguous_only(expression):
     if isinstance(expression, (tfhList, tfhRange)):
         return all(_is_ambiguous_only(item) for item in expression.items)
     return False
+
+
+def _datelike_missing_year(value):
+    if not isinstance(value, tfhDatelike):
+        return False
+    if isinstance(value, (tfhList, tfhRange)):
+        return False
+    return value.date is not None and value.year is None and value.month is not None and value.day is not None
+
+
+def _adjust_cross_year_range(items, left_missing_year: bool, right_missing_year: bool, default_year: int):
+    if len(items) != 2:
+        return
+    left, right = items
+    if not (
+        left_missing_year
+        and right_missing_year
+        and isinstance(left, tfhDatelike)
+        and isinstance(right, tfhDatelike)
+        and left.date
+        and right.date
+        and left.month is not None
+        and left.day is not None
+        and right.month is not None
+        and right.day is not None
+    ):
+        return
+
+    if (right.month, right.day) < (left.month, left.day):
+        base_year = right.year or left.year or default_year
+        right.year = base_year + 1
 
 
 def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
@@ -440,10 +475,14 @@ def _parse_numeric_date(text: str):
         return None
     if not supports_numeric_date_text(text):
         return None
+    if match.group("c") is None and int(match.group("b")) > 31 and len(match.group("b")) not in (2, 4):
+        return None
+    third = match.group("c")
+    if third is not None and len(third) not in (2, 4):
+        return None
 
     first = int(match.group("a"))
     second = int(match.group("b"))
-    third = match.group("c")
     return build_numeric_date(first, second, int(third) if third is not None else None)
 
 

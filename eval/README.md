@@ -10,4 +10,4 @@ Current corpus status:
 
 - `core_corpus`: fully gold-annotated matched-text expectations.
 - `seattle_html_76k`: fully gold-annotated matched-text expectations; HTML itself stays external. Policy: `eval/seattle_html_76k.policy.md`.
-- `test_data_560k`: tracked for document perf and sampled inspection, but not fully gold-annotated yet.
+- `test_data_560k`: sampled gold only. Includes checked-in positive matches plus forbidden false positives, but is not exhaustive.

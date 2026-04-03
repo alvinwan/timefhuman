@@ -149,8 +149,6 @@ def build_numeric_date(first: int, second: int, third: int | None = None):
         if first >= 1000:
             return build_date(year=first, month=second)
         if second > 31:
-            if len(str(second)) not in (2, 4):
-                return None
             return build_date(month=first, year=normalize_year(second))
         if 1 <= first <= 12:
             return build_date(month=first, day=second)

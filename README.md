@@ -100,17 +100,17 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 ## Performance
 
-All runtime columns are in milliseconds. `acc` is the correctness score for the dataset immediately to the left. For the document corpora, `acc` is member-level coverage, so ranges and lists still count as correct when a baseline finds the individual members separately. [`benchmarks/README.md`](benchmarks/README.md) also reports grouped correctness. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
+All runtime columns are in milliseconds. `acc` is the correctness score for the dataset immediately to the left. For the document corpora, `acc` is member-level coverage, so ranges and lists still count as correct when a baseline finds the individual members separately. `sea_560k` uses the checked-in sampled gold set rather than exhaustive annotation. [`benchmarks/README.md`](benchmarks/README.md) also reports grouped correctness. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
 
 Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
-| parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 1.0 | <ins><strong>14/14</strong></ins> | <ins><strong>39.5</strong></ins> | <ins><strong>56/56</strong></ins> | <ins><strong>267.7</strong></ins> |
-| datefinder.find_dates | <ins><strong>0.4</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 9/14 | 66.7 | 54/56 | 838.1 |
-| dateparser* | 87.0 | 15/27 | 186.4 | timeout | 552.1 | 52/56 | >1000ms |
+| parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) | acc |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 1.0 | <ins><strong>14/14</strong></ins> | <ins><strong>49.3</strong></ins> | <ins><strong>56/56</strong></ins> | <ins><strong>401.3</strong></ins> | <ins><strong>26/26</strong></ins> |
+| datefinder.find_dates | <ins><strong>0.7</strong></ins> | 10/27 | <ins><strong>0.6</strong></ins> | 9/14 | 93.0 | 54/56 | >1000ms | timeout |
+| dateparser* | 117.7 | 15/27 | 266.6 | timeout | 806.3 | 52/56 | >1000ms | timeout |
 
-`datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines such as `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are listed separately in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, timeout/error behavior, repro commands, and raw match dumps.
+`datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines such as `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are listed separately in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, grouped accuracy, timeout/error behavior, repro commands, and raw match dumps.
 
 ## Advanced Usage
 

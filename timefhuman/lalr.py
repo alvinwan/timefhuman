@@ -206,7 +206,12 @@ class tfhTransformer(Transformer):
             sep = "-"
         else:
             sep = "."
-        parts = [int(part) for part in value.split(sep)]
+        raw_parts = value.split(sep)
+        if len(raw_parts) == 2 and int(raw_parts[1]) > 31 and len(raw_parts[1]) not in (2, 4):
+            raise ValueError(f"Invalid numeric date: {value}")
+        if len(raw_parts) == 3 and len(raw_parts[2]) not in (2, 4):
+            raise ValueError(f"Invalid numeric date: {value}")
+        parts = [int(part) for part in raw_parts]
         first, second = parts[0], parts[1]
         result = build_numeric_date(first, second, parts[2] if len(parts) == 3 else None)
         if result is None:

@@ -15,34 +15,36 @@ Status as of April 3, 2026.
 - `acc` is the correctness score for the dataset immediately to the left.
 - Document `acc` is member-level coverage: lists and ranges still count as correct when a baseline finds the individual members separately.
 - Document `group` is grouped correctness: lists and ranges only count when they are returned as one grouped result.
+- `sea_560k` accuracy is measured against the checked-in sampled gold set, not an exhaustive annotation of the whole corpus.
 - `#` is the extracted count for the dataset immediately to the left.
 - `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
 - Whole-document rows use a 1-second timeout. `timeout` in an `acc` column means the correctness run hit that cap.
 
 ### Main Results
 
-| parser | short (ms) | acc | core (ms) | # | acc | group | sea_76k (ms) | # | acc | group | sea_560k (ms) | # |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 1.0 | [13](matches/timefhuman/core_corpus.md) | <ins><strong>14/14</strong></ins> | <ins><strong>13/13</strong></ins> | <ins><strong>39.5</strong></ins> | [55](matches/timefhuman/seattle_html_76k.md) | <ins><strong>56/56</strong></ins> | <ins><strong>55/55</strong></ins> | <ins><strong>267.7</strong></ins> | [572](matches/timefhuman/test_data_560k.md) |
-| datefinder.find_dates | <ins><strong>0.4</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | [11](matches/datefinder.find_dates/core_corpus.md) | 9/14 | 7/13 | 66.7 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/56 | 54/55 | 838.1 | [313](matches/datefinder.find_dates/test_data_560k.md) |
-| dateparser* | 87.0 | 15/27 | 186.4 | [14](matches/dateparser/core_corpus.md) | timeout | timeout | 552.1 | [90](matches/dateparser/seattle_html_76k.md) | 52/56 | 52/55 | >1000ms | n/a |
+| parser | short (ms) | acc | core (ms) | # | acc | group | sea_76k (ms) | # | acc | group | sea_560k (ms) | # | acc | group |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| timefhuman | 0.8 | <ins><strong>27/27</strong></ins> | 1.0 | [13](matches/timefhuman/core_corpus.md) | <ins><strong>14/14</strong></ins> | <ins><strong>13/13</strong></ins> | <ins><strong>49.3</strong></ins> | [55](matches/timefhuman/seattle_html_76k.md) | <ins><strong>56/56</strong></ins> | <ins><strong>55/55</strong></ins> | <ins><strong>401.3</strong></ins> | [554](matches/timefhuman/test_data_560k.md) | <ins><strong>26/26</strong></ins> | <ins><strong>12/12</strong></ins> |
+| datefinder.find_dates | <ins><strong>0.7</strong></ins> | 10/27 | <ins><strong>0.6</strong></ins> | [11](matches/datefinder.find_dates/core_corpus.md) | 9/14 | 7/13 | 93.0 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/56 | 54/55 | >1000ms | [313](matches/datefinder.find_dates/test_data_560k.md) | timeout | timeout |
+| dateparser* | 117.7 | 15/27 | 266.6 | [14](matches/dateparser/core_corpus.md) | timeout | timeout | 806.3 | [90](matches/dateparser/seattle_html_76k.md) | 52/56 | 52/55 | >1000ms | n/a | timeout | timeout |
 
 ### Lower-Accuracy Baselines
 
 Seattle accuracy below `50/55`.
 
-| parser | short (ms) | acc | core (ms) | # | acc | group | sea_76k (ms) | # | acc | group | sea_560k (ms) | # |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| metadate.parse_date | <ins><strong>1.1</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 10 | <ins><strong>8/14</strong></ins> | <ins><strong>6/13</strong></ins> | <ins><strong>7.2</strong></ins> | 90 | <ins><strong>2/56</strong></ins> | <ins><strong>2/55</strong></ins> | <ins><strong>83.4</strong></ins> | 1538 |
-| parsedatetime.parseDT | <ins><strong>1.1</strong></ins> | <ins><strong>13/27</strong></ins> | 4.1 | 1 | 0/14 | 0/13 | >1000ms | n/a | timeout | timeout | >1000ms | n/a |
-| recurrent.parse | 7.6 | <ins><strong>13/27</strong></ins> | 6.9 | 1 | 0/14 | 0/13 | error | n/a | error | error | >1000ms | n/a |
-| ctparse.ctparse | 219.1 | 6/27 | 208.9 | 1 | 1/14 | 1/13 | >1000ms | n/a | timeout | timeout | >1000ms | n/a |
+| parser | short (ms) | acc | core (ms) | # | acc | group | sea_76k (ms) | # | acc | group | sea_560k (ms) | # | acc | group |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| metadate.parse_date | 1.6 | 10/27 | 0.5 | 10 | 8/14 | 6/13 | 9.7 | 90 | 2/56 | 2/55 | 117.6 | 1538 | 4/26 | 1/12 |
+| parsedatetime.parseDT | 1.5 | 13/27 | 5.8 | 1 | 0/14 | 0/13 | >1000ms | n/a | timeout | timeout | >1000ms | n/a | timeout | timeout |
+| recurrent.parse | 11.0 | 13/27 | 9.9 | 1 | 0/14 | 0/13 | error | n/a | error | error | >1000ms | n/a | timeout | timeout |
+| ctparse.ctparse | 313.6 | 6/27 | 294.3 | 1 | 1/14 | 1/13 | >1000ms | n/a | timeout | timeout | >1000ms | n/a | timeout | timeout |
 
 Notes:
 
 - `metadate.parse_date`, `datefinder.find_dates`, and `dateparser*` all pick up extra HTML or metadata false positives on the document corpora, so speed and raw count alone overstate quality.
 - `datefinder.find_dates` extras on Seattle include version-like metadata such as `1.3.4` and `1.7.1`, plus `Jan 6 2016` as a smaller substring inside `Wed., Jan 6 2016 at 10:13AM`.
 - `dateparser*` extras on Seattle include noisy HTML fragments such as `01'`, `90`, `50%`, `<h1`, and `set`.
+- `timefhuman` still has some unresolved standalone-weekday matches in `sea_560k`, such as `Friday`, `Saturday`, and `Monday` inside policy prose. Those are currently left out of the sampled gold set.
 
 ## Reproduce
 

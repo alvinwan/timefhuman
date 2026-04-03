@@ -65,7 +65,7 @@ DOCUMENT_DATASETS = (
     ("seattle_html_76k", "seattle_html_76k", 5),
     ("test_data_560k", "test_data_560k", 3),
 )
-GOLD_DOCUMENT_DATASETS = ("core_corpus", "seattle_html_76k")
+GOLD_DOCUMENT_DATASETS = ("core_corpus", "seattle_html_76k", "test_data_560k")
 
 
 def build_benches():
@@ -502,8 +502,8 @@ def main():
         f"{'parser':24} "
         f"{'short (ms)':>10} {'acc':>8} "
         f"{'core (ms)':>10} {'#':>6} {'acc':>8} {'group':>8} "
-        f"{'seattle_76k (ms)':>15} {'#':>6} {'acc':>8} {'group':>8} "
-        f"{'test_560k (ms)':>15} {'#':>6}"
+        f"{'sea_76k (ms)':>15} {'#':>6} {'acc':>8} {'group':>8} "
+        f"{'sea_560k (ms)':>15} {'#':>6} {'acc':>8} {'group':>8}"
     )
 
     def format_correctness(value):
@@ -560,7 +560,9 @@ def main():
             f"{format_correctness(row['seattle_html_76k_correctness']):>8} "
             f"{format_correctness(row['seattle_html_76k_group_correctness']):>8} "
             f"{format_doc_ms(row['test_data_560k']):>12} "
-            f"{format_doc_count(row['test_data_560k']):>6}"
+            f"{format_doc_count(row['test_data_560k']):>6} "
+            f"{format_correctness(row['test_data_560k_correctness']):>8} "
+            f"{format_correctness(row['test_data_560k_group_correctness']):>8}"
         )
 
 

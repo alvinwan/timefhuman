@@ -31,6 +31,11 @@ COMPACT_TIME_RANGE_PATTERN = re.compile(
 HYPHENATED_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}(?:-\d{1,4})?$")
 PHONE_LIKE_PATTERN = re.compile(r"^\d{3,4}-\d{4}$|^\d{3}-\d{3}-\d{4}$")
 CODE_LIKE_NUMERIC_RANGE_PATTERN = re.compile(r"^\d{1,2}-\d{3}$")
+FRACTION_LIKE_PATTERN = re.compile(r"^\d+-\d+/\d+$")
+REFERENCE_LIKE_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,2}-\d{1,2}-\d{3}$")
+BARE_HYPHEN_NUMERIC_PATTERN = re.compile(r"^\d{1,2}-\d{1,2}$")
+SLASH_FRACTION_PATTERN = re.compile(r"^\d+/\d+$")
+ARTICLE_DURATION_PATTERN = re.compile(r"(?i)^(?:a|an)\s+(?:second|minute|hour|day|week|month|year)$")
 COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
 UPPERCASE_COMPACT_SUFFIX_PATTERN = re.compile(r"^\d{1,4}[A-Z]$")
 LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
@@ -226,6 +231,13 @@ def _allows_newline_continuation(tokens, index: int):
     ):
         return True
 
+    previous_lower = tokens[index - 1][1]
+    current_lower = tokens[index][1]
+    if previous_lower in get_timezone_words() and current_lower in get_timezone_words():
+        return True
+    if re.fullmatch(rf"(?ix)\d+(?::\d{{2}})?(?:{MERIDIEM_PATTERN})", previous) and current_lower in get_timezone_words():
+        return True
+
     return False
 
 
@@ -334,11 +346,38 @@ def _is_duration_value_token(token: str):
 def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
     before = text[start - 1] if start > 0 else ""
     after = text[end] if end < len(text) else ""
+    lowered_candidate = candidate.lower()
+    candidate_words = lowered_candidate.split()
 
     if PHONE_LIKE_PATTERN.fullmatch(candidate):
         return True
     if CODE_LIKE_NUMERIC_RANGE_PATTERN.fullmatch(candidate):
         return True
+    if FRACTION_LIKE_PATTERN.fullmatch(candidate):
+        return True
+    if REFERENCE_LIKE_NUMERIC_DATE_PATTERN.fullmatch(candidate):
+        return True
+    if ARTICLE_DURATION_PATTERN.fullmatch(candidate):
+        next_token = _next_token(text, end)
+        if next_token and next_token[:1].isalpha() and next_token.lower() not in EXPRESSION_CONNECTORS:
+            return True
+
+    if len(candidate_words) == 2 and candidate_words[0] == "following" and candidate_words[1] in MONTH_WORDS:
+        next_token = _next_token(text, end).lower().strip(".,:;)")
+        if next_token and next_token[:1].isalpha() and next_token not in EXPRESSION_WORDS:
+            return True
+
+    if BARE_HYPHEN_NUMERIC_PATTERN.fullmatch(candidate):
+        previous_token = _previous_token(text, start)
+        next_token = _next_token(text, end)
+        if _looks_like_reference_token(previous_token) or _looks_like_reference_token(next_token):
+            return True
+
+    if SLASH_FRACTION_PATTERN.fullmatch(candidate):
+        previous_token = _previous_token(text, start)
+        next_token = _next_token(text, end).lower().strip(".,:;)")
+        if previous_token.isdigit() or next_token in {"percent", "%", "in", "inch", "inches"}:
+            return True
 
     if candidate.isalpha() and (before == "-" or after == "-"):
         return True
@@ -384,3 +423,23 @@ def _looks_like_identifier_token(token: str):
     if any(separator in token for separator in "._/-"):
         return True
     return False
+
+
+def _next_token(text: str, end: int):
+    window_end = min(len(text), end + 64)
+    for match in TOKEN_PATTERN.finditer(text, end, window_end):
+        token = match.group(0)
+        if token.strip():
+            return token
+    return ""
+
+
+def _looks_like_reference_token(token: str):
+    if not token:
+        return False
+    lowered = token.strip(".,:;()[]{}").lower()
+    if not lowered:
+        return False
+    if lowered in {"article", "articles", "section", "sections", "series", "figure", "figures", "rcw", "wac"}:
+        return True
+    return token[:1].isupper() and lowered not in MONTH_WORDS and lowered not in WEEKDAY_WORDS
