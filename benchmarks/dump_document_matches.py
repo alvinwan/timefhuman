@@ -15,7 +15,7 @@ OUTPUT_ROOT = Path(__file__).resolve().parent / "matches"
 
 def output_label(label: str):
     if label == "dateparser*":
-        return "dateparser.search_dates"
+        return "dateparser"
     return label
 
 

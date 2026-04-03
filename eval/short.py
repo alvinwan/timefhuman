@@ -119,6 +119,7 @@ NO_INFERENCE_CASES = [
     ("08.07.2013", [datetime.date(2013, 8, 7)]),
     ("Wed 25 Jun", [datetime.date(2018, 6, 25)]),
     ("1.3.4", []),
+    ("2-319", []),
 
     # date-only ranges
     ("7/17-7/18", [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
@@ -181,6 +182,10 @@ NO_INFERENCE_CASES = [
     ("second Wednesday of December", [datetime.date(2018, 12, 12)]),
     ("third Wednesday of December", [datetime.date(2018, 12, 19)]),
     ("fourth Wednesday of December", [datetime.date(2018, 12, 26)]),
+    ("3rd Monday in January", [datetime.date(2018, 1, 15)]),
+    ("3rd Monday in February", [datetime.date(2018, 2, 19)]),
+    ("1st Monday in September", [datetime.date(2018, 9, 3)]),
+    ("4th Thursday of November", [datetime.date(2018, 11, 22)]),
 
     # support for vernacular datetimes
     ("afternoon", [datetime.time(15, 0)]),
@@ -254,6 +259,30 @@ MATCHED_TEXT_CASES = [
         "foo 11:00 a.m., Pacific Time, January 13, 2016 bar",
         [("11:00 a.m., Pacific Time, January 13, 2016", (4, 46), localized_datetime("US/Pacific", 2016, 1, 13, 11, 0))],
     ),
+    (
+        "Rev.: 07/2/07, 08/27/07, 01/16/08, 03/7/08, 09/11/08, 01/19/09, 06/15/09, 01/6/11, 03/17/11, 10/03/11",
+        [(
+            "07/2/07, 08/27/07, 01/16/08, 03/7/08, 09/11/08, 01/19/09, 06/15/09, 01/6/11, 03/17/11, 10/03/11",
+            (6, 101),
+            [
+                datetime.datetime(2007, 7, 2, 0, 0),
+                datetime.datetime(2007, 8, 27, 0, 0),
+                datetime.datetime(2008, 1, 16, 0, 0),
+                datetime.datetime(2008, 3, 7, 0, 0),
+                datetime.datetime(2008, 9, 11, 0, 0),
+                datetime.datetime(2009, 1, 19, 0, 0),
+                datetime.datetime(2009, 6, 15, 0, 0),
+                datetime.datetime(2011, 1, 6, 0, 0),
+                datetime.datetime(2011, 3, 17, 0, 0),
+                datetime.datetime(2011, 10, 3, 0, 0),
+            ],
+        )],
+    ),
+    ("holiday is on 3rd Monday in January", [("3rd Monday in January", (14, 35), datetime.datetime(2018, 1, 15, 0, 0))]),
+    ("holiday is on 3rd Monday in February", [("3rd Monday in February", (14, 36), datetime.datetime(2018, 2, 19, 0, 0))]),
+    ("holiday is on 1st Monday in September", [("1st Monday in September", (14, 37), datetime.datetime(2018, 9, 3, 0, 0))]),
+    ("holiday is on 4th Thursday of November", [("4th Thursday of November", (14, 38), datetime.datetime(2018, 11, 22, 0, 0))]),
+    ("RCW 62A.2-319", []),
     ("90p", []),
     ("4906/0", []),
     ("one-night-only", []),

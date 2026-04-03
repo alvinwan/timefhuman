@@ -52,6 +52,7 @@ MONTHNAME_DATE_PATTERN = re.compile(
     r"(?:\s*,?\s*(?P<year>\d{2,4}))?$"
 )
 DAY_ORDINAL_PATTERN = re.compile(r"(?i)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
+CODE_LIKE_NUMERIC_RANGE_PATTERN = re.compile(r"^\d{1,2}-\d{3}$")
 
 
 def get_lalr_parser():
@@ -83,6 +84,8 @@ def _trimmed_span(string: str, start_pos: int = 0):
 def parse_lalr_renderers(string: str, config: tfhConfig, start_pos: int = 0):
     stripped, span_start, span_end = _trimmed_span(string, start_pos)
     if not stripped:
+        return None
+    if CODE_LIKE_NUMERIC_RANGE_PATTERN.fullmatch(stripped):
         return None
 
     try:

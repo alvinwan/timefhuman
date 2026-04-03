@@ -71,6 +71,9 @@ DAY_SUFFIX_PATTERN = re.compile(r"(?ix)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
 POSITION_WEEKDAY_MONTH_PATTERN = re.compile(
     r"(?ix)^(?P<position>first|second|third|fourth|last)\s+(?P<weekday>[a-z]+)\s+(?:of|in)\s+(?P<month>[a-z]+)$"
 )
+ORDINAL_POSITION_WEEKDAY_MONTH_PATTERN = re.compile(
+    r"(?ix)^(?P<ordinal>[1-4])(?:st|nd|rd|th)\s+(?P<weekday>[a-z]+)\s+(?:of|in)\s+(?P<month>[a-z]+)$"
+)
 ISO_PATTERN = re.compile(
     r"^(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})"
     r"T"
@@ -93,6 +96,12 @@ NUMBER_UNIT_PATTERN = re.compile(
 )
 NUMERIC_TIMEZONE_OFFSET_PATTERN = re.compile(r"^(?P<body>.*\S)\s+(?P<sign>[+-])(?P<hour>\d{2})(?::?(?P<minute>\d{2}))$")
 HYPHENATED_NUMERIC_DATE_TOKEN_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}-\d{1,4}$")
+ORDINAL_POSITION_NAME = {
+    "1": "first",
+    "2": "second",
+    "3": "third",
+    "4": "fourth",
+}
 
 
 def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
@@ -351,6 +360,14 @@ def _parse_date(text: str, config: tfhConfig):
         if weekday is None or month is None:
             return None
         return tfhDate(month=month, delta=POSITION_TO_DELTA[match.group("position")](weekdays[weekday]))
+
+    match = ORDINAL_POSITION_WEEKDAY_MONTH_PATTERN.fullmatch(lower)
+    if match:
+        weekday = _parse_weekday_name(match.group("weekday"))
+        month = _parse_month_name(match.group("month"))
+        if weekday is None or month is None:
+            return None
+        return tfhDate(month=month, delta=POSITION_TO_DELTA[ORDINAL_POSITION_NAME[match.group("ordinal")]](weekdays[weekday]))
 
     tokens = lower.split()
     offset, remainder = _parse_modifier_prefix(tokens)

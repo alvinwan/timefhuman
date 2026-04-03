@@ -30,6 +30,7 @@ COMPACT_TIME_RANGE_PATTERN = re.compile(
 )
 HYPHENATED_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}(?:-\d{1,4})?$")
 PHONE_LIKE_PATTERN = re.compile(r"^\d{3,4}-\d{4}$|^\d{3}-\d{3}-\d{4}$")
+CODE_LIKE_NUMERIC_RANGE_PATTERN = re.compile(r"^\d{1,2}-\d{3}$")
 COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
 UPPERCASE_COMPACT_SUFFIX_PATTERN = re.compile(r"^\d{1,4}[A-Z]$")
 LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
@@ -42,7 +43,7 @@ INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
 LARGE_DOCUMENT_LINE_THRESHOLD = 1024
 LARGE_DOCUMENT_CHAR_THRESHOLD = 262144
-EXTRACTION_TOKEN_LIMIT = 10
+EXTRACTION_TOKEN_LIMIT = 24
 MONTH_WORDS = frozenset(get_month_mapping())
 WEEKDAY_WORDS = frozenset(WEEKDAY_ALIASES)
 DIRECT_START_WORDS = frozenset(DATE_NAME_TO_OFFSET) | frozenset(TIME_NAME_TO_TEMPLATE) | frozenset(
@@ -195,7 +196,7 @@ def _candidate_end_limit(tokens, start_index: int, text: str):
         token = tokens[index][0]
         lowered = tokens[index][1]
         gap = text[tokens[index - 1][3] : tokens[index][2]]
-        if "\n" in gap or "\r" in gap:
+        if ("\n" in gap or "\r" in gap) and not _allows_newline_continuation(tokens, index):
             return end_index
         if _is_weekday_period_continuation(tokens, start_index, index):
             end_index = index + 1
@@ -207,6 +208,26 @@ def _candidate_end_limit(tokens, start_index: int, text: str):
             continue
         break
     return end_index
+
+
+def _allows_newline_continuation(tokens, index: int):
+    if index <= 0 or index >= len(tokens):
+        return False
+
+    previous = tokens[index - 1][0]
+    current = tokens[index][0]
+    next_token = tokens[index + 1][0] if index + 1 < len(tokens) else ""
+    next_lower = tokens[index + 1][1] if index + 1 < len(tokens) else ""
+
+    if (HYPHENATED_NUMERIC_DATE_PATTERN.fullmatch(previous) or supports_numeric_date_text(previous)) and (
+        re.fullmatch(rf"(?ix)\d+(?:{MERIDIEM_PATTERN})", current)
+        or (current.isdigit() and MERIDIEM_ONLY_PATTERN.fullmatch(next_lower))
+    ):
+        return True
+
+    return False
+
+
 def _is_weekday_period_continuation(tokens, start_index: int, index: int):
     if tokens[index][0] != "." or index <= start_index:
         return False
@@ -275,6 +296,8 @@ def _is_plausible_start_tokens(token: str, next_token: str, next_next_token: str
         return True
     if token in POSITION_TO_DELTA and next_token in WEEKDAY_WORDS:
         return True
+    if DAY_SUFFIX_PATTERN.fullmatch(token) and next_token in WEEKDAY_WORDS and next_next_token in {"of", "in"}:
+        return True
     if token in NUMBER_WORDS and next_token in UNIT_ALIASES:
         return True
     if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
@@ -308,6 +331,8 @@ def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
     after = text[end] if end < len(text) else ""
 
     if PHONE_LIKE_PATTERN.fullmatch(candidate):
+        return True
+    if CODE_LIKE_NUMERIC_RANGE_PATTERN.fullmatch(candidate):
         return True
 
     if candidate.isalpha() and (before == "-" or after == "-"):
