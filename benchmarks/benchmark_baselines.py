@@ -11,7 +11,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from eval.corpora import CORE_CORPUS_TEXT
-from eval.short import SHORT_BENCHMARK_INPUTS, SHORT_EXACTNESS_CASES
+from eval.short import DEFAULT_CASES
 from timefhuman import timefhuman
 from timefhuman.main import tfhConfig
 
@@ -53,8 +53,12 @@ except ImportError:
 
 NOW = datetime(2018, 8, 4, 14, 0)
 DATEFINDER_ROOT = Path(os.environ.get("DATEFINDER_ROOT", "/tmp/datefinder"))
-INPUTS = SHORT_BENCHMARK_INPUTS
-EXACT_CASES = SHORT_EXACTNESS_CASES
+INPUTS = [text for text, _ in DEFAULT_CASES]
+EXACT_CASES = [
+    (text, expected[0])
+    for text, expected in DEFAULT_CASES
+    if len(expected) == 1 and isinstance(expected[0], datetime)
+]
 DOCUMENT_DATASETS = (
     ("core_corpus", "core_corpus", 10),
     ("seattle_html_76k", "seattle_html_76k", 7),
