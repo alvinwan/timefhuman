@@ -106,10 +106,12 @@ DOCUMENT_DATASETS = (
 
 def build_benches():
     cfg = tfhConfig(now=NOW)
+    match_cfg = tfhConfig(now=NOW, return_matched_text=True)
     benches = [{
         "label": "timefhuman",
         "func": lambda text: timefhuman(text, config=cfg),
         "document_func": lambda text: timefhuman(text, config=cfg),
+        "document_dump_func": lambda text: timefhuman(text, config=match_cfg),
     }]
 
     if dateparser:
@@ -123,6 +125,7 @@ def build_benches():
             "label": "dateparser.search_dates",
             "func": None,
             "document_func": lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW}),
+            "document_dump_func": lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW}),
             "document_timeout_seconds": 15,
         })
     if parsedatetime:
@@ -137,6 +140,7 @@ def build_benches():
             "label": "datefinder.find_dates",
             "func": lambda text: list(datefinder.find_dates(text, base_date=NOW)),
             "document_func": lambda text: list(datefinder.find_dates(text, base_date=NOW)),
+            "document_dump_func": lambda text: list(datefinder.find_dates(text, base_date=NOW, source=True, index=True)),
         })
     if ctparse:
         benches.append({

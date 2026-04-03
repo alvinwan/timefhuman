@@ -1,0 +1,132 @@
+import signal
+from pathlib import Path
+
+from benchmark_baselines import DATEFINDER_ROOT, DOCUMENT_DATASETS, build_benches, load_document_datasets
+
+
+OUTPUT_ROOT = Path(__file__).resolve().parent / "matches"
+
+
+def escape(value):
+    text = str(value)
+    return " ".join(text.split()).replace("|", "\\|")
+
+
+def context_snippet(text, start, end, radius=40):
+    left = max(0, start - radius)
+    right = min(len(text), end + radius)
+    snippet = text[left:right]
+    return escape(snippet)
+
+
+def format_match(label, match, text):
+    if label == "timefhuman":
+        matched_text, (start, end), value = match
+        return {
+            "match": matched_text,
+            "value": repr(value),
+            "span": f"{start}:{end}",
+            "context": context_snippet(text, start, end),
+        }
+    if label == "datefinder.find_dates":
+        value, matched_text, (start, end) = match
+        return {
+            "match": matched_text,
+            "value": repr(value),
+            "span": f"{start}:{end}",
+            "context": context_snippet(text, start, end),
+        }
+    if label == "dateparser.search_dates":
+        matched_text, value = match
+        return {
+            "match": matched_text,
+            "value": repr(value),
+            "span": "n/a",
+            "context": "n/a",
+        }
+    raise ValueError(f"unsupported label: {label}")
+
+
+def write_dump(label, dataset_name, source_path, text, matches):
+    output_dir = OUTPUT_ROOT / label
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"{dataset_name}.md"
+
+    rows = [format_match(label, match, text) for match in matches]
+    lines = [
+        f"# {label} · {dataset_name}",
+        "",
+        f"- Source: {source_path}",
+        f"- Total matches: {len(rows)}",
+        "",
+        "| # | match | normalized | span | context |",
+        "| ---: | --- | --- | --- | --- |",
+    ]
+    for index, row in enumerate(rows, start=1):
+        lines.append(
+            f"| {index} | {escape(row['match'])} | {escape(row['value'])} | {escape(row['span'])} | {row['context']} |"
+        )
+
+    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+class DumpTimeout(Exception):
+    pass
+
+
+def run_with_timeout(timeout_seconds, func, text):
+    if timeout_seconds is None:
+        return func(text)
+
+    previous_handler = signal.getsignal(signal.SIGALRM)
+
+    def alarm_handler(signum, frame):
+        raise DumpTimeout()
+
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(timeout_seconds)
+    try:
+        return func(text)
+    except DumpTimeout:
+        return None
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, previous_handler)
+
+
+def main():
+    benches = [
+        bench for bench in build_benches()
+        if bench.get("document_dump_func") is not None
+    ]
+    document_datasets = load_document_datasets()
+    if not document_datasets:
+        raise SystemExit(f"datefinder corpora not found under {DATEFINDER_ROOT}")
+
+    source_paths = {
+        "core_corpus": DATEFINDER_ROOT / "bench" / "corpus_core.txt",
+        "seattle_html_76k": DATEFINDER_ROOT / "tests" / "seattle_weekly.html",
+        "test_data_560k": DATEFINDER_ROOT / "tests" / "test_data.txt",
+    }
+
+    for bench in benches:
+        for dataset_name, _, _ in DOCUMENT_DATASETS:
+            text = document_datasets[dataset_name]
+            matches = run_with_timeout(
+                bench.get("document_timeout_seconds"),
+                bench["document_dump_func"],
+                text,
+            )
+            if matches is None:
+                continue
+            write_dump(
+                bench["label"],
+                dataset_name,
+                source_paths[dataset_name],
+                text,
+                matches,
+            )
+
+
+if __name__ == "__main__":
+    main()
