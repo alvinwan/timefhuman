@@ -105,14 +105,12 @@ Overall, timefhuman achieves higher throughput and handles a wider range of date
 | parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) | acc |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | timefhuman | 0.9 | <ins><strong>27/27</strong></ins> | 1.0 | <ins><strong>14/14</strong></ins> | <ins><strong>43.5</strong></ins> | <ins><strong>57/57</strong></ins> | <ins><strong>303.0</strong></ins> | <ins><strong>26/26</strong></ins> |
-| datefinder.find_dates | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 9/14 | 66.2 | 54/57 | 836.5 | 13/26 |
-| dateparser* | 77.3 | 15/27 | 184.2 | 9/14 | 535.0 | 53/57 | >2000ms | timeout |
+| datefinder | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 9/14 | 66.2 | 54/57 | 836.5 | 13/26 |
+| dateparser | 77.3 | 15/27 | 184.2 | 9/14 | 535.0 | 53/57 | >2000ms | timeout |
 
-- `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
-- `datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. 
-- `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are unable to parse a vast majority of the test cases so are excluded.
+`datefinder` and `dateparser` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Other baselines -- `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` -- are unable to parse a vast majority of the test cases so are excluded.
 
-See the full set of results, including the lower-accuracy baselines, in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, grouped accuracy, timeout/error behavior, repro commands, and raw match dumps.
+See the full set of results in [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Advanced Usage
 

@@ -4,12 +4,11 @@ The following benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, mac
 
 ## Results
 
-For the below, whole-document rows use a 2-second timeout. `timeout` in an `acc` column means the correctness run hit that cap.
-
 `acc` is the correctness score for the dataset immediately to the left.
 - Document `acc` is member-level coverage: lists and ranges still count as correct when a baseline finds the individual members separately.
 - Document `group` is grouped correctness: lists and ranges only count when they are returned as one grouped result.
 - Document `#` is the number of extracted datetimes for the dataset immediately to the left.
+- Whole-document rows use a 2-second timeout. `timeout` in an `acc` column means the correctness run hit that cap.
 
 These datasets are taken from datefinder's README: https://github.com/akoumjian/datefinder/blob/master/README.rst#benchmark-snapshot
 
@@ -65,14 +64,3 @@ Refresh the checked-in whole-document match dumps.
 ```bash
 /tmp/timefhuman-bench-venv/bin/python benchmarks/dump_document_matches.py
 ```
-
-## Rule Of Thumb
-
-If a change makes the LALR parser or noisy extraction run more often, it is probably a slowdown.
-
-The fastest route is:
-
-1. deterministic whole-string parse for exact expressions
-2. bounded noisy extraction for prose-like inputs
-3. exact whole-string LALR fallback only when needed
-4. LALR extraction rescue only when the fast extractor misses
