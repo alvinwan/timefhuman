@@ -12,6 +12,7 @@ Status as of April 2, 2026.
 ## Results
 
 - Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
+- Shared benchmark inputs live in `eval/short.py`, and the checked-in fully gold `core_corpus` lives in `eval/corpora.py`.
 - `extracted`: returned any result on the 37-case short-input corpus.
 - `correctness`: exact match on the 10-case exactness subset.
 - `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds and extracted count, formatted as `seconds (count)`.
@@ -25,13 +26,13 @@ Status as of April 2, 2026.
 
 | parser | us/input | extracted | correctness |
 | --- | ---: | ---: | ---: |
-| timefhuman | 37.0 | **37/37** | **10/10** |
-| datefinder.find_dates | **31.1** | 23/37 | 5/10 |
+| timefhuman | 48.5 | **37/37** | **10/10** |
+| datefinder.find_dates | **25.7** | 23/37 | 5/10 |
 | metadate.parse_date | 33.2 | 31/37 | 5/10 |
-| parsedatetime.parseDT | 44.4 | 36/37 | 6/10 |
-| recurrent.parse | 213.2 | 36/37 | 6/10 |
-| ctparse.ctparse | 12273.8 | **37/37** | 3/10 |
-| dateparser.parse | 44593.5 | 20/37 | 6/10 |
+| parsedatetime.parseDT | 43.5 | 36/37 | 6/10 |
+| recurrent.parse | 191.6 | 36/37 | 6/10 |
+| ctparse.ctparse | 12499.9 | **37/37** | 3/10 |
+| dateparser.parse | 45365.3 | 20/37 | 6/10 |
 
 ### Whole-Document Extraction
 
@@ -39,9 +40,9 @@ Only parsers with a comparable whole-document extraction API are included here.
 
 | parser | core_corpus | seattle_html_76k | test_data_560k |
 | --- | ---: | ---: | ---: |
-| timefhuman | 0.0004 ([10](matches/timefhuman/core_corpus.md)) | **0.0227** ([59](matches/timefhuman/seattle_html_76k.md)) | **0.1340** ([594](matches/timefhuman/test_data_560k.md)) |
-| datefinder.find_dates | **0.0003** ([11](matches/datefinder.find_dates/core_corpus.md)) | 0.0389 ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.4935 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
-| dateparser.search_dates | 0.1107 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.3254 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >15s (n/a) |
+| timefhuman | 0.0004 ([10](matches/timefhuman/core_corpus.md)) | **0.0219** ([59](matches/timefhuman/seattle_html_76k.md)) | **0.1326** ([594](matches/timefhuman/test_data_560k.md)) |
+| datefinder.find_dates | **0.0002** ([11](matches/datefinder.find_dates/core_corpus.md)) | 0.0394 ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.4991 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
+| dateparser.search_dates | 0.1111 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.3288 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >15s (n/a) |
 
 Notes on what the other baselines found that `timefhuman` still misses:
 
