@@ -106,16 +106,15 @@ Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 | parser | short_ms | acc | core_ms | # | acc | seattle_76k_ms | # | acc | test_560k_ms | # |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.3 | **23/23** | 0.4 | 10 | **10/10** | 22.6 | 55 | **55/55** | 133.0 | 594 |
-| metadate.parse_date | 0.5 | 9/23 | **0.2** | 10 | 5/10 | **4.6** | 90 | 2/55 | **49.5** | 1538 |
-| datefinder.find_dates | **0.2** | 9/23 | **0.2** | 11 | 1/10 | 39.8 | 57 | 53/55 | 497.3 | 313 |
-| parsedatetime.parseDT | 0.5 | 11/23 | 2.4 | 1 | 0/10 | 696.9 | 1 | 0/55 | >1000ms | n/a |
-| recurrent.parse | 3.4 | 11/23 | 4.0 | 1 | 0/10 | n/a | n/a | n/a | n/a | n/a |
-| dateparser.search_dates | n/a | n/a | 111.7 | 14 | 1/10 | 326.6 | 90 | 52/55 | >1000ms | n/a |
-| dateparser.parse | 31.5 | 13/23 | 120.8 | 0 | 0/10 | >1000ms | n/a | timeout | >1000ms | n/a |
-| ctparse.ctparse | 75.2 | 5/23 | 124.8 | 1 | 0/10 | >1000ms | n/a | timeout | >1000ms | n/a |
+| timefhuman | 0.3 | **23/23** | 0.4 | 10 | **10/10** | 21.6 | 55 | **55/55** | 132.6 | 594 |
+| metadate.parse_date | 0.6 | 9/23 | **0.2** | 10 | 5/10 | **4.2** | 90 | 2/55 | **48.3** | 1538 |
+| datefinder.find_dates | **0.2** | 9/23 | **0.2** | 11 | 1/10 | 39.5 | 57 | 53/55 | 498.7 | 313 |
+| parsedatetime.parseDT | 0.5 | 11/23 | 2.4 | 1 | 0/10 | 696.0 | 1 | 0/55 | >1000ms | n/a |
+| recurrent.parse | 3.4 | 11/23 | 4.0 | 1 | 0/10 | error | n/a | error | error | n/a |
+| dateparser* | 30.3 | 13/23 | 111.4 | 14 | 1/10 | 327.5 | 90 | 52/55 | >1000ms | n/a |
+| ctparse.ctparse | 76.2 | 5/23 | 125.2 | 1 | 0/10 | >1000ms | n/a | timeout | >1000ms | n/a |
 
-`#` is the extracted count for the dataset immediately to its left, and each adjacent `acc` column is the gold-match score for that dataset. `metadate.parse_date`, `datefinder.find_dates`, and `dateparser.search_dates` all include extra HTML and metadata false positives on these corpora, so speed and raw count alone overstate quality. Details, timeout rules, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
+`#` is the extracted count for the dataset immediately to its left, and each adjacent `acc` column is the gold-match score for that dataset. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns. `metadate.parse_date`, `datefinder.find_dates`, and `dateparser*` all include extra HTML and metadata false positives on these corpora, so speed and raw count alone overstate quality. Details, timeout rules, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Advanced Usage
 

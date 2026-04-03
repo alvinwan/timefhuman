@@ -82,17 +82,14 @@ def build_benches():
 
     if dateparser:
         benches.append({
-            "label": "dateparser.parse",
-            "func": lambda text: dateparser.parse(text, settings={"RELATIVE_BASE": NOW}),
+            "label": "dateparser*",
+            "func": None,
             "document_func": None,
         })
-    if dateparser_search_dates:
-        benches.append({
-            "label": "dateparser.search_dates",
-            "func": None,
-            "document_func": lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW}),
-            "document_dump_func": lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW}),
-        })
+        benches[-1]["func"] = lambda text: dateparser.parse(text, settings={"RELATIVE_BASE": NOW})
+        if dateparser_search_dates:
+            benches[-1]["document_func"] = lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW})
+            benches[-1]["document_dump_func"] = lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW})
     if parsedatetime:
         calendar = parsedatetime.Calendar()
         benches.append({
@@ -117,7 +114,7 @@ def build_benches():
         benches.append({
             "label": "recurrent.parse",
             "func": lambda text: recurrent.parse(text, NOW),
-            "document_func": None,
+            "document_func": lambda text: recurrent.parse(text, NOW),
         })
     if metadate:
         benches.append({
@@ -142,7 +139,7 @@ def normalize_exact_result(label, text, func):
     result = func(text)
     if label == "timefhuman":
         return result[0] if result else None
-    if label == "dateparser.parse":
+    if label == "dateparser*":
         return result
     if label == "parsedatetime.parseDT":
         value, status = result
@@ -175,12 +172,10 @@ def extract_result_items(label, result):
         if isinstance(result[0], tuple) and len(result[0]) == 3:
             return [(matched_text, value) for value, matched_text, _ in result]
         return [(None, value) for value in result]
-    if label == "dateparser.search_dates":
+    if label == "dateparser*":
         if not result:
             return []
         return [(matched_text, value) for matched_text, value in result]
-    if label == "dateparser.parse":
-        return [] if result is None else [(None, result)]
     if label == "parsedatetime.parseDT":
         value, status = result
         return [] if not status else [(None, value)]
@@ -196,7 +191,7 @@ def extract_result_items(label, result):
 
 
 def supports_text_matches(label):
-    return label in {"timefhuman", "datefinder.find_dates", "dateparser.search_dates"}
+    return label in {"timefhuman", "datefinder.find_dates", "dateparser*"}
 
 
 def get_document_runner(bench):
@@ -246,8 +241,8 @@ def benchmark_document(label, document_func, text, iterations, timeout_seconds=D
         }
     except BenchmarkTimeout:
         return {"timeout": f">{timeout_seconds}s", "count": None}
-    except Exception:
-        return None
+    except Exception as exc:
+        return {"error": type(exc).__name__, "count": None}
 
 
 def benchmark_short_perf(func, timeout_seconds=SHORT_TIMEOUT_SECONDS, samples=SHORT_SAMPLES):
@@ -330,8 +325,8 @@ def run_document_correctness(bench, document_datasets):
         except BenchmarkTimeout:
             row[key] = {"timeout": f">{DOCUMENT_TIMEOUT_SECONDS}s"}
             continue
-        except Exception:
-            row[key] = None
+        except Exception as exc:
+            row[key] = {"error": type(exc).__name__}
             continue
 
         items = [normalize_gold_match(bench["label"], match) for match in extract_result_items(bench["label"], matches)]
@@ -368,6 +363,8 @@ def sort_perf_rows(rows):
         if isinstance(core, dict) and "seconds" in core:
             key = core["seconds"]
         elif isinstance(core, dict) and "timeout" in core:
+            key = float("inf")
+        elif isinstance(core, dict) and "error" in core:
             key = float("inf")
         else:
             short = row.get("short_ms")
@@ -431,6 +428,8 @@ def main():
             return f"{value['matched']}/{value['total']}"
         if isinstance(value, dict) and "timeout" in value:
             return "timeout"
+        if isinstance(value, dict) and "error" in value:
+            return "error"
         if value is None:
             return "n/a"
         return str(value)
@@ -453,6 +452,8 @@ def main():
             return f"{value['seconds'] * 1000.0:.1f}"
         if isinstance(value, dict) and "timeout" in value:
             return value["timeout"].replace(">1s", ">1000ms")
+        if isinstance(value, dict) and "error" in value:
+            return "error"
         if value is None:
             return "n/a"
         return str(value)
