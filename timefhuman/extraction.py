@@ -22,6 +22,9 @@ MERIDIEM_PATTERN = r"(?:[ap](?:\.?m\.?)?)"
 TOKEN_PATTERN = re.compile(rf"(?ix)\d+(?:[/:.-]\d+)*(?:{MERIDIEM_PATTERN})?|[a-z]+(?:\.[a-z]+\.?)?|\S")
 DAY_SUFFIX_PATTERN = re.compile(r"(?ix)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
 MERIDIEM_ONLY_PATTERN = re.compile(rf"(?ix)^{MERIDIEM_PATTERN}$")
+COMPACT_TIME_RANGE_PATTERN = re.compile(
+    rf"(?ix)^\d{{1,2}}(?::\d{{2}})?(?:{MERIDIEM_PATTERN})?-\d{{1,2}}(?::\d{{2}})?(?:{MERIDIEM_PATTERN})?$"
+)
 EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
@@ -138,6 +141,8 @@ def _is_expression_token(token: str):
         return True
     if re.fullmatch(rf"(?ix)\d+(?:{MERIDIEM_PATTERN})", token):
         return True
+    if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
+        return True
     if any(char.isdigit() for char in token) and any(separator in token for separator in "/:.-"):
         return True
     if "t" in lowered and "-" in token:
@@ -160,6 +165,8 @@ def _is_expression_head(token: str):
     if lowered in get_month_mapping():
         return True
     if lowered.isdigit():
+        return True
+    if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
         return True
     if any(char.isdigit() for char in token) and any(separator in token for separator in "/:.-"):
         return True
@@ -186,6 +193,8 @@ def _is_plausible_start_tokens(token: str, next_token: str):
     if month_number(token) is not None or weekday_index(token) is not None:
         return True
     if token in NUMBER_WORDS and next_token in UNIT_ALIASES:
+        return True
+    if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
         return True
     if "/" in token or ":" in token or "t" in token and "-" in token:
         return True

@@ -176,6 +176,20 @@ def test_prefixed_or_punctuated_text_skips_lalr_fallback(now, monkeypatch):
     assert calls == 0
 
 
+def test_compact_time_range_is_extracted_from_prose(now):
+    text = "running from 7-11pm and featuring resident DJs"
+    assert timefhuman(text, tfhConfig(now=now, return_matched_text=True)) == [
+        (
+            "7-11pm",
+            (13, 19),
+            (
+                datetime.datetime(2018, 8, 4, 19, 0),
+                datetime.datetime(2018, 8, 4, 23, 0),
+            ),
+        ),
+    ]
+
+
 def test_corpus_regressions_do_not_crash():
     config = tfhConfig(now=localized_datetime('UTC', 2026, 3, 18, 12, 0), return_matched_text=True)
 
