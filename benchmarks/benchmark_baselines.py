@@ -54,7 +54,7 @@ except ImportError:
 NOW = datetime(2018, 8, 4, 14, 0)
 DATEFINDER_ROOT = Path(os.environ.get("DATEFINDER_ROOT", "/tmp/datefinder"))
 INPUTS = SHORT_BENCHMARK_INPUTS
-EXACT_CASES = [(case["text"], case["expected"]) for case in SHORT_EXACTNESS_CASES]
+EXACT_CASES = SHORT_EXACTNESS_CASES
 DOCUMENT_DATASETS = (
     ("core_corpus", "core_corpus", 10),
     ("seattle_html_76k", "seattle_html_76k", 7),
