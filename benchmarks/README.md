@@ -1,24 +1,17 @@
 # Benchmarks
 
-Status as of April 3, 2026.
-
-## Setup
-
-- Hardware: Apple M3 MacBook Air, 16 GB RAM
-- OS: macOS 26.3.1
-- Python: 3.13.3 from `/tmp/timefhuman-bench-venv`
-- Whole-document corpora: either a local `datefinder` clone at `/tmp/datefinder` or cached downloads under `.eval_corpora/`
+The following benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 ## Results
 
-- Milliseconds throughout.
-- `acc` is the correctness score for the dataset immediately to the left.
+For the below, whole-document rows use a 2-second timeout. `timeout` in an `acc` column means the correctness run hit that cap.
+
+`acc` is the correctness score for the dataset immediately to the left.
 - Document `acc` is member-level coverage: lists and ranges still count as correct when a baseline finds the individual members separately.
 - Document `group` is grouped correctness: lists and ranges only count when they are returned as one grouped result.
-- `sea_560k` accuracy is measured against the checked-in sampled gold set, not an exhaustive annotation of the whole corpus.
-- `#` is the extracted count for the dataset immediately to the left.
-- `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
-- Whole-document rows use a 2-second timeout. `timeout` in an `acc` column means the correctness run hit that cap.
+- Document `#` is the number of extracted datetimes for the dataset immediately to the left.
+
+These datasets are taken from datefinder's README: https://github.com/akoumjian/datefinder/blob/master/README.rst#benchmark-snapshot
 
 ### Main Results
 
@@ -44,7 +37,8 @@ Notes:
 - `metadate.parse_date`, `datefinder.find_dates`, and `dateparser*` all pick up extra HTML or metadata false positives on the document corpora, so speed and raw count alone overstate quality.
 - `datefinder.find_dates` extras on Seattle include version-like metadata such as `1.3.4` and `1.7.1`, plus `Jan 6 2016` as a smaller substring inside `Wed., Jan 6 2016 at 10:13AM`.
 - `dateparser*` extras on Seattle include noisy HTML fragments such as `01'`, `90`, `50%`, `<h1`, and `set`.
-- `timefhuman` still has some unresolved standalone-weekday matches in `sea_560k`, such as `Friday`, `Saturday`, and `Monday` inside policy prose. Those are currently left out of the sampled gold set.
+- `sea_560k` accuracy is measured against the checked-in sampled gold set, not an exhaustive annotation of the whole corpus.
+- `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
 
 ## Reproduce
 

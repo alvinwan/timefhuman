@@ -100,9 +100,7 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 ## Performance
 
-All runtime columns are in milliseconds. `acc` is the correctness score for the dataset immediately to the left. For the document corpora, `acc` is member-level coverage, so ranges and lists still count as correct when a baseline finds the individual members separately. `sea_560k` uses the checked-in sampled gold set rather than exhaustive annotation. [`benchmarks/README.md`](benchmarks/README.md) also reports grouped correctness. `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
-
-Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
+Overall, timefhuman achieves higher throughput and handles a wider range of date/time formats with higher accuracy. The following benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 | parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) | acc |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -110,7 +108,11 @@ Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 | datefinder.find_dates | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 9/14 | 66.2 | 54/57 | 836.5 | 13/26 |
 | dateparser* | 77.3 | 15/27 | 184.2 | 9/14 | 535.0 | 53/57 | >2000ms | timeout |
 
-`datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines such as `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are listed separately in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, grouped accuracy, timeout/error behavior, repro commands, and raw match dumps.
+- `dateparser*` uses `dateparser.parse` for short columns and `dateparser.search_dates` for document columns.
+- `datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. 
+- `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` are unable to parse a vast majority of the test cases so are excluded.
+
+See the full set of results, including the lower-accuracy baselines, in [`benchmarks/README.md`](benchmarks/README.md), along with extracted counts, grouped accuracy, timeout/error behavior, repro commands, and raw match dumps.
 
 ## Advanced Usage
 
