@@ -10,8 +10,11 @@ def localized_datetime(tz_name, *parts):
 
 
 DEFAULT_CASES = [
+    # time only
     ("5p", [datetime.datetime(2018, 8, 4, 17, 0)]),
     ("3p EST", [localized_datetime("US/Michigan", 2018, 8, 4, 15, 0)]),
+
+    # date only
     ("July 2019", [datetime.datetime(2019, 7, 1, 0, 0)]),
     ("7-17-18", [datetime.datetime(2018, 7, 17, 0, 0)]),
     ("2018-7-17", [datetime.datetime(2018, 7, 17, 0, 0)]),
@@ -19,6 +22,8 @@ DEFAULT_CASES = [
     ("2013.08.07", [datetime.datetime(2013, 8, 7, 0, 0)]),
     ("7/2018", [datetime.datetime(2018, 7, 1, 0, 0)]),
     ("Wed 25 Jun", [datetime.datetime(2018, 6, 25, 0, 0)]),
+
+    # datetimes
     ("July 17, 2018 at 3p.m.", [datetime.datetime(2018, 7, 17, 15, 0)]),
     ("July 17, 2018 3 p.m.", [datetime.datetime(2018, 7, 17, 15, 0)]),
     ("3PM on July 17", [datetime.datetime(2018, 7, 17, 15, 0)]),
@@ -29,10 +34,14 @@ DEFAULT_CASES = [
     ("3p tomorrow", [datetime.datetime(2018, 8, 5, 15, 0)]),
     ("yesterday 3p", [datetime.datetime(2018, 8, 3, 15, 0)]),
     ("July 3rd", [datetime.datetime(2018, 7, 3, 0, 0)]),
+
+    # date-only ranges
     ("7/17-7/18", [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]),
     ("July 17-18", [(datetime.datetime(2018, 7, 17), datetime.datetime(2018, 7, 18))]),
     ("June 11-16, 2026", [(datetime.datetime(2026, 6, 11), datetime.datetime(2026, 6, 16))]),
     ("June 11-16 2026", [(datetime.datetime(2026, 6, 11), datetime.datetime(2026, 6, 16))]),
+
+    # time-only ranges
     ("3p -4p", [(datetime.datetime(2018, 8, 4, 15, 0), datetime.datetime(2018, 8, 4, 16, 0))]),
     (
         "3p -4p PDT",
@@ -44,11 +53,15 @@ DEFAULT_CASES = [
     ("6:00 pm - 12:00 am", [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 5, 0, 0))]),
     ("8/4 6:00 pm - 8/4 12:00 am", [(datetime.datetime(2018, 8, 4, 18, 0), datetime.datetime(2018, 8, 4, 0, 0))]),
     ("11PM to 1AM", [(datetime.datetime(2018, 8, 4, 23, 0), datetime.datetime(2018, 8, 5, 1, 0))]),
+
+    # date and time ranges
     ("7/17 3 pm- 7/19 2 pm", [(datetime.datetime(2018, 7, 17, 15, 0), datetime.datetime(2018, 7, 19, 14, 0))]),
     ("Jun 28 5:00 PM - Aug 02 7:00 PM", [(datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))]),
     ("Jun 28 2019 5:00 PM - Aug 02 2019 7:00 PM", [(datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))]),
     ("6/28 5:00 PM - 8/02 7:00 PM", [(datetime.datetime(2018, 6, 28, 17, 0), datetime.datetime(2018, 8, 2, 19, 0))]),
     ("6/28/2019 5:00 PM - 8/02/2019 7:00 PM", [(datetime.datetime(2019, 6, 28, 17, 0), datetime.datetime(2019, 8, 2, 19, 0))]),
+
+    # choices
     ("July 4th or 5th at 3PM", [[datetime.datetime(2018, 7, 4, 15, 0), datetime.datetime(2018, 7, 5, 15, 0)]]),
     (
         "tomorrow noon,Wed 3 p.m.,Fri 11 AM",
@@ -62,6 +75,8 @@ DEFAULT_CASES = [
         "Are you free this Wed at 3p? Or maybe Fri at 5p?",
         [datetime.datetime(2018, 8, 8, 15, 0), datetime.datetime(2018, 8, 10, 17, 0)],
     ),
+
+    # choices of ranges
     (
         "7/17 4-5 PM or 5-6 PM today",
         [[
@@ -69,33 +84,48 @@ DEFAULT_CASES = [
             (datetime.datetime(2018, 8, 4, 17, 0), datetime.datetime(2018, 8, 4, 18, 0)),
         ]],
     ),
+
+    # timedeltas converted properly
     ("30 minutes", [datetime.datetime(2018, 8, 4, 14, 30)]),
     ("30-40 mins", [(datetime.datetime(2018, 8, 4, 14, 30), datetime.datetime(2018, 8, 4, 14, 40))]),
     ("1 or 2 days", [[datetime.datetime(2018, 8, 5, 14, 0), datetime.datetime(2018, 8, 6, 14, 0)]]),
     ("in 1 year", [datetime.datetime(2019, 8, 4, 14, 0)]),
     ("1 year ago", [datetime.datetime(2017, 8, 4, 14, 0)]),
+
+    # standard structured formats
     ("2022-12-27T09:15:01.002", [datetime.datetime(2022, 12, 27, 9, 15, 1, 2)]),
 ]
 
 
 NO_INFERENCE_CASES = [
+    # empty
     ("", []),
+
+    # time only
     ("5p", [datetime.time(17, 0)]),
     ("3 o'clock pm", [datetime.time(15, 0)]),
     ("5p Eastern Time", [datetime.time(17, 0, tzinfo=pytz.timezone("US/Michigan"))]),
+
+    # date only
     ("July 2019", [datetime.date(2019, 7, 1)]),
     ("Sunday 7/7/2019", [datetime.date(2019, 7, 7)]),
     ("1/1/95", [datetime.date(1995, 1, 1)]),
     ("08.07.2013", [datetime.date(2013, 8, 7)]),
     ("Wed 25 Jun", [datetime.date(2018, 6, 25)]),
     ("1.3.4", []),
+
+    # date-only ranges
     ("7/17-7/18", [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
     ("July 17-18", [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
     ("June 11-16, 2026", [(datetime.date(2026, 6, 11), datetime.date(2026, 6, 16))]),
     ("June 11-16 2026", [(datetime.date(2026, 6, 11), datetime.date(2026, 6, 16))]),
     ("31/08/2012 to 30/08/2013", [(datetime.date(2012, 8, 31), datetime.date(2013, 8, 30))]),
+
+    # time-only ranges
     ("3p -4p", [(datetime.time(15, 0), datetime.time(16, 0))]),
     ("3-4p", [(datetime.time(15, 0), datetime.time(16, 0))]),
+
+    # durations
     ("30 minutes", [datetime.timedelta(minutes=30)]),
     ("30 mins", [datetime.timedelta(minutes=30)]),
     ("2 hours", [datetime.timedelta(hours=2)]),
@@ -115,8 +145,25 @@ NO_INFERENCE_CASES = [
     ("thirty two hours", [datetime.timedelta(hours=32)]),
     ("in 1 year", [datetime.timedelta(days=365)]),
     ("1 year ago", [datetime.timedelta(days=-365)]),
+
+    # duration ranges and lists
     ("30-40 mins", [(datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))]),
     ("1 or 2 days", [[datetime.timedelta(days=1), datetime.timedelta(days=2)]]),
+
+    # TODO: support "quarter to 3"
+    # TODO: support "one and a half hours"
+
+    # TODO ('noon next week') <- should be a list of options
+    # TODO: support recurrences, like "5pm on thursdays" (see gh#33)
+
+    # TODO: support natural language date ranges e.g., this week, next weekend, any weekday gh#18
+    # TODO: support natural language time ranges e.g., afternoon, morning, evening, tonight, today night gh#30
+
+    # TODO: christmas? new years? eve?
+    # TODO: support 'this past July' (e.g., reduce to 'this')
+    # TODO: support 'last week of dec'
+
+    # support for date and month modifiers
     ("next Monday", [datetime.date(2018, 8, 6)]),
     ("this Monday", [datetime.date(2018, 8, 6)]),
     ("next next Monday", [datetime.date(2018, 8, 13)]),
@@ -128,6 +175,8 @@ NO_INFERENCE_CASES = [
     ("second Wednesday of December", [datetime.date(2018, 12, 12)]),
     ("third Wednesday of December", [datetime.date(2018, 12, 19)]),
     ("fourth Wednesday of December", [datetime.date(2018, 12, 26)]),
+
+    # support for vernacular datetimes
     ("afternoon", [datetime.time(15, 0)]),
     ("morning", [datetime.time(6, 0)]),
     ("evening", [datetime.time(18, 0)]),
@@ -202,61 +251,4 @@ MATCHED_TEXT_CASES = [
             datetime.datetime(1996, 4, 23, 13, 28, 27, tzinfo=datetime.timezone(datetime.timedelta(hours=-4))),
         )],
     ),
-]
-
-
-SHORT_BENCHMARK_INPUTS = [
-    "5p",
-    "3p EST",
-    "July 2019",
-    "7-17-18",
-    "2018-7-17",
-    "7/2018",
-    "July 17, 2018 at 3p.m.",
-    "July 17, 2018 3 p.m.",
-    "3PM on July 17",
-    "July 17 at 3",
-    "7/17/18 3:00 p.m.",
-    "3 p.m. today",
-    "Tomorrow 3p",
-    "3p tomorrow",
-    "yesterday 3p",
-    "July 3rd",
-    "7/17-7/18",
-    "July 17-18",
-    "3p -4p",
-    "3p -4p PDT",
-    "6:00 pm - 12:00 am",
-    "8/4 6:00 pm - 8/4 12:00 am",
-    "11PM to 1AM",
-    "7/17 3 pm- 7/19 2 pm",
-    "Jun 28 5:00 PM - Aug 02 7:00 PM",
-    "Jun 28 2019 5:00 PM - Aug 02 2019 7:00 PM",
-    "6/28 5:00 PM - 8/02 7:00 PM",
-    "6/28/2019 5:00 PM - 8/02/2019 7:00 PM",
-    "July 4th or 5th at 3PM",
-    "tomorrow noon,Wed 3 p.m.,Fri 11 AM",
-    "7/17 4-5 PM or 5-6 PM today",
-    "30 minutes",
-    "30-40 mins",
-    "1 or 2 days",
-    "in 1 year",
-    "1 year ago",
-    "2022-12-27T09:15:01.002",
-]
-
-
-_DEFAULT_CASES_BY_TEXT = dict(DEFAULT_CASES)
-
-SHORT_EXACTNESS_CASES = [
-    ("July 2019", _DEFAULT_CASES_BY_TEXT["July 2019"][0]),
-    ("2018-7-17", _DEFAULT_CASES_BY_TEXT["2018-7-17"][0]),
-    ("July 17, 2018 at 3p.m.", _DEFAULT_CASES_BY_TEXT["July 17, 2018 at 3p.m."][0]),
-    ("3 p.m. today", _DEFAULT_CASES_BY_TEXT["3 p.m. today"][0]),
-    ("Tomorrow 3p", _DEFAULT_CASES_BY_TEXT["Tomorrow 3p"][0]),
-    ("yesterday 3p", _DEFAULT_CASES_BY_TEXT["yesterday 3p"][0]),
-    ("July 3rd", _DEFAULT_CASES_BY_TEXT["July 3rd"][0]),
-    ("in 1 year", _DEFAULT_CASES_BY_TEXT["in 1 year"][0]),
-    ("1 year ago", _DEFAULT_CASES_BY_TEXT["1 year ago"][0]),
-    ("2022-12-27T09:15:01.002", _DEFAULT_CASES_BY_TEXT["2022-12-27T09:15:01.002"][0]),
 ]
