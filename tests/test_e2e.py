@@ -18,6 +18,8 @@ def localized_datetime(tz_name, *parts):
     ('July 2019', [datetime.datetime(2019, 7, 1, 0, 0)]),
     ('7-17-18', [datetime.datetime(2018, 7, 17, 0, 0)]),
     ('2018-7-17', [datetime.datetime(2018, 7, 17, 0, 0)]),  # support YMD
+    ('08.07.2013', [datetime.datetime(2013, 8, 7, 0, 0)]),
+    ('2013.08.07', [datetime.datetime(2013, 8, 7, 0, 0)]),
     ('7/2018', [datetime.datetime(2018, 7, 1, 0, 0)]),
     ('Wed 25 Jun', [datetime.datetime(2018, 6, 25, 0, 0)]),
     
@@ -98,13 +100,16 @@ def test_default(now, test_input, expected):
     ('July 2019', [datetime.date(2019, 7, 1)]),
     ('Sunday 7/7/2019', [datetime.date(2019, 7, 7)]),  # fixes gh#27
     ('1/1/95', [datetime.date(1995, 1, 1)]),
+    ('08.07.2013', [datetime.date(2013, 8, 7)]),
     ('Wed 25 Jun', [datetime.date(2018, 6, 25)]),
+    ('1.3.4', []),
     
     # date-only ranges
     ('7/17-7/18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]),
     ('July 17-18', [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]), # distribute month
     ('June 11-16, 2026', [(datetime.date(2026, 6, 11), datetime.date(2026, 6, 16))]),
     ('June 11-16 2026', [(datetime.date(2026, 6, 11), datetime.date(2026, 6, 16))]),
+    ('31/08/2012 to 30/08/2013', [(datetime.date(2012, 8, 31), datetime.date(2013, 8, 30))]),
     
     # time-only ranges
     ('3p -4p', [(datetime.time(15, 0), datetime.time(16, 0))]),
@@ -121,6 +126,10 @@ def test_default(now, test_input, expected):
     ('1.5 hours', [datetime.timedelta(hours=1, minutes=30)]),
     ('1.5h', [datetime.timedelta(hours=1, minutes=30)]),
     ('in five minutes', [datetime.timedelta(minutes=5)]), # gh#25
+    ('in 3 days', [datetime.timedelta(days=3)]),
+    ('for 3 days', [datetime.timedelta(days=3)]),
+    ('past 40 minutes', [datetime.timedelta(minutes=-40)]),
+    ('for the past 40 minutes', [datetime.timedelta(minutes=-40)]),
     ('awk', []),  # should *not become 'a week'
     ('a wk', [datetime.timedelta(days=7)]),
     ('thirty two hours', [datetime.timedelta(hours=32)]),
@@ -202,7 +211,54 @@ def test_custom_config(now, config, test_input, expected):
     ('s 1/1/24 C', [
         ('1/1/24', (2, 8), datetime.datetime(2024, 1, 1, 0, 0))
     ]),
+    ('running from 7-11pm and featuring resident DJs', [
+        ('7-11pm', (13, 19), (
+            datetime.datetime(2018, 8, 4, 19, 0),
+            datetime.datetime(2018, 8, 4, 23, 0),
+        ))
+    ]),
+    ('foo 08-07-2013 bar', [
+        ('08-07-2013', (4, 14), datetime.datetime(2013, 8, 7, 0, 0))
+    ]),
+    ('<!-- REMOVED 08-07-2013 -->', [
+        ('08-07-2013', (13, 23), datetime.datetime(2013, 8, 7, 0, 0))
+    ]),
+    ('foo 08.07.2013 bar', [
+        ('08.07.2013', (4, 14), datetime.datetime(2013, 8, 7, 0, 0))
+    ]),
+    ('foo January 4th, 2017 at 8:00pm bar', [
+        ('January 4th, 2017 at 8:00pm', (4, 31), datetime.datetime(2017, 1, 4, 20, 0))
+    ]),
+    ('foo 2024-11-09 tomorrow at noon bar', [
+        ('2024-11-09', (4, 14), datetime.datetime(2024, 11, 9, 0, 0)),
+        ('tomorrow at noon', (15, 31), datetime.datetime(2018, 8, 5, 12, 0)),
+    ]),
+    ('we start phase two in 3 days', [
+        ('in 3 days', (19, 28), datetime.datetime(2018, 8, 7, 14, 0)),
+    ]),
+    ('we waited for 3 days', [
+        ('for 3 days', (10, 20), datetime.datetime(2018, 8, 7, 14, 0)),
+    ]),
+    ('CR is 0 for the past 40 minutes', [
+        ('for the past 40 minutes', (8, 31), datetime.datetime(2018, 8, 4, 13, 20)),
+    ]),
+    ('foo 1.3.4 bar', []),
+    ("style='width:1px; height:1px;'", []),
+    ('telephone (253) 591-5252', []),
+    ('Section 7.02B 7a. - e.', []),
+    ('Meet at 7a.', [
+        ('7a', (8, 10), datetime.datetime(2018, 8, 5, 7, 0))
+    ]),
+    ('Wait 3h please', [
+        ('3h', (5, 7), datetime.datetime(2018, 8, 4, 17, 0))
+    ]),
+    ('90p', []),
+    ('4906/0', []),
+    ('Tue, 23 Apr 1996 13:28:27 -0400', [
+        ('Tue, 23 Apr 1996 13:28:27 -0400', (0, 31), datetime.datetime(
+            1996, 4, 23, 13, 28, 27, tzinfo=datetime.timezone(datetime.timedelta(hours=-4))
+        ))
+    ]),
 ])
 def test_matched_text(now, test_input, expected):  # gh#9
     assert timefhuman(test_input, tfhConfig(now=now, return_matched_text=True)) == expected
-

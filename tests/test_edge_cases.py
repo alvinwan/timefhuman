@@ -1,9 +1,10 @@
 from timefhuman import timefhuman, tfhConfig, Direction
-from timefhuman.renderers import tfhTime
+from timefhuman.renderers import tfhRange, tfhTimedelta, tfhTime
 import pytz
 import datetime
 import timefhuman.main as main
 import timefhuman.utils as utils
+from timefhuman.extraction import prefer_extraction
 
 
 def localized_datetime(tz_name, *parts):
@@ -97,6 +98,7 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
     assert timefhuman('next Monday', config=config) == [datetime.date(2018, 8, 6)]
     assert timefhuman('next next Monday', config=config) == [datetime.date(2018, 8, 13)]
     assert timefhuman('1/1/95', config=config) == [datetime.date(1995, 1, 1)]
+    assert timefhuman('08.07.2013', config=config) == [datetime.date(2013, 8, 7)]
     assert timefhuman('31/08/2012 to 30/08/2013', config=config) == [(
         datetime.date(2012, 8, 31),
         datetime.date(2013, 8, 30),
@@ -106,6 +108,9 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
     assert timefhuman('2022-12-27T09:15:01.002', config=infer_config) == [datetime.datetime(2022, 12, 27, 9, 15, 1, 2)]
     assert timefhuman('July 17, 2018 at 3p.m.', config=infer_config) == [datetime.datetime(2018, 7, 17, 15, 0)]
     assert timefhuman('2 hours and 30 minutes', config=config) == [datetime.timedelta(hours=2, minutes=30)]
+    assert timefhuman('for 3 days', config=config) == [datetime.timedelta(days=3)]
+    assert timefhuman('past 40 minutes', config=config) == [datetime.timedelta(minutes=-40)]
+    assert timefhuman('for the past 40 minutes', config=config) == [datetime.timedelta(minutes=-40)]
     assert timefhuman('30-40 mins', config=config) == [(datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))]
     assert timefhuman('1 or 2 days', config=config) == [[datetime.timedelta(days=1), datetime.timedelta(days=2)]]
     assert timefhuman('3-4p', config=config) == [(datetime.time(15, 0), datetime.time(16, 0))]
@@ -175,17 +180,33 @@ def test_prefixed_or_punctuated_text_skips_lalr_fallback(now, monkeypatch):
     assert calls == 0
 
 
-def test_corpus_regressions_do_not_crash():
-    config = tfhConfig(now=localized_datetime('UTC', 2026, 3, 18, 12, 0), return_matched_text=True)
+def test_large_multiline_documents_prefer_extraction(now, monkeypatch):
+    doc = "1/1/95 header text\n" + ("plain filler line without dates\n" * 1100) + "How does 5p mon sound?\n"
+    calls = 0
+    real_parse_fast = main.parse_fast
 
-    assert timefhuman("90p", config=config) == []
-    assert timefhuman("4906/0", config=config) == []
-    assert timefhuman("31/08/2012 to 30/08/2013", config=tfhConfig(now=config.now, infer_datetimes=False)) == [(
-        datetime.date(2012, 8, 31),
-        datetime.date(2013, 8, 30),
-    )]
-    assert timefhuman("Tue, 23 Apr 1996 13:28:27 -0400", config=config) == [
-        ("Tue, 23 Apr 1996 13:28:27 -0400", (0, 31), datetime.datetime(
-            1996, 4, 23, 13, 28, 27, tzinfo=datetime.timezone(datetime.timedelta(hours=-4))
-        ))
+    def wrapped_parse_fast(text, *args, **kwargs):
+        nonlocal calls
+        if text == doc:
+            calls += 1
+        return real_parse_fast(text, *args, **kwargs)
+
+    monkeypatch.setattr(main, "parse_fast", wrapped_parse_fast)
+
+    assert prefer_extraction(doc) is True
+    assert timefhuman(doc, tfhConfig(now=now, return_matched_text=True)) == [
+        ("1/1/95", (0, 6), datetime.datetime(1995, 1, 1, 0, 0)),
+        ("5p mon", (doc.index("5p mon"), doc.index("5p mon") + 6), datetime.datetime(2018, 8, 6, 17, 0)),
     ]
+    assert calls == 0
+
+
+def test_timedelta_range_does_not_assume_date(now):
+    renderer = tfhRange([
+        tfhTimedelta(days=4, unit="days"),
+        tfhTimedelta(seconds=10 * 60 * 60, unit="hours"),
+    ])
+    assert renderer.to_object(tfhConfig(now=now)) == (
+        now + datetime.timedelta(days=4),
+        now + datetime.timedelta(hours=10),
+    )

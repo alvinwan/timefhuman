@@ -22,6 +22,8 @@ from timefhuman.semantics import (
     clone_time,
     month_number,
     normalize_year,
+    strip_duration_prefix,
+    supports_numeric_date_text,
     timedelta_for_unit,
     weekday_index,
 )
@@ -41,7 +43,7 @@ TIME_PATTERN = re.compile(
     rf"\s*(?P<meridiem>{MERIDIEM_PATTERN})?$"
 )
 OCLOCK_PATTERN = re.compile(rf"(?ix)^(?P<hour>\d{{1,2}})\s*o'?clock\s*(?P<meridiem>{MERIDIEM_PATTERN})$")
-NUMERIC_DATE_PATTERN = re.compile(r"^(?P<a>\d{1,4})(?P<sep>[/-])(?P<b>\d{1,4})(?:(?P=sep)(?P<c>\d{1,4}))?$")
+NUMERIC_DATE_PATTERN = re.compile(r"^(?P<a>\d{1,4})(?P<sep>[./-])(?P<b>\d{1,4})(?:(?P=sep)(?P<c>\d{1,4}))?$")
 MONTHNAME_PATTERN = re.compile(
     r"(?ix)^"
     r"(?P<month>[a-z]+)"
@@ -82,6 +84,7 @@ NUMBER_UNIT_PATTERN = re.compile(
     r"(?P<unit>seconds?|secs?|sec|minutes?|mins?|min|hours?|hour|hrs?|hr|days?|day|weeks?|week|wks?|wk|months?|month|mos|years?|year|yrs?|yr|mo|[smhdwy])"
 )
 NUMERIC_TIMEZONE_OFFSET_PATTERN = re.compile(r"^(?P<body>.*\S)\s+(?P<sign>[+-])(?P<hour>\d{2})(?::?(?P<minute>\d{2}))$")
+HYPHENATED_NUMERIC_DATE_TOKEN_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}-\d{1,4}$")
 
 
 def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
@@ -90,7 +93,7 @@ def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 
         return None
 
     expression = _parse_expression(_normalize_space(stripped), config, timezone_mapping, allow_ambiguous=False)
-    if expression is None:
+    if expression is None or _is_ambiguous_only(expression):
         return None
 
     expression.matched_text_pos = (span_start, span_end)
@@ -162,7 +165,7 @@ def _parse_range(text: str, config: tfhConfig, timezone_mapping):
 
     indices = [index for index, char in enumerate(body) if char == "-"]
     preferred = [index for index in indices if _looks_like_range_hyphen(body, index)]
-    for index in preferred + [item for item in indices if item not in preferred]:
+    for index in preferred:
         result = _build_range(body[:index], body[index + 1 :], config, timezone_mapping)
         if result:
             if tzinfo:
@@ -177,7 +180,8 @@ def _build_range(left_text: str, right_text: str, config: tfhConfig, timezone_ma
     right = _parse_single(right_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     if left is None or right is None:
         return None
-    return tfhRange(infer([left, right]))
+    result = tfhRange(infer([left, right]))
+    return None if _is_ambiguous_only(result) else result
 
 
 def _parse_range_or_single(text: str, config: tfhConfig, timezone_mapping, allow_ambiguous: bool):
@@ -199,6 +203,14 @@ def _parse_single(text: str, config: tfhConfig, timezone_mapping, allow_ambiguou
         return tfhAmbiguous(int(text))
 
     return None
+
+
+def _is_ambiguous_only(expression):
+    if isinstance(expression, tfhAmbiguous):
+        return True
+    if isinstance(expression, (tfhList, tfhRange)):
+        return all(_is_ambiguous_only(item) for item in expression.items)
+    return False
 
 
 def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
@@ -358,6 +370,8 @@ def _parse_numeric_date(text: str):
     match = NUMERIC_DATE_PATTERN.fullmatch(text)
     if not match:
         return None
+    if not supports_numeric_date_text(text):
+        return None
 
     first = int(match.group("a"))
     second = int(match.group("b"))
@@ -433,12 +447,7 @@ def _parse_time_component(text: str, allow_houronly: bool):
 
 
 def _parse_duration(text: str):
-    lowered = text.lower()
-    direction = Direction.next
-    if lowered.startswith("in "):
-        lowered = lowered[3:].strip()
-    elif lowered.startswith("for "):
-        lowered = lowered[4:].strip()
+    lowered, direction = strip_duration_prefix(text)
 
     if lowered.endswith(" ago"):
         lowered = lowered[:-4].strip()
@@ -586,6 +595,16 @@ def _normalize_space(text: str):
 
 
 def _looks_like_range_hyphen(text: str, index: int):
+    token_start = index
+    while token_start > 0 and not text[token_start - 1].isspace():
+        token_start -= 1
+    token_end = index + 1
+    while token_end < len(text) and not text[token_end].isspace():
+        token_end += 1
+    token = text[token_start:token_end]
+    if HYPHENATED_NUMERIC_DATE_TOKEN_PATTERN.fullmatch(token):
+        return False
+
     left = text[index - 1] if index > 0 else ""
     right = text[index + 1] if index + 1 < len(text) else ""
     if left == " " or right == " ":

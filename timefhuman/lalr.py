@@ -25,6 +25,7 @@ from timefhuman.semantics import (
     clone_time,
     month_number,
     normalize_year,
+    supports_numeric_date_text,
     timedelta_for_unit,
     weekday_index,
 )
@@ -92,7 +93,7 @@ def parse_lalr_renderers(string: str, config: tfhConfig, start_pos: int = 0):
     try:
         renderers = tfhTransformer(config=config).transform(tree)
     except VisitError as exc:
-        if isinstance(exc.orig_exc, ValueError):
+        if isinstance(exc.orig_exc, (KeyError, ValueError)):
             return None
         raise
     for renderer in renderers:
@@ -137,6 +138,8 @@ class tfhTransformer(Transformer):
                     direction = Direction.previous
                 elif child.type == 'DURATION_FUTURE':
                     direction = Direction.next
+                elif child.type == 'DURATION_PREFIX_PAST':
+                    direction = Direction.previous
             else:
                 total += child.to_object(config)
                 if unit is None:
@@ -192,7 +195,14 @@ class tfhTransformer(Transformer):
 
     def numeric_date(self, children):
         value = children[0].value
-        sep = '/' if '/' in value else '-'
+        if not supports_numeric_date_text(value):
+            raise ValueError(f"Invalid numeric date: {value}")
+        if "/" in value:
+            sep = "/"
+        elif "-" in value:
+            sep = "-"
+        else:
+            sep = "."
         parts = [int(part) for part in value.split(sep)]
         first, second = parts[0], parts[1]
         result = build_numeric_date(first, second, parts[2] if len(parts) == 3 else None)
