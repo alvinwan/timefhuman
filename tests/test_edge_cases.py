@@ -3,6 +3,7 @@ from timefhuman.renderers import tfhTime
 import pytz
 import datetime
 import timefhuman.main as main
+import timefhuman.utils as utils
 
 
 def localized_datetime(tz_name, *parts):
@@ -57,6 +58,27 @@ def test_timezone_datetimes_use_localized_offsets():
     result = timefhuman("next friday 2 pm CET", config=config)[0]
     assert result.tzname() == "CET"
     assert result.utcoffset() == datetime.timedelta(hours=1)
+
+
+def test_generate_timezone_mapping_uses_explicit_locale(monkeypatch):
+    utils.generate_timezone_mapping.cache_clear()
+    real_get_timezone_name = utils.get_timezone_name
+    locales = []
+
+    def wrapped_get_timezone_name(timezone, locale=None, **kwargs):
+        locales.append(locale)
+        if locale is None:
+            raise TypeError("Unexpected value for identifier: None")
+        return real_get_timezone_name(timezone, locale=locale, **kwargs)
+
+    monkeypatch.setattr(utils, "get_timezone_name", wrapped_get_timezone_name)
+
+    mapping = utils.generate_timezone_mapping()
+
+    assert "pacific time" in mapping
+    assert locales
+    assert set(locales) == {"en_US"}
+    utils.generate_timezone_mapping.cache_clear()
     
 
 def test_unk_correctness():

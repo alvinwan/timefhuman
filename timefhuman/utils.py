@@ -41,7 +41,7 @@ def generate_timezone_mapping():
         timezone = pytz.timezone(tz_name)
         abbreviation1 = timezone.localize(datetime(2025, 1, 15)).strftime('%Z')
         abbreviation2 = timezone.localize(datetime(2025, 7, 15)).strftime('%Z')
-        name = get_timezone_name(timezone)
+        name = get_timezone_name(timezone, locale="en_US")
         text_to_timezone[abbreviation1] = tz_name
         text_to_timezone[abbreviation2] = tz_name
         text_to_timezone[name] = tz_name
