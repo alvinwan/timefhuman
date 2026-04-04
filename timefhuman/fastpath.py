@@ -122,6 +122,8 @@ def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 
 
     expression.matched_text_pos = (span_start, span_end)
     return [expression]
+
+
 def _parse_expression(text: str, config: tfhConfig, timezone_mapping, allow_ambiguous: bool):
     if not text:
         return None
@@ -580,13 +582,19 @@ def _parse_time_component(text: str, allow_houronly: bool):
 
 
 def _parse_duration(text: str):
+    text = _normalize_space(text)
+    if not text:
+        return None
+
     body, direction = strip_duration_prefix(text)
     body = body.strip()
+    if not body:
+        return None
     lowered = body.lower()
 
     if lowered.endswith(" ago"):
-        body = body[:-4].strip()
-        lowered = body.lower()
+        body = body[:-4].rstrip()
+        lowered = lowered[:-4].strip()
         direction = Direction.previous
 
     position = 0

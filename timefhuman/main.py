@@ -1,10 +1,10 @@
 from datetime import datetime
-import re
 
 from dataclasses import replace
 from lark import Tree, Token
 from timefhuman.extraction import extract_fast, prefer_extraction
 from timefhuman.lalr import parse_lalr_renderers as _parse_lalr
+from timefhuman.scanner import TOKEN_PATTERN
 from timefhuman.utils import Direction, generate_timezone_mapping, tfhConfig
 from timefhuman.fastpath import parse_fast
 from timefhuman.renderers import tfhAmbiguous
@@ -14,12 +14,6 @@ __all__ = ("timefhuman", "tfhConfig", "Direction", "DEFAULT_CONFIG")
 
 
 DEFAULT_CONFIG = tfhConfig()
-RAW_TOKEN_PATTERN = re.compile(
-    r"\d+(?:[/:.-]\d+)*(?:st|nd|rd|th)?(?:[ap](?:\.?m\.?)?)?|[a-z]+(?:\.[a-z]+\.?)?|\S",
-    re.IGNORECASE,
-)
-
-
 def _build_candidate_parsers(config: tfhConfig):
     timezone_mapping = generate_timezone_mapping()
 
@@ -96,7 +90,7 @@ def build_raw_tree(string: str, config: tfhConfig):
 
 
 def _unknown_children(text: str):
-    return [Tree('unknown', [Token('UNKNOWN', match.group(0))]) for match in RAW_TOKEN_PATTERN.finditer(text)]
+    return [Tree('unknown', [Token('UNKNOWN', match.group(0))]) for match in TOKEN_PATTERN.finditer(text)]
 
 
 def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now: bool=False):

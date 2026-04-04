@@ -100,17 +100,15 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 ## Performance
 
-Overall, timefhuman achieves higher throughput and handles a wider range of date/time formats with higher accuracy. The following benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
+Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3. `acc` is member-level correctness for the dataset immediately to the left. `dateparser*` uses `dateparser.parse` for short inputs and `dateparser.search_dates` for document corpora.
 
 | parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) | acc |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.9 | <ins><strong>27/27</strong></ins> | 1.0 | <ins><strong>14/14</strong></ins> | <ins><strong>43.5</strong></ins> | <ins><strong>57/57</strong></ins> | <ins><strong>303.0</strong></ins> | <ins><strong>26/26</strong></ins> |
-| datefinder | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | 9/14 | 66.2 | 54/57 | 836.5 | 13/26 |
-| dateparser | 77.3 | 15/27 | 184.2 | 9/14 | 535.0 | 53/57 | >2000ms | timeout |
+| timefhuman | 0.5 | <ins><strong>27/27</strong></ins> | 0.6 | <ins><strong>14/14</strong></ins> | <ins><strong>24.7</strong></ins> | <ins><strong>57/57</strong></ins> | <ins><strong>178.0</strong></ins> | <ins><strong>26/26</strong></ins> |
+| datefinder | <ins><strong>0.3</strong></ins> | 10/27 | <ins><strong>0.2</strong></ins> | 9/14 | 41.3 | 54/57 | 585.2 | 13/26 |
+| dateparser* | 52.0 | 15/27 | 113.2 | 9/14 | 320.6 | 53/57 | >2s | timeout |
 
-`datefinder` and `dateparser` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Other baselines -- `metadate.parse_date`, `parsedatetime.parseDT`, `recurrent.parse`, and `ctparse.ctparse` -- are unable to parse a vast majority of the test cases so are excluded.
-
-See the full set of results in [`benchmarks/README.md`](benchmarks/README.md).
+`datefinder` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines are omitted here for readability. Full results, grouped correctness, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Advanced Usage
 

@@ -165,7 +165,10 @@ class tfhTransformer(Transformer):
         duration_number = float(data['duration_number'][0]) if 'duration_number' in data else sum(
             NUMBER_WORDS[value] for value in data.get('duration_numbername', [])
         )
-        duration_unit = UNIT_ALIASES[data.get('duration_unit', data.get('duration_unit_letter', None))[0]]
+        raw_unit = data.get('duration_unit', data.get('duration_unit_letter', None))[0]
+        if len(raw_unit) == 1 and raw_unit.isalpha() and raw_unit != raw_unit.lower():
+            raise ValueError(f"Invalid duration unit: {raw_unit}")
+        duration_unit = UNIT_ALIASES[raw_unit.lower()]
         return tfhTimedelta.from_object(timedelta_for_unit(duration_unit, duration_number), unit=duration_unit)
 
     def datetime(self, children):
@@ -328,10 +331,10 @@ class tfhTransformer(Transformer):
         return {'time': result}
 
     def meridiem(self, children):
-        raw_value = children[0].value
-        if raw_value in {"A", "P"}:
-            raise ValueError(f"Invalid meridiem: {raw_value}")
-        meridiem = raw_value.lower()
+        raw = children[0].value
+        if len(raw) == 1 and raw != raw.lower():
+            raise ValueError(f"Invalid meridiem: {raw}")
+        meridiem = raw.lower()
         if meridiem.startswith('a'):
             return {'meridiem': tfhTime.Meridiem.AM}
         if meridiem.startswith('p'):

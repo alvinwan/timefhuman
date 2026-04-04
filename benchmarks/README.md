@@ -1,8 +1,6 @@
 # Benchmarks
 
-The following benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
-
-## Results
+Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 `acc` is the correctness score for the dataset immediately to the left.
 - Document `acc` is member-level coverage: lists and ranges still count as correct when a baseline finds the individual members separately.
@@ -16,20 +14,20 @@ These datasets are taken from datefinder's README: https://github.com/akoumjian/
 
 | parser | short (ms) | acc | core (ms) | # | acc | group | sea_76k (ms) | # | acc | group | sea_560k (ms) | # | acc | group |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.9 | <ins><strong>27/27</strong></ins> | 1.0 | [13](matches/timefhuman/core_corpus.md) | <ins><strong>14/14</strong></ins> | <ins><strong>13/13</strong></ins> | <ins><strong>43.5</strong></ins> | [56](matches/timefhuman/seattle_html_76k.md) | <ins><strong>57/57</strong></ins> | <ins><strong>56/56</strong></ins> | <ins><strong>303.0</strong></ins> | [557](matches/timefhuman/test_data_560k.md) | <ins><strong>26/26</strong></ins> | <ins><strong>12/12</strong></ins> |
-| datefinder.find_dates | <ins><strong>0.5</strong></ins> | 10/27 | <ins><strong>0.4</strong></ins> | [11](matches/datefinder.find_dates/core_corpus.md) | 9/14 | 7/13 | 66.2 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/57 | 54/56 | 836.5 | [313](matches/datefinder.find_dates/test_data_560k.md) | 13/26 | 0/12 |
-| dateparser* | 77.3 | 15/27 | 184.2 | [14](matches/dateparser/core_corpus.md) | 9/14 | 7/13 | 535.0 | [90](matches/dateparser/seattle_html_76k.md) | 53/57 | 53/56 | >2000ms | n/a | timeout | timeout |
+| timefhuman | 0.5 | <ins><strong>27/27</strong></ins> | 0.6 | [13](matches/timefhuman/core_corpus.md) | <ins><strong>14/14</strong></ins> | <ins><strong>13/13</strong></ins> | <ins><strong>24.7</strong></ins> | [56](matches/timefhuman/seattle_html_76k.md) | <ins><strong>57/57</strong></ins> | <ins><strong>56/56</strong></ins> | <ins><strong>178.0</strong></ins> | [557](matches/timefhuman/test_data_560k.md) | <ins><strong>26/26</strong></ins> | <ins><strong>12/12</strong></ins> |
+| datefinder.find_dates | <ins><strong>0.3</strong></ins> | 10/27 | <ins><strong>0.2</strong></ins> | [11](matches/datefinder.find_dates/core_corpus.md) | 9/14 | 7/13 | 41.3 | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/57 | 54/56 | 585.2 | [313](matches/datefinder.find_dates/test_data_560k.md) | 13/26 | 0/12 |
+| dateparser* | 52.0 | 15/27 | 113.2 | [14](matches/dateparser/core_corpus.md) | 9/14 | 7/13 | 320.6 | [90](matches/dateparser/seattle_html_76k.md) | 53/57 | 53/56 | >2s | n/a | timeout | timeout |
 
 ### Lower-Accuracy Baselines
 
-Seattle accuracy below `50/55`.
+Seattle accuracy below `50/57`.
 
 | parser | short (ms) | acc | core (ms) | # | acc | group | sea_76k (ms) | # | acc | group | sea_560k (ms) | # | acc | group |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| metadate.parse_date | 1.1 | 10/27 | 0.4 | 10 | 8/14 | 6/13 | 6.9 | 90 | 2/57 | 2/56 | 79.0 | 1538 | 4/26 | 1/12 |
-| parsedatetime.parseDT | 1.1 | 13/27 | 4.0 | 1 | 0/14 | 0/13 | 1170.0 | 1 | 0/57 | 0/56 | >2000ms | n/a | timeout | timeout |
-| recurrent.parse | 7.5 | 13/27 | 6.6 | 1 | 0/14 | 0/13 | error | n/a | error | error | error | n/a | error | error |
-| ctparse.ctparse | 213.9 | 6/27 | 207.7 | 1 | 1/14 | 1/13 | >2000ms | n/a | timeout | timeout | >2000ms | n/a | timeout | timeout |
+| metadate.parse_date | 0.7 | 10/27 | 0.2 | 10 | 8/14 | 6/13 | 4.3 | 90 | 2/57 | 2/56 | 46.7 | 1538 | 4/26 | 1/12 |
+| parsedatetime.parseDT | 0.7 | 13/27 | 2.5 | 1 | 0/14 | 0/13 | 750.7 | 1 | 0/57 | 0/56 | >2s | n/a | timeout | timeout |
+| recurrent.parse | 4.4 | 13/27 | 4.0 | 1 | 0/14 | 0/13 | error | n/a | error | error | error | n/a | error | error |
+| ctparse.ctparse | 124.8 | 6/27 | 121.9 | 1 | 1/14 | 1/13 | >2s | n/a | timeout | timeout | >2s | n/a | timeout | timeout |
 
 Notes:
 
@@ -59,7 +57,7 @@ Run the combined baseline benchmark.
 /tmp/timefhuman-bench-venv/bin/python benchmarks/benchmark_baselines.py
 ```
 
-Refresh the checked-in whole-document match dumps.
+Refresh the checked-in whole-document match dumps:
 
 ```bash
 /tmp/timefhuman-bench-venv/bin/python benchmarks/dump_document_matches.py
