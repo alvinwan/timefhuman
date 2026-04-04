@@ -4,8 +4,8 @@ from datetime import timedelta, timezone as dt_timezone
 import pytz
 
 from timefhuman.atoms import parse_date_atom, parse_datetime_atom, parse_duration_atom, parse_time_atom
-from timefhuman.expression_ast import DatetimeExpr, ListExpr, RangeExpr, ValueExpr, expression_value, is_ambiguous_only
-from timefhuman.renderers import tfhAmbiguous, tfhDate, tfhTime
+from timefhuman.expression_ast import AmbiguousExpr, DatetimeExpr, ListExpr, RangeExpr, ValueExpr
+from timefhuman.normalizer import expression_value, is_ambiguous_only
 from timefhuman.semantics import is_invalid_ambiguous_date_range
 from timefhuman.utils import get_timezone_word_lengths
 
@@ -146,7 +146,7 @@ def _parse_single(text: str, config, timezone_mapping, allow_ambiguous: bool):
         return datetime_like
 
     if allow_ambiguous and text.isdigit():
-        return ValueExpr(tfhAmbiguous(int(text)))
+        return AmbiguousExpr(int(text))
 
     return None
 
@@ -293,11 +293,11 @@ def _looks_like_range_hyphen(text: str, index: int):
     return False
 
 
-def _date_score(value: tfhDate):
+def _date_score(value):
     return int(value.year is not None) + int(value.month is not None) + int(value.day is not None)
 
 
-def _time_score(value: tfhTime):
+def _time_score(value):
     score = 0
     if value.meridiem is not None:
         score += 2

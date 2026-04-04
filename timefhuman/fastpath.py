@@ -1,4 +1,4 @@
-from timefhuman.expression_ast import is_ambiguous_only, materialize_expression
+from timefhuman.normalizer import is_ambiguous_only, materialize_expression
 from timefhuman.semantics import is_rejected_fraction_text
 from timefhuman.structure_parser import normalize_space, parse_expression
 from timefhuman.utils import tfhConfig
