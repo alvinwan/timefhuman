@@ -7,7 +7,7 @@ from timefhuman.atoms import parse_date_atom, parse_datetime_atom, parse_duratio
 from timefhuman.expression_ast import AmbiguousExpr, DatetimeExpr, ListExpr, RangeExpr, ValueExpr
 from timefhuman.normalizer import expression_value, is_ambiguous_only
 from timefhuman.semantics import is_invalid_ambiguous_date_range
-from timefhuman.utils import get_timezone_word_lengths
+from timefhuman.utils import get_timezone_tail_words, get_timezone_word_lengths
 
 
 __all__ = ("normalize_space", "parse_expression")
@@ -254,6 +254,9 @@ def _strip_trailing_timezone(text: str, timezone_mapping):
     if not text or not text[-1].isalpha():
         return text, None
     if " " not in text and not text.isalpha():
+        return text, None
+    tail_word = text.rsplit(" ", 1)[-1].strip(".,:;)]}").lower()
+    if tail_word not in get_timezone_tail_words():
         return text, None
 
     lowered = text.lower()
