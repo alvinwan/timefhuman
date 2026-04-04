@@ -9,10 +9,7 @@ from timefhuman.semantics import (
     TIME_NAME_TO_TEMPLATE,
     UNIT_ALIASES,
     WEEKDAY_ALIASES,
-    duration_prefix_length,
-    month_number,
     supports_numeric_date_text,
-    weekday_index,
 )
 from timefhuman.utils import get_month_mapping, get_timezone_words
 
@@ -39,19 +36,72 @@ INLINE_PUNCTUATION = frozenset({",", "-"})
 TERMINAL_PUNCTUATION = frozenset({".", "?", "!"})
 LARGE_DOCUMENT_LINE_THRESHOLD = 1024
 LARGE_DOCUMENT_CHAR_THRESHOLD = 262144
+MONTH_WORDS = frozenset(get_month_mapping())
+WEEKDAY_WORDS = frozenset(WEEKDAY_ALIASES)
+DIRECT_START_WORDS = frozenset(DATE_NAME_TO_OFFSET) | frozenset(TIME_NAME_TO_TEMPLATE) | frozenset(
+    DATE_TIME_NAME_TO_TEMPLATE
+) | MONTH_WORDS | WEEKDAY_WORDS
+EXPRESSION_WORDS = (
+    EXPRESSION_CONNECTORS
+    | DIRECT_START_WORDS
+    | frozenset(MODIFIER_TO_OFFSET)
+    | frozenset(POSITION_TO_DELTA)
+    | frozenset(NUMBER_WORDS)
+    | frozenset(UNIT_ALIASES)
+)
+START_WORDS = DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA) | frozenset(
+    NUMBER_WORDS
+) | frozenset({"in", "for", "the", "past"})
+DIRECT_START_PATTERN = "|".join(re.escape(word) for word in sorted(DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA), key=len, reverse=True))
+NUMBER_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(NUMBER_WORDS, key=len, reverse=True))
+UNIT_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(UNIT_ALIASES, key=len, reverse=True))
+WEEKDAY_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(WEEKDAY_ALIASES, key=len, reverse=True))
+DATE_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(DATE_NAME_TO_OFFSET, key=len, reverse=True))
+START_PATTERN = re.compile(
+    rf"(?ix)"
+    rf"(?<![a-z0-9])"
+    rf"(?:"
+    rf"{DIRECT_START_PATTERN}"
+    rf"|(?:in|past)\s+(?:\d+|{NUMBER_WORD_PATTERN})"
+    rf"|for\s+(?:the\s+past\s+|past\s+)?(?:\d+|{NUMBER_WORD_PATTERN})"
+    rf"|(?:\d+|{NUMBER_WORD_PATTERN})\s+(?:{MERIDIEM_PATTERN}|{UNIT_WORD_PATTERN}|{WEEKDAY_WORD_PATTERN}|{DATE_WORD_PATTERN})"
+    rf"|\d+(?:[/:.-]\d+)+(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN}|s|m|h|d|w|mo)?"
+    rf"|\d+(?:st|nd|rd|th)"
+    rf"|\d+(?:{MERIDIEM_PATTERN}|s|m|h|d|w|mo)"
+    rf")"
+    rf"(?![a-z])"
+)
+
+
+def _tokenize(text: str):
+    return [(match.group(0), match.group(0).lower(), match.start(), match.end()) for match in TOKEN_PATTERN.finditer(text)]
+
+
+def _window_tokens(text: str, start_pos: int):
+    tokens = []
+    for match in TOKEN_PATTERN.finditer(text, start_pos):
+        if not tokens and match.start() != start_pos:
+            return []
+        tokens.append((match.group(0), match.group(0).lower(), match.start(), match.end()))
+        if len(tokens) >= 8:
+            break
+    return tokens
 
 
 def prefer_extraction(text: str):
     stripped = text.strip()
     if not stripped:
         return False
+    newline_count = stripped.count("\n") + stripped.count("\r")
     if (
-        stripped.count("\n") + stripped.count("\r") >= LARGE_DOCUMENT_LINE_THRESHOLD
+        newline_count >= LARGE_DOCUMENT_LINE_THRESHOLD
         or len(stripped) >= LARGE_DOCUMENT_CHAR_THRESHOLD
     ):
         return True
+    if newline_count >= 4:
+        return True
 
-    tokens = [(match.group(0), match.start(), match.end()) for match in TOKEN_PATTERN.finditer(stripped)]
+    tokens = _tokenize(stripped)
     head = tokens[0][0].rstrip(",.?!") if tokens else ""
     if head and _is_expression_head(head):
         return False
@@ -59,14 +109,14 @@ def prefer_extraction(text: str):
         return False
 
     for index in range(1, len(tokens)):
-        prev_token = tokens[index - 1][0].lower()
-        current_token = tokens[index][0].lower()
-        next_token = tokens[index + 1][0].lower() if index + 1 < len(tokens) else ""
-        next_next_token = tokens[index + 2][0].lower() if index + 2 < len(tokens) else ""
+        prev_token = tokens[index - 1][1]
+        current_token = tokens[index][1]
+        next_token = tokens[index + 1][1] if index + 1 < len(tokens) else ""
+        next_next_token = tokens[index + 2][1] if index + 2 < len(tokens) else ""
         if _is_plausible_start_tokens(prev_token, current_token, next_token, next_next_token):
             return index - 1 > 0
 
-    last_token = tokens[-1][0].lower()
+    last_token = tokens[-1][1]
     if _is_plausible_start_tokens(last_token, "", "", ""):
         return len(tokens) - 1 > 0
 
@@ -74,26 +124,29 @@ def prefer_extraction(text: str):
 
 
 def extract_fast(text: str, parse_candidate):
-    tokens = [(match.group(0), match.start(), match.end()) for match in TOKEN_PATTERN.finditer(text)]
-    if not tokens:
+    if not text:
         return []
 
     results = []
+    miss_cache = set()
     saw_plausible_start = False
-    index = 0
-    while index < len(tokens):
-        if not _is_plausible_start(tokens, index):
-            index += 1
+    cursor = 0
+    for start_match in START_PATTERN.finditer(text):
+        start = start_match.start()
+        if start < cursor:
+            continue
+
+        tokens = _window_tokens(text, start)
+        if not tokens or not _is_plausible_start(tokens, 0):
             continue
 
         saw_plausible_start = True
-        expression, next_index = _extract_longest_match(tokens, index, text, parse_candidate)
+        expression, next_index = _extract_longest_match(tokens, 0, text, parse_candidate, miss_cache)
         if expression is None:
-            index += 1
             continue
 
         results.extend(expression)
-        index = next_index
+        cursor = tokens[next_index - 1][3]
 
     if results:
         return results
@@ -102,12 +155,12 @@ def extract_fast(text: str, parse_candidate):
     return None
 
 
-def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate):
-    max_end = _candidate_end_limit(tokens, start_index)
+def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate, miss_cache):
+    max_end = _candidate_end_limit(tokens, start_index, text)
     last_candidate = None
     for end_index in range(max_end, start_index, -1):
-        start = tokens[start_index][1]
-        end = tokens[end_index - 1][2]
+        start = tokens[start_index][2]
+        end = tokens[end_index - 1][3]
         candidate = text[start:end].strip()
         if candidate and candidate[-1] in ".?!":
             candidate = candidate[:-1].rstrip()
@@ -115,43 +168,40 @@ def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate)
         if not candidate or candidate == last_candidate:
             continue
         last_candidate = candidate
-        if _should_skip_candidate(text, tokens, start_index, candidate, start, end):
+        if _should_skip_candidate(text, candidate, start, end):
+            continue
+        if candidate in miss_cache:
             continue
 
         expression = parse_candidate(candidate, start)
         if expression is not None:
             return expression, end_index
+        miss_cache.add(candidate)
 
     return None, start_index + 1
 
 
-def _candidate_end_limit(tokens, start_index: int):
+def _candidate_end_limit(tokens, start_index: int, text: str):
     max_end = min(len(tokens), start_index + 8)
     end_index = start_index + 1
     for index in range(start_index + 1, max_end):
         token = tokens[index][0]
+        lowered = tokens[index][1]
+        gap = text[tokens[index - 1][3] : tokens[index][2]]
+        if "\n" in gap or "\r" in gap:
+            return end_index
         if token in TERMINAL_PUNCTUATION:
             return index + 1
-        if token in INLINE_PUNCTUATION or _is_expression_token(token):
+        if token in INLINE_PUNCTUATION or _is_expression_token(token, lowered):
             end_index = index + 1
             continue
         break
     return end_index
 
 
-def _is_expression_token(token: str):
-    lowered = token.lower()
-    if lowered in EXPRESSION_CONNECTORS:
-        return True
-    if lowered in DATE_NAME_TO_OFFSET or lowered in TIME_NAME_TO_TEMPLATE or lowered in DATE_TIME_NAME_TO_TEMPLATE:
-        return True
-    if lowered in MODIFIER_TO_OFFSET or lowered in POSITION_TO_DELTA:
-        return True
-    if lowered in NUMBER_WORDS or lowered in UNIT_ALIASES or lowered in WEEKDAY_ALIASES:
-        return True
-    if lowered in get_timezone_words():
-        return True
-    if month_number(lowered) is not None or weekday_index(lowered) is not None:
+def _is_expression_token(token: str, lowered: str | None = None):
+    lowered = token.lower() if lowered is None else lowered
+    if lowered in EXPRESSION_WORDS or lowered in get_timezone_words():
         return True
     if lowered.isdigit():
         return True
@@ -172,13 +222,7 @@ def _is_expression_token(token: str):
 
 def _is_expression_head(token: str):
     lowered = token.lower()
-    if lowered in DATE_NAME_TO_OFFSET or lowered in TIME_NAME_TO_TEMPLATE or lowered in DATE_TIME_NAME_TO_TEMPLATE:
-        return True
-    if lowered in MODIFIER_TO_OFFSET or lowered in POSITION_TO_DELTA:
-        return True
-    if lowered in NUMBER_WORDS or lowered in UNIT_ALIASES or lowered in WEEKDAY_ALIASES:
-        return True
-    if lowered in get_month_mapping():
+    if lowered in EXPRESSION_WORDS:
         return True
     if lowered.isdigit():
         return True
@@ -194,23 +238,21 @@ def _is_expression_head(token: str):
 
 
 def _is_plausible_start(tokens, index: int):
-    token = tokens[index][0].lower()
-    next_token = tokens[index + 1][0].lower() if index + 1 < len(tokens) else ""
-    next_next_token = tokens[index + 2][0].lower() if index + 2 < len(tokens) else ""
-    next_next_next_token = tokens[index + 3][0].lower() if index + 3 < len(tokens) else ""
+    token = tokens[index][1]
+    next_token = tokens[index + 1][1] if index + 1 < len(tokens) else ""
+    next_next_token = tokens[index + 2][1] if index + 2 < len(tokens) else ""
+    next_next_next_token = tokens[index + 3][1] if index + 3 < len(tokens) else ""
     return _is_plausible_start_tokens(token, next_token, next_next_token, next_next_next_token)
 
 
 def _is_plausible_start_tokens(token: str, next_token: str, next_next_token: str = "", next_next_next_token: str = ""):
-    if duration_prefix_length([token, next_token, next_next_token, next_next_next_token]):
+    if _has_duration_prefix(token, next_token, next_next_token, next_next_next_token):
         return True
-    if token in DATE_NAME_TO_OFFSET or token in TIME_NAME_TO_TEMPLATE or token in DATE_TIME_NAME_TO_TEMPLATE:
+    if token in DIRECT_START_WORDS:
         return True
-    if token in MODIFIER_TO_OFFSET and (weekday_index(next_token) is not None or month_number(next_token) is not None):
+    if token in MODIFIER_TO_OFFSET and (next_token in WEEKDAY_WORDS or next_token in MONTH_WORDS):
         return True
-    if token in POSITION_TO_DELTA and weekday_index(next_token) is not None:
-        return True
-    if month_number(token) is not None or weekday_index(token) is not None:
+    if token in POSITION_TO_DELTA and next_token in WEEKDAY_WORDS:
         return True
     if token in NUMBER_WORDS and next_token in UNIT_ALIASES:
         return True
@@ -218,9 +260,9 @@ def _is_plausible_start_tokens(token: str, next_token: str, next_next_token: str
         return True
     if HYPHENATED_NUMERIC_DATE_PATTERN.fullmatch(token):
         return True
-    if "." in token and supports_numeric_date_text(token):
+    if "." in token and any(char.isdigit() for char in token) and supports_numeric_date_text(token):
         return True
-    if "/" in token or ":" in token or "t" in token and "-" in token:
+    if any(char.isdigit() for char in token) and ("/" in token or ":" in token or ("t" in token and "-" in token)):
         return True
     if re.fullmatch(rf"(?ix)\d+(?:{MERIDIEM_PATTERN})", token):
         return True
@@ -232,7 +274,25 @@ def _is_plausible_start_tokens(token: str, next_token: str, next_next_token: str
     return False
 
 
-def _should_skip_candidate(text: str, tokens, start_index: int, candidate: str, start: int, end: int):
+def _has_duration_prefix(token: str, next_token: str, next_next_token: str, next_next_next_token: str):
+    if token == "in" or token == "past":
+        return _is_duration_value_token(next_token)
+    if token == "the":
+        return next_token == "past" and _is_duration_value_token(next_next_token)
+    if token != "for":
+        return False
+    if next_token == "the":
+        return next_next_token == "past" and _is_duration_value_token(next_next_next_token)
+    if next_token == "past":
+        return _is_duration_value_token(next_next_token)
+    return _is_duration_value_token(next_token)
+
+
+def _is_duration_value_token(token: str):
+    return token.isdigit() or token in NUMBER_WORDS
+
+
+def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
     if PHONE_LIKE_PATTERN.fullmatch(candidate):
         return True
 
@@ -248,11 +308,19 @@ def _should_skip_candidate(text: str, tokens, start_index: int, candidate: str, 
         return True
 
     if LOWERCASE_SHORT_TIME_PATTERN.fullmatch(candidate):
-        previous_token = tokens[start_index - 1][0] if start_index > 0 else ""
+        previous_token = _previous_token(text, start)
         if _looks_like_identifier_token(previous_token):
             return True
 
     return False
+
+
+def _previous_token(text: str, start: int):
+    prefix_start = max(0, start - 64)
+    previous = ""
+    for match in TOKEN_PATTERN.finditer(text, prefix_start, start):
+        previous = match.group(0)
+    return previous
 
 
 def _looks_like_identifier_token(token: str):
