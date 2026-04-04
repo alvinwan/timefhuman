@@ -4,13 +4,13 @@ from datetime import timedelta, timezone as dt_timezone
 import pytz
 
 from timefhuman.atoms import parse_date_atom, parse_datetime_atom, parse_duration_atom, parse_time_atom
-from timefhuman.inference import infer
-from timefhuman.renderers import tfhAmbiguous, tfhDatelike, tfhDatetime, tfhDate, tfhList, tfhRange, tfhTime
+from timefhuman.expression_ast import ListExpr, RangeExpr, ValueExpr, is_ambiguous_only
+from timefhuman.renderers import tfhAmbiguous, tfhDatetime, tfhDate, tfhTime
 from timefhuman.semantics import is_invalid_ambiguous_date_range
 from timefhuman.utils import get_timezone_word_lengths
 
 
-__all__ = ("is_ambiguous_only", "normalize_space", "parse_expression")
+__all__ = ("normalize_space", "parse_expression")
 
 
 BETWEEN_RANGE_PATTERN = re.compile(r"(?is)^between\s+(?P<left>.+?)\s+and\s+(?P<right>.+)$")
@@ -48,14 +48,6 @@ def parse_expression(text: str, config, timezone_mapping, allow_ambiguous: bool)
     return None
 
 
-def is_ambiguous_only(expression):
-    if isinstance(expression, tfhAmbiguous):
-        return True
-    if isinstance(expression, (tfhList, tfhRange)):
-        return all(is_ambiguous_only(item) for item in expression.items)
-    return False
-
-
 def normalize_space(text: str):
     stripped = text.strip()
     if not stripped:
@@ -86,12 +78,9 @@ def _parse_list(text: str, config, timezone_mapping):
             items.append(item)
 
         if items:
-            if all(isinstance(item, tfhAmbiguous) for item in items):
+            if all(is_ambiguous_only(item) for item in items):
                 continue
-            result = tfhList(infer(items))
-            if tzinfo:
-                result.tz = tzinfo
-            return result
+            return ListExpr(items=items, tz=tzinfo)
 
     return None
 
@@ -131,16 +120,11 @@ def _build_range(left_text: str, right_text: str, config, timezone_mapping):
     right = _parse_single(right_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     if left is None or right is None:
         return None
-    if is_invalid_ambiguous_date_range(left, right):
+    if is_invalid_ambiguous_date_range(left.value, right.value):
         return None
-    if isinstance(left, tfhAmbiguous) and isinstance(right, tfhAmbiguous):
+    if is_ambiguous_only(left) and is_ambiguous_only(right):
         return None
-    left_missing_year = _datelike_missing_year(left)
-    right_missing_year = _datelike_missing_year(right)
-    items = infer([left, right])
-    _adjust_cross_year_range(items, left_missing_year, right_missing_year, config.now.year)
-    result = tfhRange(items)
-    return None if is_ambiguous_only(result) else result
+    return RangeExpr(items=(left, right), tz=None)
 
 
 def _parse_range_or_single(text: str, config, timezone_mapping, allow_ambiguous: bool):
@@ -152,47 +136,16 @@ def _parse_range_or_single(text: str, config, timezone_mapping, allow_ambiguous:
 def _parse_single(text: str, config, timezone_mapping, allow_ambiguous: bool):
     duration = parse_duration_atom(text, normalize_space)
     if duration is not None:
-        return duration
+        return ValueExpr(duration)
 
     datetime_like = _parse_datetime(text, config, timezone_mapping)
     if datetime_like is not None:
-        return datetime_like
+        return ValueExpr(datetime_like)
 
     if allow_ambiguous and text.isdigit():
-        return tfhAmbiguous(int(text))
+        return ValueExpr(tfhAmbiguous(int(text)))
 
     return None
-
-
-def _datelike_missing_year(value):
-    if not isinstance(value, tfhDatelike):
-        return False
-    if isinstance(value, (tfhList, tfhRange)):
-        return False
-    return value.date is not None and value.year is None and value.month is not None and value.day is not None
-
-
-def _adjust_cross_year_range(items, left_missing_year: bool, right_missing_year: bool, default_year: int):
-    if len(items) != 2:
-        return
-    left, right = items
-    if not (
-        left_missing_year
-        and right_missing_year
-        and isinstance(left, tfhDatelike)
-        and isinstance(right, tfhDatelike)
-        and left.date
-        and right.date
-        and left.month is not None
-        and left.day is not None
-        and right.month is not None
-        and right.day is not None
-    ):
-        return
-
-    if (right.month, right.day) < (left.month, left.day):
-        base_year = right.year or left.year or default_year
-        right.year = base_year + 1
 
 
 def _parse_datetime(text: str, config, timezone_mapping):
