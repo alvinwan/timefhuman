@@ -1,6 +1,5 @@
-from datetime import timedelta
-
 from timefhuman.renderers import tfhAmbiguous, tfhDatelike, tfhDatetime, tfhDate, tfhTime, tfhTimedelta
+from timefhuman.semantics import timedelta_for_unit
 
 
 def infer_from(source: tfhDatelike, target):
@@ -34,7 +33,7 @@ def infer_from(source: tfhDatelike, target):
             target.tz = source.tz
 
     if isinstance(source, tfhTimedelta) and isinstance(target, tfhAmbiguous):
-        target = tfhTimedelta.from_object(timedelta(**{source.unit: target.value}), unit=source.unit)
+        target = tfhTimedelta.from_object(timedelta_for_unit(source.unit, target.value), unit=source.unit)
 
     return target
 

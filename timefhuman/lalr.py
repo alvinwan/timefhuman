@@ -169,7 +169,11 @@ class tfhTransformer(Transformer):
         if len(raw_unit) == 1 and raw_unit.isalpha() and raw_unit != raw_unit.lower():
             raise ValueError(f"Invalid duration unit: {raw_unit}")
         duration_unit = UNIT_ALIASES[raw_unit.lower()]
-        return tfhTimedelta.from_object(timedelta_for_unit(duration_unit, duration_number), unit=duration_unit)
+        try:
+            delta = timedelta_for_unit(duration_unit, duration_number)
+        except OverflowError as exc:
+            raise ValueError("Duration overflow") from exc
+        return tfhTimedelta.from_object(delta, unit=duration_unit)
 
     def datetime(self, children):
         data = nodes_to_dict(children)
