@@ -66,13 +66,52 @@ START_PATTERN = re.compile(
     rf"(?![a-z])"
 )
 def _window_tokens(text: str, start_pos: int):
-    tokens = []
-    for token in iter_tokens(text, start_pos):
-        if not tokens and token[2] != start_pos:
-            return []
-        tokens.append(token)
-        if len(tokens) >= EXTRACTION_TOKEN_LIMIT:
+    token_iter = iter(iter_tokens(text, start_pos))
+    first = next(token_iter, None)
+    if first is None or first[2] != start_pos:
+        return []
+
+    tokens = [first]
+    pending = None
+    while len(tokens) < EXTRACTION_TOKEN_LIMIT:
+        token = pending
+        if token is None:
+            token = next(token_iter, None)
+        pending = None
+        if token is None:
             break
+
+        gap = text[tokens[-1][3] : token[2]]
+        if "\n" in gap or "\r" in gap:
+            probe = tokens + [token]
+            lookahead = next(token_iter, None)
+            if lookahead is not None:
+                probe.append(lookahead)
+            if not _allows_newline_continuation(probe, len(tokens)):
+                break
+            tokens.append(token)
+            pending = lookahead
+            continue
+
+        if token[0] == ".":
+            probe = tokens + [token]
+            lookahead = next(token_iter, None)
+            if lookahead is not None:
+                probe.append(lookahead)
+            if _is_weekday_period_continuation(probe, 0, len(tokens)):
+                tokens.append(token)
+                pending = lookahead
+                continue
+            if lookahead is not None:
+                pending = lookahead
+
+        if token[0] in ".?!":
+            tokens.append(token)
+            break
+        if token[0] in ",-" or is_expression_token(token):
+            tokens.append(token)
+            continue
+        break
     return tokens
 
 
@@ -137,9 +176,8 @@ def extract_fast(text: str, parse_candidate):
 
 
 def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate, miss_cache):
-    max_end = _candidate_end_limit(tokens, start_index, text)
     last_candidate = None
-    for end_index in range(max_end, start_index, -1):
+    for end_index in range(len(tokens), start_index, -1):
         start = tokens[start_index][2]
         end = tokens[end_index - 1][3]
         candidate = text[start:end].strip()
@@ -160,27 +198,6 @@ def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate,
         miss_cache.add(candidate)
 
     return None, start_index + 1
-
-
-def _candidate_end_limit(tokens, start_index: int, text: str):
-    max_end = min(len(tokens), start_index + EXTRACTION_TOKEN_LIMIT)
-    end_index = start_index + 1
-    for index in range(start_index + 1, max_end):
-        gap = text[tokens[index - 1][3] : tokens[index][2]]
-        if ("\n" in gap or "\r" in gap) and not _allows_newline_continuation(tokens, index):
-            return end_index
-        if _is_weekday_period_continuation(tokens, start_index, index):
-            end_index = index + 1
-            continue
-        if tokens[index][0] in ".?!":
-            return index + 1
-        if tokens[index][0] in ",-" or is_expression_token(tokens[index]):
-            end_index = index + 1
-            continue
-        break
-    return end_index
-
-
 def _allows_newline_continuation(tokens, index: int):
     if index <= 0 or index >= len(tokens):
         return False
