@@ -4,8 +4,8 @@ from datetime import timedelta, timezone as dt_timezone
 import pytz
 
 from timefhuman.atoms import parse_date_atom, parse_datetime_atom, parse_duration_atom, parse_time_atom
-from timefhuman.expression_ast import ListExpr, RangeExpr, ValueExpr, is_ambiguous_only
-from timefhuman.renderers import tfhAmbiguous, tfhDatetime, tfhDate, tfhTime
+from timefhuman.expression_ast import DatetimeExpr, ListExpr, RangeExpr, ValueExpr, expression_value, is_ambiguous_only
+from timefhuman.renderers import tfhAmbiguous, tfhDate, tfhTime
 from timefhuman.semantics import is_invalid_ambiguous_date_range
 from timefhuman.utils import get_timezone_word_lengths
 
@@ -120,7 +120,10 @@ def _build_range(left_text: str, right_text: str, config, timezone_mapping):
     right = _parse_single(right_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     if left is None or right is None:
         return None
-    if is_invalid_ambiguous_date_range(left.value, right.value):
+    if is_invalid_ambiguous_date_range(
+        expression_value(left, config.now.year),
+        expression_value(right, config.now.year),
+    ):
         return None
     if is_ambiguous_only(left) and is_ambiguous_only(right):
         return None
@@ -140,7 +143,7 @@ def _parse_single(text: str, config, timezone_mapping, allow_ambiguous: bool):
 
     datetime_like = _parse_datetime(text, config, timezone_mapping)
     if datetime_like is not None:
-        return ValueExpr(datetime_like)
+        return datetime_like
 
     if allow_ambiguous and text.isdigit():
         return ValueExpr(tfhAmbiguous(int(text)))
@@ -159,7 +162,7 @@ def _parse_datetime(text: str, config, timezone_mapping):
 
     atomic = parse_datetime_atom(body, config, tzinfo, normalize_space)
     if atomic is not None:
-        return atomic
+        return ValueExpr(atomic)
 
     timezone_datetime = _parse_inline_timezone_datetime(body, config, timezone_mapping)
     if timezone_datetime is not None:
@@ -176,7 +179,7 @@ def _parse_datetime(text: str, config, timezone_mapping):
                 time = parse_time_atom(left, allow_houronly=True, normalize_space=normalize_space)
                 date = parse_date_atom(right, config, normalize_space)
             if date and time:
-                return tfhDatetime(date=date, time=time, tz=tzinfo)
+                return DatetimeExpr(date=date, time=time, tz=tzinfo)
 
     parts = body.split()
     best = None
@@ -190,7 +193,7 @@ def _parse_datetime(text: str, config, timezone_mapping):
         if date and time:
             score = _date_score(date) + _time_score(time)
             if score > best_score:
-                best = tfhDatetime(date=date, time=time, tz=tzinfo)
+                best = DatetimeExpr(date=date, time=time, tz=tzinfo)
                 best_score = score
 
         time = parse_time_atom(left, allow_houronly=True, normalize_space=normalize_space)
@@ -198,7 +201,7 @@ def _parse_datetime(text: str, config, timezone_mapping):
         if date and time:
             score = _date_score(date) + _time_score(time)
             if score > best_score:
-                best = tfhDatetime(date=date, time=time, tz=tzinfo)
+                best = DatetimeExpr(date=date, time=time, tz=tzinfo)
                 best_score = score
 
     return best
@@ -221,7 +224,7 @@ def _parse_inline_timezone_datetime(text: str, config, timezone_mapping):
             continue
 
         time, timezone = time_with_timezone
-        return tfhDatetime(date=date, time=time, tz=timezone)
+        return DatetimeExpr(date=date, time=time, tz=timezone)
 
     return None
 

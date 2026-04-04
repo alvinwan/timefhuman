@@ -1,12 +1,19 @@
 from dataclasses import dataclass
 
 from timefhuman.inference import infer
-from timefhuman.renderers import tfhAmbiguous, tfhDatelike, tfhList, tfhRange
+from timefhuman.renderers import tfhAmbiguous, tfhDatelike, tfhDatetime, tfhList, tfhRange
 
 
 @dataclass(slots=True)
 class ValueExpr:
     value: object
+
+
+@dataclass(slots=True)
+class DatetimeExpr:
+    date: object = None
+    time: object = None
+    tz: object = None
 
 
 @dataclass(slots=True)
@@ -24,12 +31,16 @@ class RangeExpr:
 def is_ambiguous_only(expression):
     if isinstance(expression, ValueExpr):
         return isinstance(expression.value, tfhAmbiguous)
+    if isinstance(expression, DatetimeExpr):
+        return False
     return all(is_ambiguous_only(item) for item in expression.items)
 
 
 def materialize_expression(expression, default_year: int):
     if isinstance(expression, ValueExpr):
         return expression.value
+    if isinstance(expression, DatetimeExpr):
+        return _materialize_datetime(expression)
 
     items = [materialize_expression(item, default_year) for item in expression.items]
     if isinstance(expression, ListExpr):
@@ -46,6 +57,16 @@ def materialize_expression(expression, default_year: int):
     if expression.tz:
         result.tz = expression.tz
     return result
+
+
+def expression_value(expression, default_year: int):
+    if isinstance(expression, ValueExpr):
+        return expression.value
+    return materialize_expression(expression, default_year)
+
+
+def _materialize_datetime(expression: DatetimeExpr):
+    return tfhDatetime(date=expression.date, time=expression.time, tz=expression.tz)
 
 
 def _datelike_missing_year(value):
