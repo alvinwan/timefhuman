@@ -1,5 +1,6 @@
+from timefhuman.expression_ast import is_ambiguous_only, materialize_expression
 from timefhuman.semantics import is_rejected_fraction_text
-from timefhuman.structure_parser import is_ambiguous_only, normalize_space, parse_expression
+from timefhuman.structure_parser import normalize_space, parse_expression
 from timefhuman.utils import tfhConfig
 
 
@@ -17,8 +18,9 @@ def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 
     if expression is None or is_ambiguous_only(expression):
         return None
 
-    expression.matched_text_pos = (span_start, span_end)
-    return [expression]
+    renderer = materialize_expression(expression, config.now.year)
+    renderer.matched_text_pos = (span_start, span_end)
+    return [renderer]
 
 
 def _trimmed_span(text: str, start_pos: int):
