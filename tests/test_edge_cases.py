@@ -112,6 +112,10 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
     assert timefhuman('past 40 minutes', config=config) == [datetime.timedelta(minutes=-40)]
     assert timefhuman('for the past 40 minutes', config=config) == [datetime.timedelta(minutes=-40)]
     assert timefhuman('30-40 mins', config=config) == [(datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))]
+    assert timefhuman('7-20 years', config=config) == [(
+        datetime.timedelta(days=7 * 365),
+        datetime.timedelta(days=20 * 365),
+    )]
     assert timefhuman('1 or 2 days', config=config) == [[datetime.timedelta(days=1), datetime.timedelta(days=2)]]
     assert timefhuman('3-4p', config=config) == [(datetime.time(15, 0), datetime.time(16, 0))]
     assert timefhuman('July 17-18', config=config) == [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]
@@ -119,6 +123,7 @@ def test_lalr_fallback_without_fastpath(now, monkeypatch):
         datetime.datetime(2018, 7, 4, 15, 0),
         datetime.datetime(2018, 7, 5, 15, 0),
     ]]
+    assert timefhuman('7136568246 day', config=config) == []
     assert timefhuman('90p', config=config) == []
     assert timefhuman('4906/0', config=config) == []
     assert timefhuman('7/17 4-5 PM or 5-6 PM today', config=infer_config) == [[

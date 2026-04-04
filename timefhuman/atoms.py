@@ -287,7 +287,10 @@ def parse_duration_atom(text: str, normalize_space, already_normalized: bool = F
             normalized_unit = normalize_duration_unit(numeric_match.group("unit"))
             if normalized_unit is None:
                 return None
-            total += timedelta_for_unit(normalized_unit, amount)
+            try:
+                total += timedelta_for_unit(normalized_unit, amount)
+            except OverflowError:
+                return None
             unit = unit or normalized_unit
             position = numeric_match.end()
             continue
@@ -300,7 +303,10 @@ def parse_duration_atom(text: str, normalize_space, already_normalized: bool = F
         if consumed is None:
             return None
         amount, normalized_unit, segment_len = consumed
-        total += timedelta_for_unit(normalized_unit, amount)
+        try:
+            total += timedelta_for_unit(normalized_unit, amount)
+        except OverflowError:
+            return None
         unit = unit or normalized_unit
         position += segment_len
 

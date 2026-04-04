@@ -12,6 +12,7 @@ from timefhuman.semantics import (
     WEEKDAY_ALIASES,
     duration_prefix_length,
     normalize_duration_unit,
+    supports_numeric_date_text,
 )
 from timefhuman.utils import get_month_mapping, get_timezone_words
 
@@ -25,6 +26,7 @@ __all__ = (
     "MONTH_WORDS",
     "TIMEZONE_WORDS",
     "WEEKDAY_WORDS",
+    "is_month_context_token",
     "is_expression_head",
     "is_expression_token",
     "is_month_token",
@@ -78,7 +80,7 @@ def is_expression_token(token, lowered: str | None = None):
         return True
     if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
         return True
-    if any(char.isdigit() for char in token) and any(separator in token for separator in "/:.-"):
+    if _has_supported_numeric_separator_shape(token):
         return True
     if "t" in lowered and "-" in token:
         return True
@@ -92,13 +94,13 @@ def is_expression_token(token, lowered: str | None = None):
 def is_expression_head(token):
     token = _token_value(token)
     lowered = _token_lower(token)
-    if lowered in EXPRESSION_WORDS:
+    if lowered in DIRECT_START_WORDS or lowered in NUMBER_WORDS:
         return True
     if token.isdigit():
         return True
     if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
         return True
-    if any(char.isdigit() for char in token) and any(separator in token for separator in "/:.-"):
+    if _has_supported_numeric_separator_shape(token):
         return True
     if MERIDIEM_ONLY_PATTERN.fullmatch(lowered) or DAY_SUFFIX_PATTERN.fullmatch(lowered):
         return True
@@ -111,16 +113,51 @@ def is_month_token(token):
     return _token_lower(token) in MONTH_WORDS
 
 
+def _has_supported_numeric_separator_shape(token: str):
+    if not any(char.isdigit() for char in token):
+        return False
+    if any(separator in token for separator in "/:-"):
+        return True
+    if "." in token:
+        return supports_numeric_date_text(token)
+    return False
+
+
+def is_month_context_token(token: str):
+    lowered = token.lower()
+    if token.isdigit():
+        return True
+    if DAY_SUFFIX_PATTERN.fullmatch(lowered):
+        return True
+    if lowered in NUMBER_WORDS:
+        return True
+    return _has_supported_numeric_separator_shape(token)
+
+
 def is_plausible_start_tokens(token: str, next_token: str, next_next_token: str = "", next_next_next_token: str = ""):
     lowered = token.lower()
     next_lower = next_token.lower()
     next_next_lower = next_next_token.lower()
     next_next_next_lower = next_next_next_token.lower()
 
+    if lowered in MONTH_WORDS:
+        probe_tokens = (next_token, next_next_token, next_next_next_token)
+        probe_index = 0
+        while probe_index < len(probe_tokens) and probe_tokens[probe_index] in {".", ","}:
+            probe_index += 1
+        return probe_index < len(probe_tokens) and is_month_context_token(probe_tokens[probe_index])
+
     if duration_prefix_length((lowered, next_lower, next_next_lower, next_next_next_lower)) > 0:
         return True
     if lowered == "between":
         return is_expression_head(next_token) or duration_prefix_length((next_lower, next_next_lower, next_next_next_lower, "")) > 0
+    if lowered.isdigit():
+        return (
+            normalize_duration_unit(next_token) is not None
+            or next_lower in WEEKDAY_ALIASES
+            or next_lower in DATE_NAME_TO_OFFSET
+            or bool(MERIDIEM_ONLY_PATTERN.fullmatch(next_lower))
+        )
     if is_expression_head(token):
         return True
     if lowered in MODIFIER_TO_OFFSET and (next_lower in WEEKDAY_WORDS or is_month_token(next_token)):
@@ -135,11 +172,4 @@ def is_plausible_start_tokens(token: str, next_token: str, next_next_token: str 
         return True
     if re.fullmatch(rf"(?ix)\d+(?:{MERIDIEM_PATTERN})", token):
         return True
-    if lowered.isdigit():
-        return (
-            normalize_duration_unit(next_token) is not None
-            or next_lower in WEEKDAY_ALIASES
-            or next_lower in DATE_NAME_TO_OFFSET
-            or bool(MERIDIEM_ONLY_PATTERN.fullmatch(next_lower))
-        )
     return False

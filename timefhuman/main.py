@@ -23,6 +23,8 @@ def _build_candidate_parsers(config: tfhConfig):
     def parse_lalr_candidate(string: str, start_pos: int = 0):
         return _parse_lalr(string, config=config, start_pos=start_pos)
 
+    parse_fast_candidate._cache_tag = ("fast", config.now, config.direction)
+    parse_lalr_candidate._cache_tag = ("lalr", config.now, config.direction)
     return parse_fast_candidate, parse_lalr_candidate
 
 
@@ -58,7 +60,7 @@ def _matched_results(string: str, renderers, config: tfhConfig):
     for renderer in renderers:
         try:
             value = renderer.to_object(config)
-        except ValueError:
+        except (OverflowError, ValueError):
             continue
         start, end = renderer.matched_text_pos
         results.append((string[start:end], (start, end), value))
@@ -70,7 +72,7 @@ def _valid_objects(renderers, config: tfhConfig):
     for renderer in renderers:
         try:
             results.append(renderer.to_object(config))
-        except ValueError:
+        except (OverflowError, ValueError):
             continue
     return results
 
