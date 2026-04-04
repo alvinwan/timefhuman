@@ -1,10 +1,22 @@
 import signal
 from pathlib import Path
+import sys
 
-from benchmark_baselines import DATEFINDER_ROOT, DOCUMENT_DATASETS, build_benches, load_document_datasets
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from eval.corpora import CORPORA, resolve_corpus_path
+from benchmark_baselines import DOCUMENT_DATASETS, build_benches, load_document_datasets
 
 
 OUTPUT_ROOT = Path(__file__).resolve().parent / "matches"
+
+
+def output_label(label: str):
+    if label == "dateparser*":
+        return "dateparser"
+    return label
 
 
 def escape(value):
@@ -36,7 +48,7 @@ def format_match(label, match, text):
             "span": f"{start}:{end}",
             "context": context_snippet(text, start, end),
         }
-    if label == "dateparser.search_dates":
+    if label == "dateparser*":
         matched_text, value = match
         return {
             "match": matched_text,
@@ -48,7 +60,7 @@ def format_match(label, match, text):
 
 
 def write_dump(label, dataset_name, source_path, text, matches):
-    output_dir = OUTPUT_ROOT / label
+    output_dir = OUTPUT_ROOT / output_label(label)
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{dataset_name}.md"
 
@@ -101,13 +113,11 @@ def main():
     ]
     document_datasets = load_document_datasets()
     if not document_datasets:
-        raise SystemExit(f"datefinder corpora not found under {DATEFINDER_ROOT}")
+        raise SystemExit("no corpora available; use /tmp/datefinder or run python -m eval.download_corpora")
 
-    source_paths = {
-        "core_corpus": DATEFINDER_ROOT / "bench" / "corpus_core.txt",
-        "seattle_html_76k": DATEFINDER_ROOT / "tests" / "seattle_weekly.html",
-        "test_data_560k": DATEFINDER_ROOT / "tests" / "test_data.txt",
-    }
+    source_paths = {}
+    for dataset_name, _, _ in DOCUMENT_DATASETS:
+        source_paths[dataset_name] = resolve_corpus_path(dataset_name) or CORPORA[dataset_name]["source_hint"]
 
     for bench in benches:
         for dataset_name, _, _ in DOCUMENT_DATASETS:

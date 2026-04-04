@@ -6,7 +6,7 @@ __all__ = ("MERIDIEM_PATTERN", "TOKEN_PATTERN", "first_token", "iter_tokens", "t
 
 MERIDIEM_PATTERN = r"(?:[ap](?:\.?m\.?)?)"
 TOKEN_PATTERN = re.compile(
-    rf"(?ix)\d+(?:[/:.-]\d+)*(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN})?|[a-z]+(?:\.[a-z]+\.?)?|\S"
+    rf"(?iu)\d+(?:[/:.-]\d+)*(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN})?|[^\W\d_]+(?:\.[^\W\d_]+\.?)?|\S"
 )
 
 def tokenize(text: str):

@@ -96,19 +96,19 @@ You can also use natural language descriptions of dates and times.
 [datetime.datetime(2018, 7, 5, 14, 0)]
 ```
 
-See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
+See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](tests/test_e2e.py).
 
 ## Performance
 
-Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3. Whole-document columns are `seconds (matches)`. `dateparser*` uses `dateparser.parse` for short inputs and `dateparser.search_dates` for whole documents.
+Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3. `acc` is member-level correctness for the dataset immediately to the left. `dateparser*` uses `dateparser.parse` for short inputs and `dateparser.search_dates` for document corpora.
 
-| parser | short (us/input) | extracted | correctness | core_corpus | seattle_html_76k | test_data_560k |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 44.5 | <ins><strong>37/37</strong></ins> | <ins><strong>10/10</strong></ins> | 0.0004 (10) | <ins><strong>0.0223 (57)</strong></ins> | <ins><strong>0.1321 (594)</strong></ins> |
-| datefinder.find_dates | <ins><strong>26.3</strong></ins> | 23/37 | 5/10 | <ins><strong>0.0003 (11)</strong></ins> | 0.0394 (57) | 0.5034 (313) |
-| dateparser* | 44039.9 | 20/37 | 6/10 | 0.1155 (14) | 0.3135 (90) | >15s (n/a) |
+| parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) | acc |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| timefhuman | 0.5 | <ins><strong>27/27</strong></ins> | 0.6 | <ins><strong>14/14</strong></ins> | <ins><strong>24.7</strong></ins> | <ins><strong>57/57</strong></ins> | <ins><strong>178.0</strong></ins> | <ins><strong>26/26</strong></ins> |
+| datefinder | <ins><strong>0.3</strong></ins> | 10/27 | <ins><strong>0.2</strong></ins> | 9/14 | 41.3 | 54/57 | 585.2 | 13/26 |
+| dateparser* | 52.0 | 15/27 | 113.2 | 9/14 | 320.6 | 53/57 | >2s | timeout |
 
-`datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates document quality. Full results, repro commands, raw match dumps, and the lower-accuracy baselines are in [`benchmarks/README.md`](benchmarks/README.md).
+`datefinder` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines are omitted here for readability. Full results, grouped correctness, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Advanced Usage
 

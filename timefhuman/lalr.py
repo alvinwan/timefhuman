@@ -16,13 +16,16 @@ from timefhuman.semantics import (
     MODIFIER_TO_OFFSET,
     NUMBER_WORDS,
     build_date,
-    build_numeric_date,
+    build_numeric_date_parts,
     build_time,
     POSITION_TO_DELTA,
     TIME_NAME_TO_TEMPLATE,
     UNIT_ALIASES,
     clone_datetime,
     clone_time,
+    is_invalid_ambiguous_date_range,
+    is_rejected_compact_meridiem_text,
+    is_rejected_fraction_text,
     month_number,
     normalize_year,
     supports_numeric_date_text,
@@ -84,6 +87,8 @@ def parse_lalr_renderers(string: str, config: tfhConfig, start_pos: int = 0):
     stripped, span_start, span_end = _trimmed_span(string, start_pos)
     if not stripped:
         return None
+    if is_rejected_fraction_text(stripped):
+        return None
 
     try:
         tree = get_lalr_parser().parse(stripped)
@@ -122,9 +127,15 @@ class tfhTransformer(Transformer):
 
     def range(self, children):
         assert len(children) == 2
+        if is_invalid_ambiguous_date_range(children[0], children[1]):
+            raise ValueError("Ambiguous-date range")
+        if all(isinstance(child, tfhAmbiguous) for child in children):
+            raise ValueError("Ambiguous-only range")
         return tfhRange(infer(children))
 
     def list(self, children):
+        if all(isinstance(child, tfhAmbiguous) for child in children):
+            raise ValueError("Ambiguous-only list")
         return tfhList(infer(children))
 
     def duration(self, children):
@@ -206,9 +217,8 @@ class tfhTransformer(Transformer):
             sep = "-"
         else:
             sep = "."
-        parts = [int(part) for part in value.split(sep)]
-        first, second = parts[0], parts[1]
-        result = build_numeric_date(first, second, parts[2] if len(parts) == 3 else None)
+        raw_parts = value.split(sep)
+        result = build_numeric_date_parts(*raw_parts)
         if result is None:
             raise ValueError(f"Invalid numeric date: {value}")
         return {'date': result}
@@ -223,14 +233,19 @@ class tfhTransformer(Transformer):
         return {'year': normalize_year(int(children[0].value))}
 
     def monthname(self, children):
-        return {'month': month_number(children[0].value, self.config.now.month)}
+        month = month_number(children[0].value)
+        if month is None:
+            raise ValueError(f"Invalid month name: {children[0].value}")
+        return {'month': month}
 
     def monthname_date(self, children):
         match = MONTHNAME_DATE_PATTERN.fullmatch(children[0].value)
         if match is None:
             raise NotImplementedError(f"Unknown monthname date: {children[0].value}")
 
-        month = month_number(match.group('month'), self.config.now.month)
+        month = month_number(match.group('month'))
+        if month is None:
+            raise ValueError(f"Invalid monthname date: {children[0].value}")
         first = int(match.group('first'))
         year = match.group('year')
 
@@ -260,7 +275,9 @@ class tfhTransformer(Transformer):
 
     def modified_month(self, children):
         offset = sum(child['offset'] for child in children[:-1])
-        month = month_number(children[-1].value, self.config.now.month)
+        month = month_number(children[-1].value)
+        if month is None:
+            raise ValueError(f"Invalid modified month: {children[-1].value}")
         return {'month': month, 'offset': offset}
 
     def weekday(self, children):

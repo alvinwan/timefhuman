@@ -5,14 +5,14 @@ from dateutil.relativedelta import relativedelta, weekdays
 import pytz
 
 from timefhuman.inference import infer
-from timefhuman.renderers import tfhAmbiguous, tfhDatetime, tfhDate, tfhList, tfhRange, tfhTime, tfhTimedelta
+from timefhuman.renderers import tfhAmbiguous, tfhDatelike, tfhDatetime, tfhDate, tfhList, tfhRange, tfhTime, tfhTimedelta
 from timefhuman.semantics import (
     DATE_NAME_TO_OFFSET,
     DATE_TIME_NAME_TO_TEMPLATE,
     MODIFIER_TO_OFFSET,
     NUMBER_WORDS,
     build_date,
-    build_numeric_date,
+    build_numeric_date_parts,
     build_time,
     POSITION_TO_DELTA,
     TIME_NAME_TO_TEMPLATE,
@@ -20,9 +20,13 @@ from timefhuman.semantics import (
     WEEKDAY_ALIASES,
     clone_datetime,
     clone_time,
-    duration_prefix_length,
+    is_invalid_ambiguous_date_range,
+    is_rejected_compact_meridiem_text,
+    is_rejected_fraction_text,
     month_number,
+    normalize_duration_unit,
     normalize_year,
+    strip_duration_prefix,
     supports_numeric_date_text,
     timedelta_for_unit,
     weekday_index,
@@ -67,9 +71,20 @@ DAY_YEAR_PATTERN = re.compile(
     r"(?:\s*,\s*|\s+)"
     r"(?P<year>\d{2,4})$"
 )
+DAY_OF_MONTH_PATTERN = re.compile(
+    r"(?ix)^"
+    r"(?P<day>\d{1,2})"
+    r"(?P<suffix>st|nd|rd|th)"
+    r"\s+of\s+"
+    r"(?P<month>[a-z]+)"
+    r"(?:\s*,?\s*(?P<year>\d{2,4}))?$"
+)
 DAY_SUFFIX_PATTERN = re.compile(r"(?ix)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
 POSITION_WEEKDAY_MONTH_PATTERN = re.compile(
     r"(?ix)^(?P<position>first|second|third|fourth|last)\s+(?P<weekday>[a-z]+)\s+(?:of|in)\s+(?P<month>[a-z]+)$"
+)
+ORDINAL_POSITION_WEEKDAY_MONTH_PATTERN = re.compile(
+    r"(?ix)^(?P<ordinal>[1-4])(?:st|nd|rd|th)\s+(?P<weekday>[a-z]+)\s+(?:of|in)\s+(?P<month>[a-z]+)$"
 )
 ISO_PATTERN = re.compile(
     r"^(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})"
@@ -77,20 +92,28 @@ ISO_PATTERN = re.compile(
     r"(?P<hour>\d{1,2}):(?P<minute>\d{2})"
     r"(?::(?P<second>\d{2})(?:\.(?P<millisecond>\d{1,6}))?)?$"
 )
+BETWEEN_RANGE_PATTERN = re.compile(r"(?is)^between\s+(?P<left>.+?)\s+and\s+(?P<right>.+)$")
 NUMBER_UNIT_PATTERN = re.compile(
     r"(?ix)"
     r"(?P<number>\d+(?:\.\d+)?)"
     r"\s*"
-    r"(?P<unit>seconds?|secs?|sec|minutes?|mins?|min|hours?|hour|hrs?|hr|days?|day|weeks?|week|wks?|wk|months?|month|mos|years?|year|yrs?|yr|mo|[smhdwy])"
+    r"(?P<unit>seconds?|secs?|sec|minutes?|mins?|min|hours?|hour|hrs?|hr|jours?|days?|day|weeks?|week|wks?|wk|months?|month|mos|years?|year|yrs?|yr|mo|[smhdwy])"
 )
 NUMERIC_TIMEZONE_OFFSET_PATTERN = re.compile(r"^(?P<body>.*\S)\s+(?P<sign>[+-])(?P<hour>\d{2})(?::?(?P<minute>\d{2}))$")
 HYPHENATED_NUMERIC_DATE_TOKEN_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}-\d{1,4}$")
-COMPACT_UPPERCASE_MERIDIEM_PATTERN = re.compile(r"^\d{1,2}[AP]$")
+ORDINAL_POSITION_NAME = {
+    "1": "first",
+    "2": "second",
+    "3": "third",
+    "4": "fourth",
+}
 
 
 def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
     stripped, span_start, span_end = _trimmed_span(text, start_pos)
     if not stripped:
+        return None
+    if is_rejected_fraction_text(stripped):
         return None
 
     expression = _parse_expression(_normalize_space(stripped), config, timezone_mapping, allow_ambiguous=False)
@@ -152,6 +175,8 @@ def _parse_list(text: str, config: tfhConfig, timezone_mapping):
             items.append(item)
 
         if items:
+            if all(isinstance(item, tfhAmbiguous) for item in items):
+                continue
             result = tfhList(infer(items))
             if tzinfo:
                 result.tz = tzinfo
@@ -162,6 +187,13 @@ def _parse_list(text: str, config: tfhConfig, timezone_mapping):
 
 def _parse_range(text: str, config: tfhConfig, timezone_mapping):
     body, tzinfo = _strip_trailing_timezone(text, timezone_mapping)
+
+    between_match = BETWEEN_RANGE_PATTERN.fullmatch(body)
+    if between_match:
+        result = _build_range(between_match.group("left"), between_match.group("right"), config, timezone_mapping)
+        if result and tzinfo:
+            result.tz = tzinfo
+        return result
 
     if " to " in body.lower():
         parts = re.split(r"(?i)\s+to\s+", body, maxsplit=1)
@@ -188,7 +220,15 @@ def _build_range(left_text: str, right_text: str, config: tfhConfig, timezone_ma
     right = _parse_single(right_text.strip(), config, timezone_mapping, allow_ambiguous=True)
     if left is None or right is None:
         return None
-    result = tfhRange(infer([left, right]))
+    if is_invalid_ambiguous_date_range(left, right):
+        return None
+    if isinstance(left, tfhAmbiguous) and isinstance(right, tfhAmbiguous):
+        return None
+    left_missing_year = _datelike_missing_year(left)
+    right_missing_year = _datelike_missing_year(right)
+    items = infer([left, right])
+    _adjust_cross_year_range(items, left_missing_year, right_missing_year, config.now.year)
+    result = tfhRange(items)
     return None if _is_ambiguous_only(result) else result
 
 
@@ -221,6 +261,37 @@ def _is_ambiguous_only(expression):
     return False
 
 
+def _datelike_missing_year(value):
+    if not isinstance(value, tfhDatelike):
+        return False
+    if isinstance(value, (tfhList, tfhRange)):
+        return False
+    return value.date is not None and value.year is None and value.month is not None and value.day is not None
+
+
+def _adjust_cross_year_range(items, left_missing_year: bool, right_missing_year: bool, default_year: int):
+    if len(items) != 2:
+        return
+    left, right = items
+    if not (
+        left_missing_year
+        and right_missing_year
+        and isinstance(left, tfhDatelike)
+        and isinstance(right, tfhDatelike)
+        and left.date
+        and right.date
+        and left.month is not None
+        and left.day is not None
+        and right.month is not None
+        and right.day is not None
+    ):
+        return
+
+    if (right.month, right.day) < (left.month, left.day):
+        base_year = right.year or left.year or default_year
+        right.year = base_year + 1
+
+
 def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
     text = _normalize_space(text)
     if not text:
@@ -233,6 +304,10 @@ def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
     atomic = _parse_atomic_datetime(body, config, tzinfo)
     if atomic is not None:
         return atomic
+
+    timezone_datetime = _parse_inline_timezone_datetime(body, config, timezone_mapping)
+    if timezone_datetime is not None:
+        return timezone_datetime
 
     lower_body = body.lower()
     for separator, mode in ((" at ", "date_time"), (" on ", "time_date")):
@@ -271,6 +346,40 @@ def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
                 best_score = score
 
     return best
+
+
+def _parse_inline_timezone_datetime(text: str, config: tfhConfig, timezone_mapping):
+    comma_indices = [index for index, char in enumerate(text) if char == ","]
+    for comma_index in comma_indices:
+        left = text[:comma_index].strip()
+        right = text[comma_index + 1 :].strip()
+        if not left or not right:
+            continue
+
+        date = _parse_date(right, config)
+        if date is None:
+            continue
+
+        time_with_timezone = _parse_time_with_inline_timezone(left, timezone_mapping)
+        if time_with_timezone is None:
+            continue
+
+        time, timezone = time_with_timezone
+        return tfhDatetime(date=date, time=time, tz=timezone)
+
+    return None
+
+
+def _parse_time_with_inline_timezone(text: str, timezone_mapping):
+    body, timezone = _strip_trailing_timezone(text.strip().rstrip(","), timezone_mapping)
+    if timezone is None:
+        return None
+
+    time = _parse_time_component(body.rstrip(", ").strip(), allow_houronly=True)
+    if time is None:
+        return None
+
+    return time, timezone
 
 
 def _parse_atomic_datetime(text: str, config: tfhConfig, tzinfo):
@@ -322,20 +431,30 @@ def _parse_date(text: str, config: tfhConfig):
     if lower in DATE_NAME_TO_OFFSET:
         return tfhDate.from_object(config.now.date() + timedelta(days=DATE_NAME_TO_OFFSET[lower]))
 
-    match = POSITION_WEEKDAY_MONTH_PATTERN.fullmatch(lower)
+    match = POSITION_WEEKDAY_MONTH_PATTERN.fullmatch(text)
     if match:
         weekday = _parse_weekday_name(match.group("weekday"))
         month = _parse_month_name(match.group("month"))
         if weekday is None or month is None:
             return None
-        return tfhDate(month=month, delta=POSITION_TO_DELTA[match.group("position")](weekdays[weekday]))
+        return tfhDate(month=month, delta=POSITION_TO_DELTA[match.group("position").lower()](weekdays[weekday]))
 
-    tokens = lower.split()
-    offset, remainder = _parse_modifier_prefix(tokens)
+    match = ORDINAL_POSITION_WEEKDAY_MONTH_PATTERN.fullmatch(text)
+    if match:
+        weekday = _parse_weekday_name(match.group("weekday"))
+        month = _parse_month_name(match.group("month"))
+        if weekday is None or month is None:
+            return None
+        return tfhDate(month=month, delta=POSITION_TO_DELTA[ORDINAL_POSITION_NAME[match.group("ordinal")]](weekdays[weekday]))
+
+    tokens = text.split()
+    lowered_tokens = [token.lower() for token in tokens]
+    offset, lowered_remainder = _parse_modifier_prefix(lowered_tokens)
+    remainder = tokens[len(tokens) - len(lowered_remainder):]
     if len(remainder) == 1:
         weekday = _parse_weekday_name(remainder[0])
         if weekday is not None:
-            if tokens[: len(tokens) - 1]:
+            if lowered_tokens[: len(lowered_tokens) - 1]:
                 weekday_offset = offset
             else:
                 weekday_offset = direction_to_offset(config.direction)
@@ -343,7 +462,7 @@ def _parse_date(text: str, config: tfhConfig):
             return tfhDate.from_object(value)
 
         month = _parse_month_name(remainder[0])
-        if month is not None and tokens[: len(tokens) - 1]:
+        if month is not None and lowered_tokens[: len(lowered_tokens) - 1]:
             return tfhDate(month=month, delta=relativedelta(years=offset))
 
     stripped = _strip_leading_weekday(text) if len(tokens) >= 2 else text
@@ -380,11 +499,7 @@ def _parse_numeric_date(text: str):
         return None
     if not supports_numeric_date_text(text):
         return None
-
-    first = int(match.group("a"))
-    second = int(match.group("b"))
-    third = match.group("c")
-    return build_numeric_date(first, second, int(third) if third is not None else None)
+    return build_numeric_date_parts(match.group("a"), match.group("b"), match.group("c"))
 
 
 def _parse_monthname_date(text: str):
@@ -408,6 +523,16 @@ def _parse_monthname_date(text: str):
 
 
 def _parse_day_month_or_year(text: str):
+    match = DAY_OF_MONTH_PATTERN.fullmatch(text)
+    if match:
+        month = _parse_month_name(match.group("month"))
+        if month is None:
+            return None
+        year = match.group("year")
+        if year is not None:
+            return build_date(day=int(match.group("day")), month=month, year=normalize_year(int(year)))
+        return build_date(day=int(match.group("day")), month=month)
+
     match = DAY_MONTH_PATTERN.fullmatch(text)
     if match:
         month = _parse_month_name(match.group("month"))
@@ -429,7 +554,7 @@ def _parse_time_component(text: str, allow_houronly: bool):
     text = _normalize_space(text)
     if not text:
         return None
-    if COMPACT_UPPERCASE_MERIDIEM_PATTERN.fullmatch(text):
+    if is_rejected_compact_meridiem_text(text):
         return None
     lowered = text.lower()
     if lowered in TIME_NAME_TO_TEMPLATE:
@@ -461,19 +586,14 @@ def _parse_duration(text: str):
     if not text:
         return None
 
-    tokens = text.split()
-    direction = Direction.next
-    prefix_length = duration_prefix_length(tokens)
-    if prefix_length:
-        prefix_tokens = [token.lower() for token in tokens[:prefix_length]]
-        if "past" in prefix_tokens:
-            direction = Direction.previous
-        text = " ".join(tokens[prefix_length:])
-
-    lowered = text.lower()
+    body, direction = strip_duration_prefix(text)
+    body = body.strip()
+    if not body:
+        return None
+    lowered = body.lower()
 
     if lowered.endswith(" ago"):
-        text = text[:-4].rstrip()
+        body = body[:-4].rstrip()
         lowered = lowered[:-4].strip()
         direction = Direction.previous
 
@@ -489,19 +609,18 @@ def _parse_duration(text: str):
         if position >= len(lowered):
             break
 
-        numeric_match = NUMBER_UNIT_PATTERN.match(text, position)
+        numeric_match = NUMBER_UNIT_PATTERN.match(body, position)
         if numeric_match:
             amount = float(numeric_match.group("number"))
-            unit_token = numeric_match.group("unit")
-            if len(unit_token) == 1 and unit_token.isalpha() and unit_token != unit_token.lower():
+            normalized_unit = normalize_duration_unit(numeric_match.group("unit"))
+            if normalized_unit is None:
                 return None
-            normalized_unit = UNIT_ALIASES[unit_token.lower()]
             total += timedelta_for_unit(normalized_unit, amount)
             unit = unit or normalized_unit
             position = numeric_match.end()
             continue
 
-        word_match = re.match(r"[a-z]+(?:\s+[a-z]+)*", lowered[position:])
+        word_match = re.match(r"(?i)[a-z]+(?:\s+[a-z]+)*", body[position:])
         if not word_match:
             return None
 
@@ -521,7 +640,7 @@ def _parse_duration(text: str):
 
 
 def _consume_word_duration(segment: str):
-    tokens = segment.split()
+    tokens = [token.lower() for token in segment.split()]
     if len(tokens) < 2:
         return None
 
@@ -568,6 +687,11 @@ def _strip_trailing_timezone(text: str, timezone_mapping):
     return text, None
 
 
+def _parse_timezone_segment(text: str, timezone_mapping):
+    body, timezone = _strip_trailing_timezone(text.strip().strip(","), timezone_mapping)
+    return timezone if body == "" else None
+
+
 def _parse_modifier_prefix(tokens):
     offset = 0
     index = 0
@@ -579,7 +703,7 @@ def _parse_modifier_prefix(tokens):
 
 def _strip_leading_weekday(text: str):
     parts = text.split(maxsplit=1)
-    if len(parts) == 2 and weekday_index(parts[0].rstrip(",")) is not None:
+    if len(parts) == 2 and weekday_index(parts[0].rstrip(".,")) is not None:
         return parts[1]
     return text
 

@@ -1,8 +1,9 @@
 from datetime import date, timedelta
+import re
 
 from dateutil.relativedelta import relativedelta
 
-from timefhuman.renderers import tfhDate, tfhDatetime, tfhTime
+from timefhuman.renderers import tfhAmbiguous, tfhDate, tfhDatelike, tfhDatetime, tfhTime
 from timefhuman.utils import Direction, get_month_mapping
 
 
@@ -22,7 +23,15 @@ TIME_NAME_TO_TEMPLATE = {
     "evening": _time(18, tfhTime.Meridiem.PM),
     "night": _time(20, tfhTime.Meridiem.PM),
 }
-DATE_NAME_TO_OFFSET = {"today": 0, "tomorrow": 1, "tmw": 1, "yesterday": -1}
+DATE_NAME_TO_OFFSET = {
+    "today": 0,
+    "tomorrow": 1,
+    "tmw": 1,
+    "mañana": 1,
+    "manana": 1,
+    "yesterday": -1,
+    "ayer": -1,
+}
 DATE_TIME_NAME_TO_TEMPLATE = {
     "tonight": tfhDatetime(date=None, time=_time(20, tfhTime.Meridiem.PM)),
 }
@@ -77,11 +86,13 @@ UNIT_ALIASES = _expand_aliases(
         ("minutes", "minute minutes min mins m"),
         ("hours", "hour hours hr hrs h"),
         ("days", "day days d"),
+        ("days", "jour jours"),
         ("weeks", "week weeks wk wks w"),
         ("months", "month months mos mo"),
         ("years", "year years yr yrs y"),
     )
 )
+CASE_SENSITIVE_SINGLE_LETTER_DURATION_UNITS = frozenset({"s", "m", "h", "d", "w", "y"})
 WEEKDAY_ALIASES = _expand_aliases(
     (
         (0, "monday mon"),
@@ -99,6 +110,7 @@ DURATION_PREFIX_PATTERNS = (
     (("the", "past"), Direction.previous),
     (("past",), Direction.previous),
     (("in",), Direction.next),
+    (("dans",), Direction.next),
     (("for",), Direction.next),
 )
 
@@ -116,6 +128,21 @@ def supports_numeric_date_text(value: str):
         return True
     parts = value.split(".")
     return len(parts) == 3 and any(len(part) == 4 for part in parts)
+
+
+MIXED_FRACTION_RANGE_PATTERN = re.compile(r"^\d+-\d+/\d+$")
+
+
+def is_rejected_fraction_text(value: str):
+    return bool(MIXED_FRACTION_RANGE_PATTERN.fullmatch(value.strip()))
+
+
+def is_invalid_ambiguous_date_range(left, right):
+    if not isinstance(left, tfhAmbiguous):
+        return False
+    if not isinstance(right, tfhDatelike):
+        return False
+    return bool((right.date or right.year or right.month or right.day) and not right.time)
 
 
 def build_date(year: int | None = None, month: int | None = None, day: int | None = None):
@@ -155,6 +182,16 @@ def build_numeric_date(first: int, second: int, third: int | None = None):
     if 1 <= second <= 12:
         return build_date(year=year, month=second, day=first)
     return None
+
+
+def build_numeric_date_parts(first: str, second: str, third: str | None = None):
+    if third is None:
+        if int(second) > 31 and len(second) not in (2, 4):
+            return None
+    elif len(third) not in (2, 4):
+        return None
+
+    return build_numeric_date(int(first), int(second), int(third) if third is not None else None)
 
 
 def build_time(
@@ -216,6 +253,19 @@ def is_duration_value_token(token: str):
     return lowered.isdigit() or lowered in NUMBER_WORDS
 
 
+def normalize_duration_unit(token: str):
+    lowered = token.lower()
+    if lowered not in UNIT_ALIASES:
+        return None
+    if len(token) == 1 and lowered in CASE_SENSITIVE_SINGLE_LETTER_DURATION_UNITS and token != lowered:
+        return None
+    return UNIT_ALIASES[lowered]
+
+
+def is_rejected_compact_meridiem_text(value: str):
+    return bool(re.fullmatch(r"\d+[AP]", value.strip()))
+
+
 def duration_prefix_length(tokens, index: int = 0):
     lowered = [token.lower() for token in tokens[index:]]
     for prefix, _ in DURATION_PREFIX_PATTERNS:
@@ -229,13 +279,14 @@ def duration_prefix_length(tokens, index: int = 0):
 
 
 def strip_duration_prefix(text: str):
-    lowered = text.lower().strip()
-    tokens = lowered.split()
+    stripped = text.strip()
+    tokens = stripped.split()
+    lowered = [token.lower() for token in tokens]
     for prefix, direction in DURATION_PREFIX_PATTERNS:
         prefix_length = len(prefix)
-        if tokens[:prefix_length] != list(prefix):
+        if lowered[:prefix_length] != list(prefix):
             continue
         value_index = prefix_length
-        if value_index < len(tokens) and is_duration_value_token(tokens[value_index]):
+        if value_index < len(tokens) and is_duration_value_token(lowered[value_index]):
             return " ".join(tokens[value_index:]), direction
-    return lowered, Direction.next
+    return stripped, Direction.next
