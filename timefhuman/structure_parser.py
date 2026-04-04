@@ -253,6 +253,8 @@ def _strip_trailing_timezone(text: str, timezone_mapping):
 
     if not text or not text[-1].isalpha():
         return text, None
+    if " " not in text and not text.isalpha():
+        return text, None
 
     lowered = text.lower()
     timezone_name = timezone_mapping.get(lowered)
