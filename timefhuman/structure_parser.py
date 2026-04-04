@@ -139,7 +139,7 @@ def _parse_range_or_single(text: str, config, timezone_mapping, allow_ambiguous:
 
 
 def _parse_single(text: str, config, timezone_mapping, allow_ambiguous: bool):
-    duration = parse_duration_atom(text, normalize_space)
+    duration = parse_duration_atom(text, normalize_space, already_normalized=True)
     if duration is not None:
         return ValueExpr(duration)
 
@@ -168,18 +168,18 @@ def _parse_datetime(text: str, config, timezone_mapping):
     def parse_date_cached(value: str):
         cached = date_cache.get(value)
         if cached is None and value not in date_cache:
-            cached = parse_date_atom(value, config, normalize_space)
+            cached = parse_date_atom(value, config, normalize_space, already_normalized=True)
             date_cache[value] = cached
         return cached
 
     def parse_time_cached(value: str):
         cached = time_cache.get(value)
         if cached is None and value not in time_cache:
-            cached = parse_time_atom(value, allow_houronly=True, normalize_space=normalize_space)
+            cached = parse_time_atom(value, allow_houronly=True, normalize_space=normalize_space, already_normalized=True)
             time_cache[value] = cached
         return cached
 
-    atomic = parse_datetime_atom(body, config, tzinfo, normalize_space)
+    atomic = parse_datetime_atom(body, config, tzinfo, normalize_space, already_normalized=True)
     if atomic is not None:
         return ValueExpr(atomic)
 
@@ -203,6 +203,28 @@ def _parse_datetime(text: str, config, timezone_mapping):
                 return DatetimeExpr(date=date, time=time, tz=tzinfo)
 
     parts = body.split()
+    if len(parts) < 2:
+        return None
+
+    if len(parts) <= 5:
+        for time_part_count in (2, 1):
+            if len(parts) <= time_part_count:
+                continue
+            date = parse_date_cached(" ".join(parts[:-time_part_count]))
+            if date:
+                time = parse_time_cached(" ".join(parts[-time_part_count:]))
+                if time:
+                    return DatetimeExpr(date=date, time=time, tz=tzinfo)
+
+        for time_part_count in (2, 1):
+            if len(parts) <= time_part_count:
+                continue
+            time = parse_time_cached(" ".join(parts[:time_part_count]))
+            if time:
+                date = parse_date_cached(" ".join(parts[time_part_count:]))
+                if date:
+                    return DatetimeExpr(date=date, time=time, tz=tzinfo)
+
     best = None
     best_score = -1
     for index in range(1, len(parts)):
@@ -229,6 +251,12 @@ def _parse_datetime(text: str, config, timezone_mapping):
 
 
 def _parse_inline_timezone_datetime(text: str, config, timezone_mapping):
+    if "," not in text:
+        return None
+
+    if not any(token.strip(".,:;)]}") in get_timezone_tail_words() for token in text.lower().split()):
+        return None
+
     comma_indices = [index for index, char in enumerate(text) if char == ","]
     for comma_index in comma_indices:
         left = text[:comma_index].strip()

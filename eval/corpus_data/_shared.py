@@ -1,7 +1,6 @@
 import datetime
-
-import pytz
+from zoneinfo import ZoneInfo
 
 
 def localized_datetime(tz_name, *parts):
-    return pytz.timezone(tz_name).localize(datetime.datetime(*parts))
+    return datetime.datetime(*parts, tzinfo=ZoneInfo(tz_name))

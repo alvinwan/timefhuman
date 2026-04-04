@@ -4,8 +4,8 @@ from eval.corpus_data.core_corpus import DATA as CORE_CORPUS, MATCHED_TEXT as CO
 from eval.corpus_data.seattle_html_76k import DATA as SEATTLE_HTML_76K, MATCHED_TEXT as SEATTLE_HTML_76K_MATCHED_TEXT
 from eval.corpus_data.test_data_560k import (
     DATA as TEST_DATA_560K,
-    FORBIDDEN as TEST_DATA_560K_SAMPLE_FORBIDDEN,
-    MATCHED_TEXT as TEST_DATA_560K_SAMPLE_MATCHED_TEXT,
+    FORBIDDEN as TEST_DATA_560K_FORBIDDEN,
+    MATCHED_TEXT as TEST_DATA_560K_MATCHED_TEXT,
 )
 
 
