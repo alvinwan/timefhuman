@@ -101,8 +101,9 @@ ORDINAL_POSITION_NAME = {
 }
 
 
-def parse_date_atom(text: str, config, normalize_space):
-    text = normalize_space(text)
+def parse_date_atom(text: str, config, normalize_space, already_normalized: bool = False):
+    if not already_normalized:
+        text = normalize_space(text)
     if not text:
         return None
     lower = text.lower()
@@ -173,8 +174,9 @@ def parse_date_atom(text: str, config, normalize_space):
     return None
 
 
-def parse_datetime_atom(text: str, config, tzinfo, normalize_space):
-    text = normalize_space(text)
+def parse_datetime_atom(text: str, config, tzinfo, normalize_space, already_normalized: bool = False):
+    if not already_normalized:
+        text = normalize_space(text)
     if not text:
         return None
     lower_body = text.lower()
@@ -202,19 +204,23 @@ def parse_datetime_atom(text: str, config, tzinfo, normalize_space):
         value.tz = tzinfo
         return value
 
-    time = parse_time_atom(text, allow_houronly=False, normalize_space=normalize_space)
+    if _looks_composite_datetime_text(text, lower_body):
+        return None
+
+    time = parse_time_atom(text, allow_houronly=False, normalize_space=normalize_space, already_normalized=True)
     if time is not None:
         return tfhDatetime(time=time, tz=tzinfo)
 
-    date = parse_date_atom(text, config, normalize_space)
+    date = parse_date_atom(text, config, normalize_space, already_normalized=True)
     if date is not None:
         return tfhDatetime(date=date, tz=tzinfo)
 
     return None
 
 
-def parse_time_atom(text: str, allow_houronly: bool, normalize_space):
-    text = normalize_space(text)
+def parse_time_atom(text: str, allow_houronly: bool, normalize_space, already_normalized: bool = False):
+    if not already_normalized:
+        text = normalize_space(text)
     if not text:
         return None
     if is_rejected_compact_meridiem_text(text):
@@ -244,8 +250,9 @@ def parse_time_atom(text: str, allow_houronly: bool, normalize_space):
     )
 
 
-def parse_duration_atom(text: str, normalize_space):
-    text = normalize_space(text)
+def parse_duration_atom(text: str, normalize_space, already_normalized: bool = False):
+    if not already_normalized:
+        text = normalize_space(text)
     if not text:
         return None
     if not _looks_duration_text(text):
@@ -328,6 +335,36 @@ def _looks_like_time_not_date_text(text: str, lowered: str):
     if not any(char.isdigit() for char in text):
         return False
     return lowered.endswith(("am", "pm", "a.m.", "p.m.", "a.m", "p.m"))
+
+
+def _looks_composite_datetime_text(text: str, lowered: str):
+    if " at " in lowered or " on " in lowered:
+        return True
+
+    has_time = (
+        ":" in text
+        or is_rejected_compact_meridiem_text(text)
+        or lowered.endswith(("am", "pm", "a.m.", "p.m.", "a.m", "p.m"))
+        or " o'clock" in lowered
+    )
+    if not has_time:
+        return False
+
+    if "/" in text or "-" in text or _has_numeric_dot_date_shape(text):
+        return True
+
+    tokens = [token.strip(".,") for token in lowered.split()]
+    for token in tokens:
+        if token in DATE_NAME_TO_OFFSET or month_number(token) is not None or weekday_index(token) is not None:
+            return True
+    return False
+
+
+def _has_numeric_dot_date_shape(text: str):
+    for index in range(1, len(text) - 1):
+        if text[index] == "." and text[index - 1].isdigit() and text[index + 1].isdigit():
+            return True
+    return False
 
 
 def _parse_numeric_date(text: str):

@@ -263,7 +263,13 @@ def normalize_duration_unit(token: str):
 
 
 def is_rejected_compact_meridiem_text(value: str):
-    return bool(re.fullmatch(r"\d+[AP]", value.strip()))
+    stripped = value.strip()
+    if len(stripped) < 2:
+        return False
+    suffix = stripped[-1]
+    if suffix not in {"A", "P"}:
+        return False
+    return stripped[:-1].isdigit()
 
 
 def duration_prefix_length(tokens, index: int = 0):
