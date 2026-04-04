@@ -4,21 +4,12 @@ Status as of April 2, 2026.
 
 ## Results
 
-- Runtime path: deterministic whole-string parse, extraction-first for noisy text, LALR fallback only on misses. Earley is not used at runtime.
-- Test suite: `127 passed in 0.22s`
-- Tight loop: `19.52 us/input` at `10000` rounds
-- Internal path benchmark:
-  - `fast exact`: `6.5 us`
-  - `fast collection`: `19.5 us`
-  - `extract hit`: `46.1 us`
-  - `extract miss`: `13.6 us`
-- Cross-library snapshot from `benchmarks/benchmark_baselines.py`:
-  - `timefhuman`: `56.1 us/input`, `37/37 ok`, `10/10 exact`
-  - `parsedatetime`: `45.0 us/input`, `36/37 ok`, `6/10 exact`
-  - `datefinder`: `42.9 us/input`, `23/37 ok`, `5/10 exact`
-  - `recurrent`: `195.2 us/input`, `36/37 ok`, `6/10 exact`
-  - `ctparse`: `12808.2 us/input`, `37/37 ok`, `3/10 exact`
-  - `dateparser`: `49105.3 us/input`, `20/37 ok`, `6/10 exact`
+- Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
+- Correctness: public `timefhuman(...)` now completes on the `datefinder` `core_corpus` and `seattle_html_76k` datasets without raising conversion errors.
+- Test suite: `137 passed in 0.55s`
+- Warm whole-document median on this machine:
+  - `core_corpus`: `timefhuman 0.00199s` for `10` matches, `datefinder.extract 0.00045s` for `14` matches
+  - `seattle_html_76k`: `timefhuman 0.09717s` for `48` matches, `datefinder.extract 0.07821s` for `57` matches
 
 ## Reproduce
 
@@ -28,36 +19,43 @@ Run tests:
 /tmp/timefhuman-bench-venv/bin/python -m pytest -q
 ```
 
-Run the cross-library benchmark:
-
-```bash
-/tmp/timefhuman-bench-venv/bin/python benchmarks/benchmark_baselines.py
-```
-
-Run the internal path benchmark:
-
-```bash
-/tmp/timefhuman-bench-venv/bin/python benchmarks/benchmark_paths.py
-```
-
-Run the local tight loop:
+Run the warmed whole-document benchmark used above.
+This expects a local clone of `datefinder` at `/tmp/datefinder`.
 
 ```bash
 /tmp/timefhuman-bench-venv/bin/python - <<'PY'
+from datetime import datetime, timezone
+import statistics
 import time
-from datetime import datetime
-from benchmarks.benchmark_baselines import INPUTS
-from timefhuman import timefhuman
-from timefhuman.main import tfhConfig
+from pathlib import Path
 
-cfg = tfhConfig(now=datetime(2018, 8, 4, 14, 0))
-for rounds in [1000, 5000, 10000]:
-    start = time.perf_counter()
-    for _ in range(rounds):
-        for text in INPUTS:
-            timefhuman(text, config=cfg)
-    us = (time.perf_counter() - start) / (rounds * len(INPUTS)) * 1e6
-    print(rounds, f"{us:.2f} us/input")
+import datefinder
+from timefhuman import timefhuman, tfhConfig
+
+ref = datetime(2026, 3, 18, 12, 0, tzinfo=timezone.utc)
+cfg = tfhConfig(now=ref)
+docs = [
+    ("core_corpus", "\n".join(
+        x.strip()
+        for x in Path("/tmp/datefinder/bench/corpus_core.txt").read_text(encoding="utf-8").splitlines()
+        if x.strip()
+    ), 10),
+    ("seattle_html_76k", Path("/tmp/datefinder/tests/seattle_weekly.html").read_text(errors="ignore"), 7),
+]
+
+def bench(fn, iterations):
+    times = []
+    count = 0
+    for _ in range(iterations):
+        start = time.perf_counter()
+        count = fn()
+        times.append(time.perf_counter() - start)
+    return statistics.median(times), count
+
+for name, text, iterations in docs:
+    tfh = bench(lambda: len(timefhuman(text, cfg)), iterations)
+    df = bench(lambda: len(datefinder.extract(text, reference_dt=ref)), iterations)
+    print(name, "timefhuman", tfh, "datefinder", df)
 PY
 ```
 

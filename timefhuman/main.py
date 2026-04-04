@@ -57,10 +57,25 @@ def _parse_renderers(string: str, config: tfhConfig):
 
 
 def _matched_results(string: str, renderers, config: tfhConfig):
-    positions = [(renderer.matched_text_pos[0], renderer.matched_text_pos[1]) for renderer in renderers]
-    matched_texts = [string[start:end] for start, end in positions]
-    datetimes = [renderer.to_object(config) for renderer in renderers]
-    return list(zip(matched_texts, positions, datetimes))
+    results = []
+    for renderer in renderers:
+        try:
+            value = renderer.to_object(config)
+        except ValueError:
+            continue
+        start, end = renderer.matched_text_pos
+        results.append((string[start:end], (start, end), value))
+    return results
+
+
+def _valid_objects(renderers, config: tfhConfig):
+    results = []
+    for renderer in renderers:
+        try:
+            results.append(renderer.to_object(config))
+        except ValueError:
+            continue
+    return results
 
 
 def build_raw_tree(string: str, config: tfhConfig):
@@ -97,4 +112,4 @@ def timefhuman(string, config: tfhConfig = DEFAULT_CONFIG, raw: bool=False, now:
 
     if config.return_matched_text:
         return _matched_results(string, renderers, config)
-    return [renderer.to_object(config) for renderer in renderers]
+    return _valid_objects(renderers, config)
