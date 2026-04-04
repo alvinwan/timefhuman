@@ -100,27 +100,15 @@ See more examples in [`tests/test_e2e.py`](tests/test_e2e.py).
 
 ## Performance
 
-Current benchmark snapshot from [`benchmarks/README.md`](benchmarks/README.md). Short-input parsing and whole-document extraction are measured separately.
+Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3. Whole-document columns are `seconds (matches)`. `dateparser*` uses `dateparser.parse` for short inputs and `dateparser.search_dates` for whole documents.
 
-Setup: Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
+| parser | short (us/input) | extracted | correctness | core_corpus | seattle_html_76k | test_data_560k |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| timefhuman | 44.5 | <ins><strong>37/37</strong></ins> | <ins><strong>10/10</strong></ins> | 0.0004 (10) | <ins><strong>0.0223 (57)</strong></ins> | <ins><strong>0.1321 (594)</strong></ins> |
+| datefinder.find_dates | <ins><strong>26.3</strong></ins> | 23/37 | 5/10 | <ins><strong>0.0003 (11)</strong></ins> | 0.0394 (57) | 0.5034 (313) |
+| dateparser* | 44039.9 | 20/37 | 6/10 | 0.1155 (14) | 0.3135 (90) | >15s (n/a) |
 
-| parser | us/input | extracted | correctness |
-| --- | ---: | ---: | ---: |
-| timefhuman | 37.0 | **37/37** | **10/10** |
-| datefinder.find_dates | **31.1** | 23/37 | 5/10 |
-| metadate.parse_date | 33.2 | 31/37 | 5/10 |
-| parsedatetime.parseDT | 44.4 | 36/37 | 6/10 |
-| recurrent.parse | 213.2 | 36/37 | 6/10 |
-| ctparse.ctparse | 12273.8 | **37/37** | 3/10 |
-| dateparser.parse | 44593.5 | 20/37 | 6/10 |
-
-| parser | core_corpus | seattle_html_76k | test_data_560k |
-| --- | ---: | ---: | ---: |
-| timefhuman | 0.0004 (10) | **0.0227 (59)** | **0.1340 (594)** |
-| datefinder.find_dates | **0.0003 (11)** | 0.0389 (57) | 0.4935 (313) |
-| dateparser.search_dates | 0.1107 (14) | 0.3254 (90) | >15s (n/a) |
-
-Whole-document extracted counts are raw matches. `datefinder.find_dates` and `dateparser.search_dates` include extra HTML and metadata false positives on these corpora, so count alone overstates their quality. Details, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
+`datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates document quality. Full results, repro commands, raw match dumps, and the lower-accuracy baselines are in [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Advanced Usage
 
