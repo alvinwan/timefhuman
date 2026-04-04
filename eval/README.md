@@ -11,4 +11,4 @@ Current corpus status:
 
 - `core_corpus`: fully gold-annotated matched-text expectations.
 - `seattle_html_76k`: fully gold-annotated matched-text expectations; HTML itself stays external.
-- `test_data_560k`: sampled gold only. Includes checked-in positive matches plus forbidden false positives, but is not exhaustive.
+- `test_data_560k`: broad sampled gold. Includes many checked-in positive matches plus forbidden false positives, but is not exhaustive.

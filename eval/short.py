@@ -1,12 +1,8 @@
 import datetime
+from zoneinfo import ZoneInfo
 
-import pytz
-
+from eval.corpus_data._shared import localized_datetime
 from timefhuman import Direction
-
-
-def localized_datetime(tz_name, *parts):
-    return pytz.timezone(tz_name).localize(datetime.datetime(*parts))
 
 
 DEFAULT_CASES = [
@@ -108,7 +104,7 @@ NO_INFERENCE_CASES = [
     # time only
     ("5p", [datetime.time(17, 0)]),
     ("3 o'clock pm", [datetime.time(15, 0)]),
-    ("5p Eastern Time", [datetime.time(17, 0, tzinfo=pytz.timezone("US/Michigan"))]),
+    ("5p Eastern Time", [datetime.time(17, 0, tzinfo=ZoneInfo("US/Michigan"))]),
     ("Wed., Jan 6 2016 at 10:13AM", [datetime.datetime(2016, 1, 6, 10, 13)]),
     ("01/13/2016 11 AM", [datetime.datetime(2016, 1, 13, 11, 0)]),
     ("11:00 a.m., Pacific Time, January 13, 2016", [localized_datetime("US/Pacific", 2016, 1, 13, 11, 0)]),
