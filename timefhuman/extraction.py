@@ -29,7 +29,6 @@ COMPACT_TIME_RANGE_PATTERN = re.compile(
 HYPHENATED_NUMERIC_DATE_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}(?:-\d{1,4})?$")
 PHONE_LIKE_PATTERN = re.compile(r"^\d{3,4}-\d{4}$|^\d{3}-\d{3}-\d{4}$")
 COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
-UPPERCASE_COMPACT_SUFFIX_PATTERN = re.compile(r"^\d{1,4}[A-Z]$")
 LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
 EXPRESSION_CONNECTORS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "ago", "the"})
 INLINE_PUNCTUATION = frozenset({",", "-"})
@@ -302,9 +301,6 @@ def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
     before = text[start - 1] if start > 0 else ""
     after = text[end] if end < len(text) else ""
     if before.isalnum() or after.isalnum():
-        return True
-
-    if UPPERCASE_COMPACT_SUFFIX_PATTERN.fullmatch(candidate):
         return True
 
     if LOWERCASE_SHORT_TIME_PATTERN.fullmatch(candidate):
