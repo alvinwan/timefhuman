@@ -99,8 +99,6 @@ ORDINAL_POSITION_NAME = {
     "3": "third",
     "4": "fourth",
 }
-
-
 def parse_date_atom(text: str, config, normalize_space):
     text = normalize_space(text)
     if not text:
@@ -244,6 +242,8 @@ def parse_duration_atom(text: str, normalize_space):
     text = normalize_space(text)
     if not text:
         return None
+    if not _looks_duration_text(text):
+        return None
 
     body, direction = strip_duration_prefix(text)
     body = body.strip()
@@ -296,6 +296,22 @@ def parse_duration_atom(text: str, normalize_space):
     if direction == Direction.previous:
         total = -total
     return tfhTimedelta.from_object(total, unit=unit)
+
+
+def _looks_duration_text(text: str):
+    lowered = text.lower()
+    if any(char.isspace() for char in lowered):
+        return True
+    if ":" in lowered or "/" in lowered:
+        return False
+    if lowered.endswith(("am", "pm", "a", "p")):
+        return False
+    suffix_start = len(lowered)
+    while suffix_start > 0 and lowered[suffix_start - 1].isalpha():
+        suffix_start -= 1
+    if suffix_start == len(lowered):
+        return False
+    return normalize_duration_unit(lowered[suffix_start:]) is not None
 
 
 def _parse_numeric_date(text: str):

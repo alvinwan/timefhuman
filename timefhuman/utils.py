@@ -82,6 +82,14 @@ def get_timezone_words():
     )
 
 
+@lru_cache(maxsize=1)
+def get_timezone_tail_words():
+    return frozenset(
+        candidate.split()[-1]
+        for candidate in generate_timezone_mapping()
+    )
+
+
 def node_to_dict(node: Tree) -> dict:
     assert isinstance(node, (Tree, dict, Token)), f"Expected a Tree or dict, got {type(node)} ({node})"
     if isinstance(node, dict):

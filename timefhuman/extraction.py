@@ -4,7 +4,6 @@ from timefhuman.scanner import (
     MERIDIEM_PATTERN,
     first_token,
     iter_tokens,
-    tokenize,
 )
 from timefhuman.semantics import (
     DATE_NAME_TO_OFFSET,
@@ -90,28 +89,19 @@ def prefer_extraction(text: str):
     if newline_count >= 4:
         return True
 
+    if START_PATTERN.match(stripped):
+        return False
+
     head_token = first_token(stripped)
     head = head_token[0].rstrip(",.?!") if head_token else ""
     if head and is_expression_head(head):
         return False
 
-    tokens = tokenize(stripped)
-    if tokens and _is_plausible_start(tokens, 0):
-        return False
+    start_match = START_PATTERN.search(stripped)
+    if start_match is not None:
+        return start_match.start() > 0
 
-    for index in range(1, len(tokens)):
-        prev_token = tokens[index - 1][1]
-        current_token = tokens[index][1]
-        next_token = tokens[index + 1][1] if index + 1 < len(tokens) else ""
-        next_next_token = tokens[index + 2][1] if index + 2 < len(tokens) else ""
-        if is_plausible_start_tokens(prev_token, current_token, next_token, next_next_token):
-            return index - 1 > 0
-
-    last_token = tokens[-1][1]
-    if is_plausible_start_tokens(last_token, "", "", ""):
-        return len(tokens) - 1 > 0
-
-    return len(tokens) > 1
+    return any(char.isspace() for char in stripped)
 
 
 def extract_fast(text: str, parse_candidate):
