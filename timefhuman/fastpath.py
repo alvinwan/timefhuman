@@ -4,7 +4,7 @@ from datetime import timedelta, timezone as dt_timezone
 from dateutil.relativedelta import relativedelta, weekdays
 import pytz
 
-from timefhuman.atoms import parse_duration_atom
+from timefhuman.atoms import parse_duration_atom, parse_time_atom
 from timefhuman.inference import infer
 from timefhuman.renderers import tfhAmbiguous, tfhDatelike, tfhDatetime, tfhDate, tfhList, tfhRange, tfhTime, tfhTimedelta
 from timefhuman.semantics import (
@@ -15,12 +15,9 @@ from timefhuman.semantics import (
     build_numeric_date_parts,
     build_time,
     POSITION_TO_DELTA,
-    TIME_NAME_TO_TEMPLATE,
     WEEKDAY_ALIASES,
     clone_datetime,
-    clone_time,
     is_invalid_ambiguous_date_range,
-    is_rejected_compact_meridiem_text,
     is_rejected_fraction_text,
     month_number,
     normalize_year,
@@ -33,16 +30,6 @@ from timefhuman.utils import Direction, direction_to_offset, get_timezone_word_l
 __all__ = ("parse_fast",)
 
 
-MERIDIEM_PATTERN = r"(?:[ap](?:\.?m\.?)?)"
-TIME_PATTERN = re.compile(
-    rf"(?ix)^"
-    rf"(?P<hour>\d{{1,2}})"
-    rf"(?::(?P<minute>\d{{1,2}})"
-    rf"(?::(?P<second>\d{{1,2}})(?:\.(?P<millisecond>\d{{1,6}}))?)?"
-    rf")?"
-    rf"\s*(?P<meridiem>{MERIDIEM_PATTERN})?$"
-)
-OCLOCK_PATTERN = re.compile(rf"(?ix)^(?P<hour>\d{{1,2}})\s*o'?clock\s*(?P<meridiem>{MERIDIEM_PATTERN})$")
 NUMERIC_DATE_PATTERN = re.compile(r"^(?P<a>\d{1,4})(?P<sep>[./-])(?P<b>\d{1,4})(?:(?P=sep)(?P<c>\d{1,4}))?$")
 MONTHNAME_PATTERN = re.compile(
     r"(?ix)^"
@@ -305,9 +292,9 @@ def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
             left, right = re.split(rf"(?i){separator.strip()}", body, maxsplit=1)
             if mode == "date_time":
                 date = _parse_date(left, config)
-                time = _parse_time_component(right, allow_houronly=True)
+                time = parse_time_atom(right, allow_houronly=True, normalize_space=_normalize_space)
             else:
-                time = _parse_time_component(left, allow_houronly=True)
+                time = parse_time_atom(left, allow_houronly=True, normalize_space=_normalize_space)
                 date = _parse_date(right, config)
             if date and time:
                 return tfhDatetime(date=date, time=time, tz=tzinfo)
@@ -320,14 +307,14 @@ def _parse_datetime(text: str, config: tfhConfig, timezone_mapping):
         right = " ".join(parts[index:])
 
         date = _parse_date(left, config)
-        time = _parse_time_component(right, allow_houronly=True)
+        time = parse_time_atom(right, allow_houronly=True, normalize_space=_normalize_space)
         if date and time:
             score = _date_score(date) + _time_score(time)
             if score > best_score:
                 best = tfhDatetime(date=date, time=time, tz=tzinfo)
                 best_score = score
 
-        time = _parse_time_component(left, allow_houronly=True)
+        time = parse_time_atom(left, allow_houronly=True, normalize_space=_normalize_space)
         date = _parse_date(right, config)
         if date and time:
             score = _date_score(date) + _time_score(time)
@@ -365,7 +352,7 @@ def _parse_time_with_inline_timezone(text: str, timezone_mapping):
     if timezone is None:
         return None
 
-    time = _parse_time_component(body.rstrip(", ").strip(), allow_houronly=True)
+    time = parse_time_atom(body.rstrip(", ").strip(), allow_houronly=True, normalize_space=_normalize_space)
     if time is None:
         return None
 
@@ -401,7 +388,7 @@ def _parse_atomic_datetime(text: str, config: tfhConfig, tzinfo):
         value.tz = tzinfo
         return value
 
-    time = _parse_time_component(text, allow_houronly=False)
+    time = parse_time_atom(text, allow_houronly=False, normalize_space=_normalize_space)
     if time is not None:
         return tfhDatetime(time=time, tz=tzinfo)
 
@@ -540,36 +527,6 @@ def _parse_day_month_or_year(text: str):
     return None
 
 
-def _parse_time_component(text: str, allow_houronly: bool):
-    text = _normalize_space(text)
-    if not text:
-        return None
-    if is_rejected_compact_meridiem_text(text):
-        return None
-    lowered = text.lower()
-    if lowered in TIME_NAME_TO_TEMPLATE:
-        return clone_time(TIME_NAME_TO_TEMPLATE[lowered])
-
-    match = OCLOCK_PATTERN.fullmatch(lowered)
-    if match:
-        return tfhTime(hour=int(match.group("hour")), meridiem=_parse_meridiem(match.group("meridiem")))
-
-    match = TIME_PATTERN.fullmatch(lowered)
-    if not match:
-        return None
-
-    meridiem = _parse_meridiem(match.group("meridiem"))
-    if meridiem is None and match.group("minute") is None and not allow_houronly:
-        return None
-
-    return build_time(
-        hour=int(match.group("hour")),
-        minute=int(match.group("minute") or 0),
-        second=int(match.group("second") or 0),
-        millisecond=int(match.group("millisecond") or 0),
-        meridiem=meridiem,
-    )
-
 def _strip_trailing_timezone(text: str, timezone_mapping):
     offset_match = NUMERIC_TIMEZONE_OFFSET_PATTERN.fullmatch(text)
     if offset_match:
@@ -627,14 +584,6 @@ def _parse_month_name(value: str):
 
 def _parse_weekday_name(value: str):
     return weekday_index(value)
-
-
-def _parse_meridiem(value: str):
-    if value is None:
-        return None
-    if value.startswith("a"):
-        return tfhTime.Meridiem.AM
-    return tfhTime.Meridiem.PM
 
 
 def _trimmed_span(text: str, start_pos: int):
