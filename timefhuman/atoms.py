@@ -99,11 +99,16 @@ ORDINAL_POSITION_NAME = {
     "3": "third",
     "4": "fourth",
 }
+
+
 def parse_date_atom(text: str, config, normalize_space):
     text = normalize_space(text)
     if not text:
         return None
     lower = text.lower()
+
+    if text.isdigit() or _looks_like_time_not_date_text(text, lower):
+        return None
 
     if lower in DATE_NAME_TO_OFFSET:
         return tfhDate.from_object(config.now.date() + timedelta(days=DATE_NAME_TO_OFFSET[lower]))
@@ -125,23 +130,10 @@ def parse_date_atom(text: str, config, normalize_space):
         return tfhDate(month=month, delta=POSITION_TO_DELTA[ORDINAL_POSITION_NAME[match.group("ordinal")]](weekdays[weekday]))
 
     tokens = text.split()
-    lowered_tokens = [token.lower() for token in tokens]
-    offset, lowered_remainder = _parse_modifier_prefix(lowered_tokens)
-    remainder = tokens[len(tokens) - len(lowered_remainder):]
-    if len(remainder) == 1:
-        weekday = _parse_weekday_name(remainder[0])
-        if weekday is not None:
-            weekday_offset = offset if lowered_tokens[: len(lowered_tokens) - 1] else direction_to_offset(config.direction)
-            value = config.now.date() + relativedelta(weekday=weekdays[weekday](weekday_offset))
-            return tfhDate.from_object(value)
-
-        month = _parse_month_name(remainder[0])
-        if month is not None and lowered_tokens[: len(lowered_tokens) - 1]:
-            return tfhDate(month=month, delta=relativedelta(years=offset))
-
     stripped = _strip_leading_weekday(text) if len(tokens) >= 2 else text
-    if stripped.lower() in DATE_NAME_TO_OFFSET:
-        return tfhDate.from_object(config.now.date() + timedelta(days=DATE_NAME_TO_OFFSET[stripped.lower()]))
+    stripped_lower = stripped.lower()
+    if stripped_lower in DATE_NAME_TO_OFFSET:
+        return tfhDate.from_object(config.now.date() + timedelta(days=DATE_NAME_TO_OFFSET[stripped_lower]))
 
     numeric = _parse_numeric_date(stripped)
     if numeric is not None:
@@ -158,6 +150,20 @@ def parse_date_atom(text: str, config, normalize_space):
     day_suffix = DAY_SUFFIX_PATTERN.fullmatch(lower)
     if day_suffix:
         return build_date(day=int(day_suffix.group("day")))
+
+    lowered_tokens = [token.lower() for token in tokens]
+    offset, lowered_remainder = _parse_modifier_prefix(lowered_tokens)
+    remainder = tokens[len(tokens) - len(lowered_remainder):]
+    if len(remainder) == 1:
+        weekday = _parse_weekday_name(remainder[0])
+        if weekday is not None:
+            weekday_offset = offset if lowered_tokens[: len(lowered_tokens) - 1] else direction_to_offset(config.direction)
+            value = config.now.date() + relativedelta(weekday=weekdays[weekday](weekday_offset))
+            return tfhDate.from_object(value)
+
+        month = _parse_month_name(remainder[0])
+        if month is not None and lowered_tokens[: len(lowered_tokens) - 1]:
+            return tfhDate(month=month, delta=relativedelta(years=offset))
 
     weekday = _parse_weekday_name(lower)
     if weekday is not None:
@@ -300,18 +306,28 @@ def parse_duration_atom(text: str, normalize_space):
 
 def _looks_duration_text(text: str):
     lowered = text.lower()
-    if any(char.isspace() for char in lowered):
-        return True
     if ":" in lowered or "/" in lowered:
         return False
     if lowered.endswith(("am", "pm", "a", "p")):
         return False
+    if any(char.isspace() for char in lowered):
+        return True
     suffix_start = len(lowered)
     while suffix_start > 0 and lowered[suffix_start - 1].isalpha():
         suffix_start -= 1
     if suffix_start == len(lowered):
         return False
     return normalize_duration_unit(lowered[suffix_start:]) is not None
+
+
+def _looks_like_time_not_date_text(text: str, lowered: str):
+    if is_rejected_compact_meridiem_text(text):
+        return True
+    if ":" in text or "o'clock" in lowered:
+        return True
+    if not any(char.isdigit() for char in text):
+        return False
+    return lowered.endswith(("am", "pm", "a.m.", "p.m.", "a.m", "p.m"))
 
 
 def _parse_numeric_date(text: str):

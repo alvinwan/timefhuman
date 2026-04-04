@@ -203,6 +203,28 @@ def _parse_datetime(text: str, config, timezone_mapping):
                 return DatetimeExpr(date=date, time=time, tz=tzinfo)
 
     parts = body.split()
+    if len(parts) < 2:
+        return None
+
+    if len(parts) <= 5:
+        for time_part_count in (2, 1):
+            if len(parts) <= time_part_count:
+                continue
+            date = parse_date_cached(" ".join(parts[:-time_part_count]))
+            if date:
+                time = parse_time_cached(" ".join(parts[-time_part_count:]))
+                if time:
+                    return DatetimeExpr(date=date, time=time, tz=tzinfo)
+
+        for time_part_count in (2, 1):
+            if len(parts) <= time_part_count:
+                continue
+            time = parse_time_cached(" ".join(parts[:time_part_count]))
+            if time:
+                date = parse_date_cached(" ".join(parts[time_part_count:]))
+                if date:
+                    return DatetimeExpr(date=date, time=time, tz=tzinfo)
+
     best = None
     best_score = -1
     for index in range(1, len(parts)):

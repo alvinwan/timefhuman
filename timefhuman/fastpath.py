@@ -24,12 +24,24 @@ def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 
 
 
 def _trimmed_span(text: str, start_pos: int):
-    stripped = text.strip()
-    if not stripped:
+    if not text:
         return "", start_pos, start_pos
-    leading = len(text) - len(text.lstrip())
-    stripped = stripped.rstrip(".?!").rstrip()
-    if not stripped:
-        return "", start_pos, start_pos
-    trailing = leading + len(stripped)
-    return stripped, start_pos + leading, start_pos + trailing
+    if not text[0].isspace() and not text[-1].isspace() and text[-1] not in ".?!":
+        return text, start_pos, start_pos + len(text)
+
+    left = 0
+    right = len(text)
+    while left < right and text[left].isspace():
+        left += 1
+    if left == right:
+        return "", start_pos + left, start_pos + left
+
+    while right > left and text[right - 1].isspace():
+        right -= 1
+    while right > left and text[right - 1] in ".?!":
+        right -= 1
+    while right > left and text[right - 1].isspace():
+        right -= 1
+    if right <= left:
+        return "", start_pos + left, start_pos + left
+    return text[left:right], start_pos + left, start_pos + right
