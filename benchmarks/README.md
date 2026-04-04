@@ -1,7 +1,6 @@
 # Benchmarks
 
-Benchmarks were run from `.venv` on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
-Optional baseline packages used for the comparison rows were installed into that same environment.
+Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
 `acc` is the correctness score for the dataset immediately to the left.
 - Document `acc` is member-level coverage: lists and ranges still count as correct when a baseline finds the individual members separately.
