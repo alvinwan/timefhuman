@@ -1,13 +1,20 @@
 import re
 
 
-__all__ = ("MERIDIEM_PATTERN", "TOKEN_PATTERN", "first_token", "iter_tokens", "tokenize")
+__all__ = (
+    "MERIDIEM_PATTERN",
+    "TOKEN_PATTERN",
+    "first_token",
+    "iter_tokens",
+    "tokenize",
+)
 
 
 MERIDIEM_PATTERN = r"(?:[ap](?:\.?m\.?)?)"
 TOKEN_PATTERN = re.compile(
     rf"(?iu)\d+(?:[/:.-]\d+)*(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN})?|[^\W\d_]+(?:\.[^\W\d_]+\.?)?|\S"
 )
+
 
 def tokenize(text: str):
     return [(value := match.group(0), value.lower(), match.start(), match.end()) for match in TOKEN_PATTERN.finditer(text)]
