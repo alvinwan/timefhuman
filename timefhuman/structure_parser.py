@@ -59,13 +59,15 @@ def normalize_space(text: str):
 
 def _parse_list(text: str, config, timezone_mapping):
     body, tzinfo = _strip_trailing_timezone(text, timezone_mapping)
+    lower_body = body.lower()
 
-    patterns = [r"\s+or\s+"]
+    parts_to_try = []
+    if " or " in lower_body:
+        parts_to_try.append(_split_all_case_insensitive(body, lower_body, " or "))
     if _supports_comma_list(body, config, timezone_mapping):
-        patterns.append(r"\s*,\s*")
+        parts_to_try.append([part.strip() for part in body.split(",") if part.strip()])
 
-    for pattern in patterns:
-        parts = [part.strip() for part in re.split(pattern, body) if part.strip()]
+    for parts in parts_to_try:
         if len(parts) < 2:
             continue
 
@@ -87,6 +89,7 @@ def _parse_list(text: str, config, timezone_mapping):
 
 def _parse_range(text: str, config, timezone_mapping):
     body, tzinfo = _strip_trailing_timezone(text, timezone_mapping)
+    lower_body = body.lower()
 
     between_match = BETWEEN_RANGE_PATTERN.fullmatch(body)
     if between_match:
@@ -95,13 +98,12 @@ def _parse_range(text: str, config, timezone_mapping):
             result.tz = tzinfo
         return result
 
-    if " to " in body.lower():
-        parts = re.split(r"(?i)\s+to\s+", body, maxsplit=1)
-        if len(parts) == 2:
-            result = _build_range(parts[0], parts[1], config, timezone_mapping)
-            if result and tzinfo:
-                result.tz = tzinfo
-            return result
+    split_index = lower_body.find(" to ")
+    if split_index >= 0:
+        result = _build_range(body[:split_index], body[split_index + 4 :], config, timezone_mapping)
+        if result and tzinfo:
+            result.tz = tzinfo
+        return result
 
     indices = [index for index, char in enumerate(body) if char == "-"]
     preferred = [index for index in indices if _looks_like_range_hyphen(body, index)]
@@ -160,6 +162,23 @@ def _parse_datetime(text: str, config, timezone_mapping):
     if not body:
         return None
 
+    date_cache = {}
+    time_cache = {}
+
+    def parse_date_cached(value: str):
+        cached = date_cache.get(value)
+        if cached is None and value not in date_cache:
+            cached = parse_date_atom(value, config, normalize_space)
+            date_cache[value] = cached
+        return cached
+
+    def parse_time_cached(value: str):
+        cached = time_cache.get(value)
+        if cached is None and value not in time_cache:
+            cached = parse_time_atom(value, allow_houronly=True, normalize_space=normalize_space)
+            time_cache[value] = cached
+        return cached
+
     atomic = parse_datetime_atom(body, config, tzinfo, normalize_space)
     if atomic is not None:
         return ValueExpr(atomic)
@@ -170,14 +189,16 @@ def _parse_datetime(text: str, config, timezone_mapping):
 
     lower_body = body.lower()
     for separator, mode in ((" at ", "date_time"), (" on ", "time_date")):
-        if separator in lower_body:
-            left, right = re.split(rf"(?i){separator.strip()}", body, maxsplit=1)
+        split_index = lower_body.find(separator)
+        if split_index >= 0:
+            left = body[:split_index]
+            right = body[split_index + len(separator) :]
             if mode == "date_time":
-                date = parse_date_atom(left, config, normalize_space)
-                time = parse_time_atom(right, allow_houronly=True, normalize_space=normalize_space)
+                date = parse_date_cached(left)
+                time = parse_time_cached(right)
             else:
-                time = parse_time_atom(left, allow_houronly=True, normalize_space=normalize_space)
-                date = parse_date_atom(right, config, normalize_space)
+                time = parse_time_cached(left)
+                date = parse_date_cached(right)
             if date and time:
                 return DatetimeExpr(date=date, time=time, tz=tzinfo)
 
@@ -188,16 +209,16 @@ def _parse_datetime(text: str, config, timezone_mapping):
         left = " ".join(parts[:index])
         right = " ".join(parts[index:])
 
-        date = parse_date_atom(left, config, normalize_space)
-        time = parse_time_atom(right, allow_houronly=True, normalize_space=normalize_space)
+        date = parse_date_cached(left)
+        time = parse_time_cached(right)
         if date and time:
             score = _date_score(date) + _time_score(time)
             if score > best_score:
                 best = DatetimeExpr(date=date, time=time, tz=tzinfo)
                 best_score = score
 
-        time = parse_time_atom(left, allow_houronly=True, normalize_space=normalize_space)
-        date = parse_date_atom(right, config, normalize_space)
+        time = parse_time_cached(left)
+        date = parse_date_cached(right)
         if date and time:
             score = _date_score(date) + _time_score(time)
             if score > best_score:
@@ -338,3 +359,19 @@ def _supports_comma_list(text: str, config, timezone_mapping):
 
     collapsed = text.replace(",", " ")
     return _parse_single(collapsed, config, timezone_mapping, allow_ambiguous=False) is None
+
+
+def _split_all_case_insensitive(text: str, lowered: str, separator: str):
+    parts = []
+    start = 0
+    while True:
+        index = lowered.find(separator, start)
+        if index < 0:
+            part = text[start:].strip()
+            if part:
+                parts.append(part)
+            return parts
+        part = text[start:index].strip()
+        if part:
+            parts.append(part)
+        start = index + len(separator)
