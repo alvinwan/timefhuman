@@ -1,6 +1,8 @@
 from timefhuman import timefhuman, tfhConfig, Direction
+from timefhuman.renderers import tfhTime
 import pytz
 import datetime
+import timefhuman.main as main
 
 
 def test_now_changes(now): # gh#53
@@ -49,3 +51,86 @@ def test_timezone(now):  # gh#52
 def test_unk_correctness():
     tree = timefhuman('how does 5p sound?', raw=True)
     assert len(tree.children) > 1, "Should have parsed into many UNK tokens"
+
+
+def test_lalr_fallback_without_fastpath(now, monkeypatch):
+    config = tfhConfig(now=now, infer_datetimes=False)
+    infer_config = tfhConfig(now=now)
+
+    monkeypatch.setattr(main, 'parse_fast', lambda *args, **kwargs: None)
+    monkeypatch.setattr(main, 'extract_fast', lambda *args, **kwargs: None)
+
+    assert timefhuman('last Wednesday of December', config=config) == [datetime.date(2018, 12, 26)]
+    assert timefhuman('next Monday', config=config) == [datetime.date(2018, 8, 6)]
+    assert timefhuman('next next Monday', config=config) == [datetime.date(2018, 8, 13)]
+    assert timefhuman('1/1/95', config=config) == [datetime.date(1995, 1, 1)]
+    assert timefhuman('7/2018', config=config) == [datetime.date(2018, 7, 1)]
+    assert timefhuman('Sunday 7/7/2019', config=config) == [datetime.date(2019, 7, 7)]
+    assert timefhuman('2022-12-27T09:15:01.002', config=infer_config) == [datetime.datetime(2022, 12, 27, 9, 15, 1, 2)]
+    assert timefhuman('July 17, 2018 at 3p.m.', config=infer_config) == [datetime.datetime(2018, 7, 17, 15, 0)]
+    assert timefhuman('2 hours and 30 minutes', config=config) == [datetime.timedelta(hours=2, minutes=30)]
+    assert timefhuman('30-40 mins', config=config) == [(datetime.timedelta(minutes=30), datetime.timedelta(minutes=40))]
+    assert timefhuman('1 or 2 days', config=config) == [[datetime.timedelta(days=1), datetime.timedelta(days=2)]]
+    assert timefhuman('3-4p', config=config) == [(datetime.time(15, 0), datetime.time(16, 0))]
+    assert timefhuman('July 17-18', config=config) == [(datetime.date(2018, 7, 17), datetime.date(2018, 7, 18))]
+    assert timefhuman('July 4th or 5th at 3PM', config=infer_config) == [[
+        datetime.datetime(2018, 7, 4, 15, 0),
+        datetime.datetime(2018, 7, 5, 15, 0),
+    ]]
+    assert timefhuman('7/17 4-5 PM or 5-6 PM today', config=infer_config) == [[
+        (datetime.datetime(2018, 7, 17, 16, 0), datetime.datetime(2018, 7, 17, 17, 0)),
+        (datetime.datetime(2018, 8, 4, 17, 0), datetime.datetime(2018, 8, 4, 18, 0)),
+    ]]
+
+
+def test_time_renderer_does_not_mutate_hour():
+    renderer = tfhTime(hour=5, meridiem=tfhTime.Meridiem.PM)
+    assert renderer.to_object() == datetime.time(17, 0)
+    assert renderer.hour == 5
+    assert "tz=" not in repr(renderer)
+
+
+def test_extraction_avoids_lalr_candidate_fallback(now, monkeypatch):
+    calls = 0
+    real_parse_lalr = main._parse_lalr
+
+    def wrapped_parse_lalr(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return real_parse_lalr(*args, **kwargs)
+
+    monkeypatch.setattr(main, "_parse_lalr", wrapped_parse_lalr)
+
+    result = timefhuman(
+        "How does 5p mon sound? Or maybe 4p tu?",
+        tfhConfig(now=now, return_matched_text=True),
+    )
+
+    assert result == [
+        ("5p mon", (9, 15), datetime.datetime(2018, 8, 6, 17, 0)),
+        ("4p tu", (32, 37), datetime.datetime(2018, 8, 7, 16, 0)),
+    ]
+    assert calls == 0
+
+
+def test_prefixed_or_punctuated_text_skips_lalr_fallback(now, monkeypatch):
+    calls = 0
+    real_parse_lalr = main._parse_lalr
+
+    def wrapped_parse_lalr(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return real_parse_lalr(*args, **kwargs)
+
+    monkeypatch.setattr(main, "_parse_lalr", wrapped_parse_lalr)
+
+    prefixed = timefhuman("e 6:50PM", tfhConfig(now=now, return_matched_text=True))
+    punctuated = timefhuman("September 30, 2019.", tfhConfig(now=now, return_matched_text=True))
+
+    assert prefixed == [
+        ("6:50PM", (2, 8), datetime.datetime(2018, 8, 4, 18, 50)),
+    ]
+    assert punctuated == [
+        ("September 30, 2019", (0, 18), datetime.datetime(2019, 9, 30, 0, 0)),
+    ]
+    assert calls == 0
