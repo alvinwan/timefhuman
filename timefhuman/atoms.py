@@ -99,9 +99,6 @@ ORDINAL_POSITION_NAME = {
     "3": "third",
     "4": "fourth",
 }
-COMPACT_DURATION_SUFFIXES = ("mo", "s", "m", "h", "d", "w", "y")
-
-
 def parse_date_atom(text: str, config, normalize_space):
     text = normalize_space(text)
     if not text:
@@ -309,7 +306,12 @@ def _looks_duration_text(text: str):
         return False
     if lowered.endswith(("am", "pm", "a", "p")):
         return False
-    return lowered.endswith(COMPACT_DURATION_SUFFIXES)
+    suffix_start = len(lowered)
+    while suffix_start > 0 and lowered[suffix_start - 1].isalpha():
+        suffix_start -= 1
+    if suffix_start == len(lowered):
+        return False
+    return normalize_duration_unit(lowered[suffix_start:]) is not None
 
 
 def _parse_numeric_date(text: str):
