@@ -20,9 +20,9 @@ from timefhuman.semantics import (
     WEEKDAY_ALIASES,
     clone_datetime,
     clone_time,
+    duration_prefix_length,
     month_number,
     normalize_year,
-    strip_duration_prefix,
     supports_numeric_date_text,
     timedelta_for_unit,
     weekday_index,
@@ -85,6 +85,7 @@ NUMBER_UNIT_PATTERN = re.compile(
 )
 NUMERIC_TIMEZONE_OFFSET_PATTERN = re.compile(r"^(?P<body>.*\S)\s+(?P<sign>[+-])(?P<hour>\d{2})(?::?(?P<minute>\d{2}))$")
 HYPHENATED_NUMERIC_DATE_TOKEN_PATTERN = re.compile(r"^\d{1,4}-\d{1,4}-\d{1,4}$")
+COMPACT_UPPERCASE_MERIDIEM_PATTERN = re.compile(r"^\d{1,2}[AP]$")
 
 
 def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
@@ -98,6 +99,8 @@ def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 
 
     expression.matched_text_pos = (span_start, span_end)
     return [expression]
+
+
 def _parse_expression(text: str, config: tfhConfig, timezone_mapping, allow_ambiguous: bool):
     if not text:
         return None
@@ -426,6 +429,8 @@ def _parse_time_component(text: str, allow_houronly: bool):
     text = _normalize_space(text)
     if not text:
         return None
+    if COMPACT_UPPERCASE_MERIDIEM_PATTERN.fullmatch(text):
+        return None
     lowered = text.lower()
     if lowered in TIME_NAME_TO_TEMPLATE:
         return clone_time(TIME_NAME_TO_TEMPLATE[lowered])
@@ -452,9 +457,23 @@ def _parse_time_component(text: str, allow_houronly: bool):
 
 
 def _parse_duration(text: str):
-    lowered, direction = strip_duration_prefix(text)
+    text = _normalize_space(text)
+    if not text:
+        return None
+
+    tokens = text.split()
+    direction = Direction.next
+    prefix_length = duration_prefix_length(tokens)
+    if prefix_length:
+        prefix_tokens = [token.lower() for token in tokens[:prefix_length]]
+        if "past" in prefix_tokens:
+            direction = Direction.previous
+        text = " ".join(tokens[prefix_length:])
+
+    lowered = text.lower()
 
     if lowered.endswith(" ago"):
+        text = text[:-4].rstrip()
         lowered = lowered[:-4].strip()
         direction = Direction.previous
 
@@ -470,10 +489,13 @@ def _parse_duration(text: str):
         if position >= len(lowered):
             break
 
-        numeric_match = NUMBER_UNIT_PATTERN.match(lowered, position)
+        numeric_match = NUMBER_UNIT_PATTERN.match(text, position)
         if numeric_match:
             amount = float(numeric_match.group("number"))
-            normalized_unit = UNIT_ALIASES[numeric_match.group("unit")]
+            unit_token = numeric_match.group("unit")
+            if len(unit_token) == 1 and unit_token.isalpha() and unit_token != unit_token.lower():
+                return None
+            normalized_unit = UNIT_ALIASES[unit_token.lower()]
             total += timedelta_for_unit(normalized_unit, amount)
             unit = unit or normalized_unit
             position = numeric_match.end()

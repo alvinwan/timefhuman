@@ -130,6 +130,8 @@ def test_default(now, test_input, expected):
     ('for 3 days', [datetime.timedelta(days=3)]),
     ('past 40 minutes', [datetime.timedelta(minutes=-40)]),
     ('for the past 40 minutes', [datetime.timedelta(minutes=-40)]),
+    ('70Y', []),
+    ('3A', []),
     ('awk', []),  # should *not become 'a week'
     ('a wk', [datetime.timedelta(days=7)]),
     ('thirty two hours', [datetime.timedelta(hours=32)]),
@@ -252,6 +254,8 @@ def test_custom_config(now, config, test_input, expected):
     ('Wait 3h please', [
         ('3h', (5, 7), datetime.datetime(2018, 8, 4, 17, 0))
     ]),
+    ('foo 70Y bar', []),
+    ('foo 3A bar', []),
     ('90p', []),
     ('4906/0', []),
     ('Tue, 23 Apr 1996 13:28:27 -0400', [
