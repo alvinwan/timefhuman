@@ -1,53 +1,33 @@
 # Benchmarks
 
-Status as of April 2, 2026.
+Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
-## Setup
+`short` is median microseconds per input on the 37-case short-input suite. Whole-document columns are median seconds with extracted counts in parentheses. `dateparser*` uses `dateparser.parse` for short inputs and `dateparser.search_dates` for whole documents.
 
-- Hardware: Apple M3 MacBook Air, 16 GB RAM
-- OS: macOS 26.3.1
-- Python: 3.13.3 from `/tmp/timefhuman-bench-venv`
-- Whole-document corpora: local `datefinder` clone at `/tmp/datefinder`
+## Main Results
 
-## Results
+| parser | short (us/input) | extracted | correctness | core_corpus | seattle_html_76k | test_data_560k |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| timefhuman | 44.5 | <ins><strong>37/37</strong></ins> | <ins><strong>10/10</strong></ins> | 0.0004 ([10](matches/timefhuman/core_corpus.md)) | <ins><strong>0.0223</strong></ins> ([57](matches/timefhuman/seattle_html_76k.md)) | <ins><strong>0.1321</strong></ins> ([594](matches/timefhuman/test_data_560k.md)) |
+| datefinder.find_dates | <ins><strong>26.3</strong></ins> | 23/37 | 5/10 | <ins><strong>0.0003</strong></ins> ([11](matches/datefinder.find_dates/core_corpus.md)) | 0.0394 ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.5034 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
+| dateparser* | 44039.9 | 20/37 | 6/10 | 0.1155 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.3135 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >15s (n/a) |
 
-- Runtime path: deterministic whole-string parse first, bounded extraction for noisy text, LALR fallback only on misses. Earley is not used at runtime.
-- `extracted`: returned any result on the 37-case short-input corpus.
-- `correctness`: exact match on the 10-case exactness subset.
-- `core_corpus`, `seattle_html_76k`, `test_data_560k`: warmed median seconds and extracted count, formatted as `seconds (count)`.
-- whole-document counts link to checked-in raw match dumps under `benchmarks/matches/`.
-- `timefhuman` whole-document extraction uses `infer_datetimes=False`, so linked dumps keep raw dates, times, and timedeltas while explicit datetimes stay datetimes.
-- `>15s (n/a)`: exceeded the document benchmark timeout for that dataset.
-- whole-document counts are raw extracted-match counts, so HTML noise can inflate them.
-- `timefhuman` is pinned first; the remaining rows are ordered fastest to slowest.
+## Lower-Accuracy Baselines
 
-### Short-Input Parsing
+These baselines do not support the whole-document task well enough to include in the main table.
 
-| parser | us/input | extracted | correctness |
+| parser | short (us/input) | extracted | correctness |
 | --- | ---: | ---: | ---: |
-| timefhuman | 37.0 | **37/37** | **10/10** |
-| datefinder.find_dates | **31.1** | 23/37 | 5/10 |
-| metadate.parse_date | 33.2 | 31/37 | 5/10 |
-| parsedatetime.parseDT | 44.4 | 36/37 | 6/10 |
-| recurrent.parse | 213.2 | 36/37 | 6/10 |
-| ctparse.ctparse | 12273.8 | **37/37** | 3/10 |
-| dateparser.parse | 44593.5 | 20/37 | 6/10 |
+| metadate.parse_date | 32.5 | 31/37 | 5/10 |
+| parsedatetime.parseDT | 43.7 | 36/37 | 6/10 |
+| recurrent.parse | 193.7 | 36/37 | 6/10 |
+| ctparse.ctparse | 12598.5 | 37/37 | 3/10 |
 
-### Whole-Document Extraction
+## Notes
 
-Only parsers with a comparable whole-document extraction API are included here.
-
-| parser | core_corpus | seattle_html_76k | test_data_560k |
-| --- | ---: | ---: | ---: |
-| timefhuman | 0.0004 ([10](matches/timefhuman/core_corpus.md)) | **0.0227** ([59](matches/timefhuman/seattle_html_76k.md)) | **0.1340** ([594](matches/timefhuman/test_data_560k.md)) |
-| datefinder.find_dates | **0.0003** ([11](matches/datefinder.find_dates/core_corpus.md)) | 0.0389 ([57](matches/datefinder.find_dates/seattle_html_76k.md)) | 0.4935 ([313](matches/datefinder.find_dates/test_data_560k.md)) |
-| dateparser.search_dates | 0.1107 ([14](matches/dateparser.search_dates/core_corpus.md)) | 0.3254 ([90](matches/dateparser.search_dates/seattle_html_76k.md)) | >15s (n/a) |
-
-Notes on what the other baselines found that `timefhuman` still misses:
-
-- `core_corpus`: `datefinder.find_dates`'s extra hits are mainly multilingual relative words such as Spanish `ayer` and `mañana`, plus component-level substring matches like `31/08/2012`, `30/08/2013`, and `23 Apr 1996` instead of the full range or full timestamp.
-- `seattle_html_76k`: `datefinder.find_dates`'s extra unique hits are mainly low-value metadata matches, such as asset version numbers like `1.3.4` and `1.7.1`, plus `Jan 6 2016` as a smaller substring inside the longer `Jan 6 2016 at 10:13AM` timestamp that `timefhuman` already captures.
-- `seattle_html_76k`: most of `dateparser.search_dates`'s extra hits are low-quality HTML false positives like `01'`, `90`, `50%`, `<h1`, and `set`.
+- `datefinder.find_dates` and `dateparser*` both pick up extra HTML and metadata false positives on the document corpora, so speed and raw count alone overstate document quality.
+- `datefinder.find_dates` extras on Seattle include version-like metadata such as `1.3.4` and `1.7.1`, plus `Jan 6 2016` as a smaller substring inside `Wed., Jan 6 2016 at 10:13AM`.
+- `dateparser*` extras on Seattle include noisy HTML fragments such as `01'`, `90`, `50%`, `<h1`, and `set`.
 
 ## Reproduce
 
@@ -57,26 +37,14 @@ Run tests:
 /tmp/timefhuman-bench-venv/bin/python -m pytest -q
 ```
 
-Run the combined baseline benchmark.
-This expects a local clone of `datefinder` at `/tmp/datefinder` to populate the whole-document table.
+The whole-document benchmark expects a local clone of `datefinder` at `/tmp/datefinder`.
 
 ```bash
 /tmp/timefhuman-bench-venv/bin/python benchmarks/benchmark_baselines.py
 ```
 
-Refresh the checked-in whole-document match dumps.
+Refresh the checked-in whole-document match dumps:
 
 ```bash
 /tmp/timefhuman-bench-venv/bin/python benchmarks/dump_document_matches.py
 ```
-
-## Rule Of Thumb
-
-If a change makes the LALR parser or noisy extraction run more often, it is probably a slowdown.
-
-The fastest route is:
-
-1. deterministic whole-string parse for exact expressions
-2. bounded noisy extraction for prose-like inputs
-3. exact whole-string LALR fallback only when needed
-4. LALR extraction rescue only when the fast extractor misses

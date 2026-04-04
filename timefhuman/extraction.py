@@ -1,5 +1,6 @@
 import re
 
+from timefhuman.scanner import MERIDIEM_PATTERN, TOKEN_PATTERN, first_token, tokenize
 from timefhuman.semantics import (
     DATE_NAME_TO_OFFSET,
     DATE_TIME_NAME_TO_TEMPLATE,
@@ -17,10 +18,6 @@ from timefhuman.utils import get_month_mapping, get_timezone_words
 __all__ = ("extract_fast", "prefer_extraction")
 
 
-MERIDIEM_PATTERN = r"(?:[ap](?:\.?m\.?)?)"
-TOKEN_PATTERN = re.compile(
-    rf"(?ix)\d+(?:[/:.-]\d+)*(?:st|nd|rd|th)?(?:{MERIDIEM_PATTERN})?|[a-z]+(?:\.[a-z]+\.?)?|\S"
-)
 DAY_SUFFIX_PATTERN = re.compile(r"(?ix)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
 MERIDIEM_ONLY_PATTERN = re.compile(rf"(?ix)^{MERIDIEM_PATTERN}$")
 COMPACT_TIME_RANGE_PATTERN = re.compile(
@@ -70,18 +67,13 @@ START_PATTERN = re.compile(
     rf")"
     rf"(?![a-z])"
 )
-
-
-def _tokenize(text: str):
-    return [(match.group(0), match.group(0).lower(), match.start(), match.end()) for match in TOKEN_PATTERN.finditer(text)]
-
-
 def _window_tokens(text: str, start_pos: int):
     tokens = []
     for match in TOKEN_PATTERN.finditer(text, start_pos):
         if not tokens and match.start() != start_pos:
             return []
-        tokens.append((match.group(0), match.group(0).lower(), match.start(), match.end()))
+        value = match.group(0)
+        tokens.append((value, value.lower(), match.start(), match.end()))
         if len(tokens) >= 8:
             break
     return tokens
@@ -100,10 +92,12 @@ def prefer_extraction(text: str):
     if newline_count >= 4:
         return True
 
-    tokens = _tokenize(stripped)
-    head = tokens[0][0].rstrip(",.?!") if tokens else ""
+    head_token = first_token(stripped)
+    head = head_token[0].rstrip(",.?!") if head_token else ""
     if head and _is_expression_head(head):
         return False
+
+    tokens = tokenize(stripped)
     if tokens and _is_plausible_start(tokens, 0):
         return False
 
