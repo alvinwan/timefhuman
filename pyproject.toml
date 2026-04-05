@@ -35,6 +35,9 @@ test = [
 packages = ["timefhuman"]
 include-package-data = true
 
+[tool.setuptools.dynamic]
+version = {attr = "timefhuman.__VERSION__"}
+
 [tool.setuptools.package-data]
 timefhuman = ["*.txt", "*.md"]
 
