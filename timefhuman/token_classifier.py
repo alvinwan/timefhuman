@@ -1,4 +1,5 @@
 import re
+from functools import lru_cache
 
 from timefhuman.scanner import MERIDIEM_PATTERN
 from timefhuman.semantics import (
@@ -72,6 +73,11 @@ def _token_lower(token, lowered: str | None = None):
 def is_expression_token(token, lowered: str | None = None):
     token = _token_value(token)
     lowered = _token_lower(token, lowered)
+    return _is_expression_token_cached(token, lowered)
+
+
+@lru_cache(maxsize=8192)
+def _is_expression_token_cached(token: str, lowered: str):
     if lowered in EXPRESSION_WORDS or lowered in TIMEZONE_WORDS:
         return True
     if token.isdigit():
@@ -94,6 +100,11 @@ def is_expression_token(token, lowered: str | None = None):
 def is_expression_head(token):
     token = _token_value(token)
     lowered = _token_lower(token)
+    return _is_expression_head_cached(token, lowered)
+
+
+@lru_cache(maxsize=8192)
+def _is_expression_head_cached(token: str, lowered: str):
     if lowered in DIRECT_START_WORDS or lowered in NUMBER_WORDS:
         return True
     if token.isdigit():
@@ -113,6 +124,7 @@ def is_month_token(token):
     return _token_lower(token) in MONTH_WORDS
 
 
+@lru_cache(maxsize=8192)
 def _has_supported_numeric_separator_shape(token: str):
     if not any(char.isdigit() for char in token):
         return False
@@ -125,6 +137,11 @@ def _has_supported_numeric_separator_shape(token: str):
 
 def is_month_context_token(token: str):
     lowered = token.lower()
+    return _is_month_context_token_cached(token, lowered)
+
+
+@lru_cache(maxsize=8192)
+def _is_month_context_token_cached(token: str, lowered: str):
     if token.isdigit():
         return True
     if DAY_SUFFIX_PATTERN.fullmatch(lowered):
@@ -135,6 +152,11 @@ def is_month_context_token(token: str):
 
 
 def is_plausible_start_tokens(token: str, next_token: str, next_next_token: str = "", next_next_next_token: str = ""):
+    return _is_plausible_start_tokens_cached(token, next_token, next_next_token, next_next_next_token)
+
+
+@lru_cache(maxsize=16384)
+def _is_plausible_start_tokens_cached(token: str, next_token: str, next_next_token: str = "", next_next_next_token: str = ""):
     lowered = token.lower()
     next_lower = next_token.lower()
     next_next_lower = next_next_token.lower()
