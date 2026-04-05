@@ -104,9 +104,9 @@ Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Pyt
 
 | parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) | acc |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | 0.1 | <ins><strong>28/28</strong></ins> | 0.1 | <ins><strong>14/14</strong></ins> | <ins><strong>4.9</strong></ins> | <ins><strong>57/57</strong></ins> | <ins><strong>26.9</strong></ins> | <ins><strong>94/94</strong></ins> |
-| datefinder | 0.3 | 10/28 | 0.2 | 9/14 | 38.6 | 54/57 | 485.4 | 37/94 |
-| dateparser* | 56.1 | 15/28 | 109.6 | 9/14 | 332.7 | 53/57 | >2s | timeout |
+| timefhuman | <ins><strong>0.1</strong></ins> | <ins><strong>28/28</strong></ins> | <ins><strong>0.1</strong></ins> | <ins><strong>14/14</strong></ins> | <ins><strong>4.9</strong></ins> | <ins><strong>57/57</strong></ins> | <ins><strong>26.9</strong></ins> | <ins><strong>94/94</strong></ins> |
+| datefinder | *0.3* | 10/28 | *0.2* | 9/14 | *38.6* | 54/57 | *485.4* | 37/94 |
+| dateparser* | *56.1* | 15/28 | *109.6* | 9/14 | *332.7* | 53/57 | *>2s* | timeout |
 
 `datefinder` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines are omitted here for readability. Full results, grouped correctness, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
 
