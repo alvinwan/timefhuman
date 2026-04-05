@@ -21,7 +21,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/alvinwan/timefhuman"
-Download = "https://github.com/alvinwan/timefhuman/archive/0.1.2.zip"
+Download = "https://github.com/alvinwan/timefhuman/archive/0.1.5.zip"
 
 [project.optional-dependencies]
 test = [
