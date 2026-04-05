@@ -17,6 +17,7 @@ DEFAULT_CASES = [
     ("08.07.2013", [datetime.datetime(2013, 8, 7, 0, 0)]),
     ("2013.08.07", [datetime.datetime(2013, 8, 7, 0, 0)]),
     ("7/2018", [datetime.datetime(2018, 7, 1, 0, 0)]),
+    ("Dec2000", [datetime.datetime(2000, 12, 1, 0, 0)]),
     ("Wed 25 Jun", [datetime.datetime(2018, 6, 25, 0, 0)]),
 
     # datetimes
@@ -114,6 +115,7 @@ NO_INFERENCE_CASES = [
     ("Sunday 7/7/2019", [datetime.date(2019, 7, 7)]),
     ("1/1/95", [datetime.date(1995, 1, 1)]),
     ("08.07.2013", [datetime.date(2013, 8, 7)]),
+    ("Dec2000", [datetime.date(2000, 12, 1)]),
     ("Wed 25 Jun", [datetime.date(2018, 6, 25)]),
     ("1.3.4", []),
     ("2-319", []),

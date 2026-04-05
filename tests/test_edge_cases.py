@@ -60,7 +60,6 @@ def test_timezone_datetimes_use_localized_offsets():
     assert result.tzname() == "CET"
     assert result.utcoffset() == datetime.timedelta(hours=1)
 
-
 def test_generate_timezone_mapping_uses_explicit_locale(monkeypatch):
     utils.generate_timezone_mapping.cache_clear()
     real_get_timezone_name = utils.get_timezone_name

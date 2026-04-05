@@ -1,10 +1,13 @@
 import re
 from collections import OrderedDict
+from functools import lru_cache
 
+from timefhuman.fastpath import _clone_renderer
 from timefhuman.scanner import (
     MERIDIEM_PATTERN,
     first_token,
     iter_tokens,
+    tokenize,
 )
 from timefhuman.semantics import (
     DATE_NAME_TO_OFFSET,
@@ -43,12 +46,17 @@ COMPACT_ALNUM_PATTERN = re.compile(r"(?i)^\d{1,4}(?:[a-z]|am|pm|mo)$")
 LOWERCASE_SHORT_TIME_PATTERN = re.compile(r"^\d{1,2}[ap]$")
 LARGE_DOCUMENT_LINE_THRESHOLD = 1024
 LARGE_DOCUMENT_CHAR_THRESHOLD = 262144
-SEGMENTED_EXTRACTION_LINE_THRESHOLD = 32
-SEGMENTED_EXTRACTION_CHAR_THRESHOLD = 1024
-LINEWISE_SEGMENT_LINE_THRESHOLD = 8
+SEGMENTED_EXTRACTION_LINE_THRESHOLD = 256
+SEGMENTED_EXTRACTION_CHAR_THRESHOLD = 8192
+LINEWISE_SEGMENT_LINE_THRESHOLD = 100
+TOKENIZE_CACHE_CHAR_LIMIT = 2048
+SEGMENT_CACHE_CHAR_LIMIT = 256
 EXTRACTION_TOKEN_LIMIT = 24
 GLOBAL_EXTRACTION_MISS_LIMIT = 65536
+GLOBAL_EXTRACTION_HIT_LIMIT = 32768
+GLOBAL_SEGMENT_RESULT_LIMIT = 8192
 DANGLING_TAIL_TOKENS = frozenset({"at", "on", "of", "in", "to", "or", "and", "for", "the", "between", "past"})
+TRAILING_SEPARATOR_TOKENS = frozenset({"-", "/", ":"})
 START_WORDS = DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA) | frozenset(
     NUMBER_WORDS
 ) | frozenset({"in", "dans", "for", "the", "past", "between"})
@@ -73,6 +81,15 @@ START_PATTERN = re.compile(
     rf"(?![a-z])"
 )
 _GLOBAL_EXTRACTION_MISS_CACHE = OrderedDict()
+_GLOBAL_EXTRACTION_HIT_CACHE = OrderedDict()
+_GLOBAL_SEGMENT_RESULT_CACHE = OrderedDict()
+_SEGMENT_NO_MATCH = object()
+_SEGMENT_UNRESOLVED = object()
+
+
+@lru_cache(maxsize=4096)
+def _tokenize_cached(text: str):
+    return tuple(tokenize(text))
 
 
 def _window_tokens(text: str, start_pos: int):
@@ -118,11 +135,84 @@ def _window_tokens(text: str, start_pos: int):
         if token[0] in ".?!":
             tokens.append(token)
             break
-        if token[0] in ",-" or is_expression_token(token):
+        if token[0] == "-":
+            lookahead = next(token_iter, None)
+            if lookahead is None:
+                break
+            if lookahead[0] == "-":
+                break
+            if not is_expression_token(lookahead):
+                break
+            tokens.append(token)
+            pending = lookahead
+            continue
+        if token[0] == ",":
+            tokens.append(token)
+            continue
+        if is_expression_token(token):
             tokens.append(token)
             continue
         break
     return tokens
+
+
+def _window_tokens_from_index(text: str, tokens, start_index: int):
+    if start_index >= len(tokens):
+        return []
+
+    first = tokens[start_index]
+    tokens_window = [first]
+    index = start_index + 1
+    while len(tokens_window) < EXTRACTION_TOKEN_LIMIT and index < len(tokens):
+        token = tokens[index]
+        index += 1
+
+        gap = text[tokens_window[-1][3] : token[2]]
+        if "\n" in gap or "\r" in gap:
+            probe = tokens_window + [token]
+            if index < len(tokens):
+                probe.append(tokens[index])
+            if not _allows_newline_continuation(probe, len(tokens_window)):
+                break
+            tokens_window.append(token)
+            continue
+
+        if token[0] == ".":
+            probe = tokens_window + [token]
+            if index < len(tokens):
+                probe.append(tokens[index])
+            if _is_weekday_period_continuation(probe, 0, len(tokens_window)):
+                tokens_window.append(token)
+                continue
+
+        if token[0] in ".?!":
+            tokens_window.append(token)
+            break
+        if token[0] == "-":
+            if index >= len(tokens):
+                break
+            lookahead = tokens[index]
+            if lookahead[0] == "-":
+                break
+            if not is_expression_token(lookahead):
+                break
+            tokens_window.append(token)
+            continue
+        if token[0] == ",":
+            tokens_window.append(token)
+            continue
+        if is_expression_token(token):
+            tokens_window.append(token)
+            continue
+        break
+    return tokens_window
+
+
+def _could_start_expression_token(token):
+    raw = token[0]
+    if token[1] in START_WORDS:
+        return True
+    return raw[:1].isdigit()
 
 
 def prefer_extraction(text: str):
@@ -204,30 +294,59 @@ def _extract_segmented(text: str, parse_candidate):
 def _extract_segment(text: str, parse_candidate, base_offset: int = 0, miss_cache=None):
     if miss_cache is None:
         miss_cache = set()
+    segment_cache_key = _global_segment_key(parse_candidate, text)
+    if segment_cache_key is not None and segment_cache_key in _GLOBAL_SEGMENT_RESULT_CACHE:
+        _GLOBAL_SEGMENT_RESULT_CACHE.move_to_end(segment_cache_key)
+        return _restore_segment_result(segment_cache_key, base_offset)
+
     results = []
     saw_plausible_start = False
     cursor = 0
-    for start_match in START_PATTERN.finditer(text):
-        start = start_match.start()
+    segment_tokens = _tokenize_cached(text) if len(text) <= TOKENIZE_CACHE_CHAR_LIMIT else tokenize(text)
+    token_index = 0
+    token_count = len(segment_tokens)
+    while token_index < token_count:
+        token = segment_tokens[token_index]
+        start = token[2]
         if start < cursor:
+            token_index += 1
             continue
 
-        tokens = _window_tokens(text, start)
+        if not _could_start_expression_token(token):
+            token_index += 1
+            continue
+
+        start_match = START_PATTERN.match(text, start)
+        if start_match is None:
+            token_index += 1
+            continue
+        match_end = start_match.end()
+
+        tokens = _window_tokens_from_index(text, segment_tokens, token_index)
         if not tokens or not _is_plausible_start(tokens, 0):
+            while token_index < token_count and segment_tokens[token_index][2] < match_end:
+                token_index += 1
             continue
 
         saw_plausible_start = True
         expression, next_index = _extract_longest_match(tokens, 0, text, parse_candidate, miss_cache, base_offset)
         if expression is None:
+            while token_index < token_count and segment_tokens[token_index][2] < match_end:
+                token_index += 1
             continue
 
         results.extend(expression)
         cursor = tokens[next_index - 1][3]
+        while token_index < token_count and segment_tokens[token_index][2] < cursor:
+            token_index += 1
 
     if results:
+        _remember_segment_result(segment_cache_key, results, base_offset)
         return results, saw_plausible_start
     if not saw_plausible_start:
+        _remember_segment_no_match(segment_cache_key)
         return [], saw_plausible_start
+    _remember_segment_unresolved(segment_cache_key)
     return None, saw_plausible_start
 
 
@@ -261,16 +380,20 @@ def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate,
     minimum_end_index = start_index + _minimum_candidate_token_count(tokens, start_index)
     for end_index in range(len(tokens), minimum_end_index - 1, -1):
         start = tokens[start_index][2]
-        end = tokens[end_index - 1][3]
-        candidate = text[start:end].strip()
-        if candidate and candidate[-1] in ".?!":
-            candidate = candidate[:-1].rstrip()
-            end = start + len(candidate)
-        if not candidate or candidate == last_candidate:
+        tail_token = tokens[end_index - 1]
+        if tail_token[0] in TRAILING_SEPARATOR_TOKENS:
+            continue
+        if tail_token[1] in DANGLING_TAIL_TOKENS:
+            continue
+
+        end = tail_token[2] if tail_token[0] in ".?!" else tail_token[3]
+        if end <= start:
+            continue
+
+        candidate = text[start:end]
+        if candidate == last_candidate:
             continue
         last_candidate = candidate
-        if tokens[end_index - 1][1] in DANGLING_TAIL_TOKENS:
-            continue
         parse_candidate_text = candidate
         if (
             parse_candidate_text.endswith(",")
@@ -287,6 +410,10 @@ def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate,
         if global_miss_key is not None and global_miss_key in _GLOBAL_EXTRACTION_MISS_CACHE:
             _GLOBAL_EXTRACTION_MISS_CACHE.move_to_end(global_miss_key)
             continue
+        global_hit_key = _global_hit_key(parse_candidate, parse_candidate_text)
+        if global_hit_key is not None and global_hit_key in _GLOBAL_EXTRACTION_HIT_CACHE:
+            _GLOBAL_EXTRACTION_HIT_CACHE.move_to_end(global_hit_key)
+            return _restore_global_hit(global_hit_key, base_offset + start), end_index
 
         try:
             expression = parse_candidate(parse_candidate_text, base_offset + start)
@@ -301,6 +428,7 @@ def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate,
                         continue
                     match_start, match_end = renderer.matched_text_pos
                     renderer.matched_text_pos = (match_start, match_end + 1)
+            _remember_global_hit(global_hit_key, expression, base_offset + start)
             return expression, end_index
         miss_cache.add(parse_candidate_text)
         _remember_global_miss(global_miss_key)
@@ -568,6 +696,20 @@ def _global_miss_key(parse_candidate, candidate: str):
     return cache_tag, candidate
 
 
+def _global_hit_key(parse_candidate, candidate: str):
+    cache_tag = getattr(parse_candidate, "_cache_tag", None)
+    if cache_tag is None:
+        return None
+    return cache_tag, candidate
+
+
+def _global_segment_key(parse_candidate, text: str):
+    cache_tag = getattr(parse_candidate, "_cache_tag", None)
+    if cache_tag is None or len(text) > SEGMENT_CACHE_CHAR_LIMIT:
+        return None
+    return cache_tag, text
+
+
 def _remember_global_miss(key):
     if key is None:
         return
@@ -575,3 +717,81 @@ def _remember_global_miss(key):
     _GLOBAL_EXTRACTION_MISS_CACHE.move_to_end(key)
     if len(_GLOBAL_EXTRACTION_MISS_CACHE) > GLOBAL_EXTRACTION_MISS_LIMIT:
         _GLOBAL_EXTRACTION_MISS_CACHE.popitem(last=False)
+
+
+def _remember_global_hit(key, expression, offset: int):
+    if key is None:
+        return
+    cached_renderers = []
+    for renderer in expression:
+        cached = _clone_renderer(renderer)
+        if renderer.matched_text_pos is not None:
+            start, end = renderer.matched_text_pos
+            cached.matched_text_pos = (start - offset, end - offset)
+        cached_renderers.append(cached)
+    _GLOBAL_EXTRACTION_HIT_CACHE[key] = tuple(cached_renderers)
+    _GLOBAL_EXTRACTION_HIT_CACHE.move_to_end(key)
+    if len(_GLOBAL_EXTRACTION_HIT_CACHE) > GLOBAL_EXTRACTION_HIT_LIMIT:
+        _GLOBAL_EXTRACTION_HIT_CACHE.popitem(last=False)
+
+
+def _restore_global_hit(key, offset: int):
+    expression = []
+    for renderer in _GLOBAL_EXTRACTION_HIT_CACHE[key]:
+        restored = _clone_renderer(renderer)
+        if renderer.matched_text_pos is not None:
+            start, end = renderer.matched_text_pos
+            restored.matched_text_pos = (start + offset, end + offset)
+        expression.append(restored)
+    return expression
+
+
+def _remember_segment_result(key, expression, offset: int):
+    if key is None:
+        return
+    cached_renderers = []
+    for renderer in expression:
+        cached = _clone_renderer(renderer)
+        if renderer.matched_text_pos is not None:
+            start, end = renderer.matched_text_pos
+            cached.matched_text_pos = (start - offset, end - offset)
+        cached_renderers.append(cached)
+    _GLOBAL_SEGMENT_RESULT_CACHE[key] = tuple(cached_renderers)
+    _GLOBAL_SEGMENT_RESULT_CACHE.move_to_end(key)
+    if len(_GLOBAL_SEGMENT_RESULT_CACHE) > GLOBAL_SEGMENT_RESULT_LIMIT:
+        _GLOBAL_SEGMENT_RESULT_CACHE.popitem(last=False)
+
+
+def _remember_segment_no_match(key):
+    if key is None:
+        return
+    _GLOBAL_SEGMENT_RESULT_CACHE[key] = _SEGMENT_NO_MATCH
+    _GLOBAL_SEGMENT_RESULT_CACHE.move_to_end(key)
+    if len(_GLOBAL_SEGMENT_RESULT_CACHE) > GLOBAL_SEGMENT_RESULT_LIMIT:
+        _GLOBAL_SEGMENT_RESULT_CACHE.popitem(last=False)
+
+
+def _remember_segment_unresolved(key):
+    if key is None:
+        return
+    _GLOBAL_SEGMENT_RESULT_CACHE[key] = _SEGMENT_UNRESOLVED
+    _GLOBAL_SEGMENT_RESULT_CACHE.move_to_end(key)
+    if len(_GLOBAL_SEGMENT_RESULT_CACHE) > GLOBAL_SEGMENT_RESULT_LIMIT:
+        _GLOBAL_SEGMENT_RESULT_CACHE.popitem(last=False)
+
+
+def _restore_segment_result(key, offset: int):
+    cached = _GLOBAL_SEGMENT_RESULT_CACHE[key]
+    if cached is _SEGMENT_NO_MATCH:
+        return [], False
+    if cached is _SEGMENT_UNRESOLVED:
+        return None, True
+
+    results = []
+    for renderer in cached:
+        restored = _clone_renderer(renderer)
+        if renderer.matched_text_pos is not None:
+            start, end = renderer.matched_text_pos
+            restored.matched_text_pos = (start + offset, end + offset)
+        results.append(restored)
+    return results, True

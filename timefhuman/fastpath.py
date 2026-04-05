@@ -1,3 +1,5 @@
+import re
+from datetime import datetime
 from functools import lru_cache
 
 from timefhuman.normalizer import is_ambiguous_only, materialize_expression
@@ -19,9 +21,25 @@ from timefhuman.utils import tfhConfig
 __all__ = ("parse_fast",)
 
 
-CACHEABLE_PARSE_TEXT_LIMIT = 80
+CACHEABLE_PARSE_TEXT_LIMIT = 120
 _CACHED_TIMEZONE_MAPPING = None
 _CACHED_NO_RENDERER = object()
+_ABSOLUTE_CACHE_NOW = datetime(2000, 1, 1, 12, 0)
+_EXPLICIT_YEAR_PATTERN = re.compile(r"\b\d{4}\b")
+_MONTH_NAME_PATTERN = re.compile(
+    r"(?ix)\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b"
+)
+_DATE_ONLY_WORD_PATTERN = re.compile(
+    r"(?ix)\b(?:"
+    r"today|tomorrow|yesterday|tonight|"
+    r"next|last|this|first|second|third|fourth|"
+    r"sun(?:day)?|mon(?:day)?|tu(?:esday)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|thur(?:sday)?|fri(?:day)?|sat(?:urday)?|"
+    r"jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?"
+    r")\b"
+)
+_COMPACT_MONTH_YEAR_PATTERN = re.compile(
+    r"(?ix)^(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\d{4}$"
+)
 
 
 def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 0):
@@ -37,7 +55,28 @@ def parse_fast(text: str, config: tfhConfig, timezone_mapping, start_pos: int = 
 
     normalized = normalize_space(stripped)
     if len(normalized) <= CACHEABLE_PARSE_TEXT_LIMIT:
-        renderer = _clone_renderer(_parse_renderer_cached(normalized, config.now, config.direction))
+        if _is_absolute_cacheable_text(normalized):
+            renderer = _clone_renderer(_parse_renderer_absolute_cached(normalized))
+        elif _is_date_only_cacheable_text(normalized):
+            renderer = _clone_renderer(
+                _parse_renderer_date_cached(
+                    normalized,
+                    config.now.year,
+                    config.now.month,
+                    config.now.day,
+                    config.direction,
+                )
+            )
+        else:
+            renderer = _clone_renderer(
+                _parse_renderer_cached(
+                    normalized,
+                    config.now.year,
+                    config.now.month,
+                    config.now.day,
+                    config.direction,
+                )
+            )
         if renderer is None:
             return None
     else:
@@ -74,12 +113,51 @@ def _trimmed_span(text: str, start_pos: int):
 
 
 @lru_cache(maxsize=16384)
-def _parse_renderer_cached(text: str, now, direction):
+def _parse_renderer_cached(text: str, year: int, month: int, day: int, direction):
+    now = datetime(year, month, day, 12, 0)
     config = tfhConfig(now=now, direction=direction)
     expression = parse_expression(text, config, _CACHED_TIMEZONE_MAPPING, allow_ambiguous=False)
     if expression is None or is_ambiguous_only(expression):
         return _CACHED_NO_RENDERER
     return materialize_expression(expression, now.year)
+
+
+@lru_cache(maxsize=16384)
+def _parse_renderer_absolute_cached(text: str):
+    config = tfhConfig(now=_ABSOLUTE_CACHE_NOW)
+    expression = parse_expression(text, config, _CACHED_TIMEZONE_MAPPING, allow_ambiguous=False)
+    if expression is None or is_ambiguous_only(expression):
+        return _CACHED_NO_RENDERER
+    return materialize_expression(expression, _ABSOLUTE_CACHE_NOW.year)
+
+
+def _is_absolute_cacheable_text(text: str):
+    lower = text.lower()
+    if any(unit in lower for unit in (" day", " days", " week", " weeks", " month", " months", " year", " years", " hour", " hours", " minute", " minutes", " second", " seconds")):
+        return True
+    if _COMPACT_MONTH_YEAR_PATTERN.fullmatch(text):
+        return True
+    if _EXPLICIT_YEAR_PATTERN.search(text):
+        return any(separator in text for separator in "/-.") or _MONTH_NAME_PATTERN.search(text) is not None
+    return False
+
+
+@lru_cache(maxsize=16384)
+def _parse_renderer_date_cached(text: str, year: int, month: int, day: int, direction):
+    now = datetime(year, month, day, 12, 0)
+    config = tfhConfig(now=now, direction=direction)
+    expression = parse_expression(text, config, _CACHED_TIMEZONE_MAPPING, allow_ambiguous=False)
+    if expression is None or is_ambiguous_only(expression):
+        return _CACHED_NO_RENDERER
+    return materialize_expression(expression, now.year)
+
+
+def _is_date_only_cacheable_text(text: str):
+    if any(char.isdigit() for char in text) and any(separator in text for separator in "/-."):
+        return True
+    if re.search(r"(?ix)\b\d{1,2}(?:st|nd|rd|th)\b", text):
+        return True
+    return _DATE_ONLY_WORD_PATTERN.search(text) is not None
 
 
 def _clone_renderer(renderer):

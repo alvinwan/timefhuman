@@ -86,6 +86,11 @@ DAY_OF_MONTH_PATTERN = re.compile(
     r"(?P<month>[a-z]+)"
     r"(?:\s*,?\s*(?P<year>\d{2,4}))?$"
 )
+MONTH_YEAR_COMPACT_PATTERN = re.compile(
+    r"(?ix)^"
+    r"(?P<month>[a-z]+)"
+    r"(?P<year>\d{4})$"
+)
 DAY_SUFFIX_PATTERN = re.compile(r"(?ix)^(?P<day>\d{1,2})(?:st|nd|rd|th)$")
 POSITION_WEEKDAY_MONTH_PATTERN = re.compile(
     r"(?ix)^(?P<position>first|second|third|fourth|last)\s+(?P<weekday>[a-z]+)\s+(?:of|in)\s+(?P<month>[a-z]+)$"
@@ -383,6 +388,13 @@ def _parse_numeric_date(text: str):
 
 
 def _parse_monthname_date(text: str):
+    compact = MONTH_YEAR_COMPACT_PATTERN.fullmatch(text)
+    if compact:
+        month = _parse_month_name(compact.group("month"))
+        if month is None:
+            return None
+        return build_date(month=month, year=int(compact.group("year")))
+
     match = MONTHNAME_PATTERN.fullmatch(text)
     if not match:
         return None

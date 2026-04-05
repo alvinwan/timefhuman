@@ -16,6 +16,7 @@ __all__ = ("timefhuman", "tfhConfig", "Direction", "DEFAULT_CONFIG")
 DEFAULT_CONFIG = tfhConfig()
 def _build_candidate_parsers(config: tfhConfig):
     timezone_mapping = generate_timezone_mapping()
+    cache_tag_now = (config.now.year, config.now.month, config.now.day)
 
     def parse_fast_candidate(string: str, start_pos: int = 0):
         return parse_fast(string, config=config, timezone_mapping=timezone_mapping, start_pos=start_pos)
@@ -23,8 +24,8 @@ def _build_candidate_parsers(config: tfhConfig):
     def parse_lalr_candidate(string: str, start_pos: int = 0):
         return _parse_lalr(string, config=config, start_pos=start_pos)
 
-    parse_fast_candidate._cache_tag = ("fast", config.now, config.direction)
-    parse_lalr_candidate._cache_tag = ("lalr", config.now, config.direction)
+    parse_fast_candidate._cache_tag = ("fast", cache_tag_now, config.direction)
+    parse_lalr_candidate._cache_tag = ("lalr", cache_tag_now, config.direction)
     return parse_fast_candidate, parse_lalr_candidate
 
 
