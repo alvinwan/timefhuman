@@ -135,8 +135,8 @@ def _has_supported_numeric_separator_shape(token: str):
     return False
 
 
-def is_month_context_token(token: str):
-    lowered = token.lower()
+def is_month_context_token(token: str, lowered: str | None = None):
+    lowered = lowered or token.lower()
     return _is_month_context_token_cached(token, lowered)
 
 
@@ -151,17 +151,40 @@ def _is_month_context_token_cached(token: str, lowered: str):
     return _has_supported_numeric_separator_shape(token)
 
 
-def is_plausible_start_tokens(token: str, next_token: str, next_next_token: str = "", next_next_next_token: str = ""):
-    return _is_plausible_start_tokens_cached(token, next_token, next_next_token, next_next_next_token)
+def is_plausible_start_tokens(
+    token: str,
+    next_token: str,
+    next_next_token: str = "",
+    next_next_next_token: str = "",
+    *,
+    lowered: str | None = None,
+    next_lowered: str | None = None,
+    next_next_lowered: str | None = None,
+    next_next_next_lowered: str | None = None,
+):
+    return _is_plausible_start_tokens_cached(
+        token,
+        lowered or token.lower(),
+        next_token,
+        next_lowered or next_token.lower(),
+        next_next_token,
+        next_next_lowered or next_next_token.lower(),
+        next_next_next_token,
+        next_next_next_lowered or next_next_next_token.lower(),
+    )
 
 
 @lru_cache(maxsize=16384)
-def _is_plausible_start_tokens_cached(token: str, next_token: str, next_next_token: str = "", next_next_next_token: str = ""):
-    lowered = token.lower()
-    next_lower = next_token.lower()
-    next_next_lower = next_next_token.lower()
-    next_next_next_lower = next_next_next_token.lower()
-
+def _is_plausible_start_tokens_cached(
+    token: str,
+    lowered: str,
+    next_token: str,
+    next_lower: str,
+    next_next_token: str = "",
+    next_next_lower: str = "",
+    next_next_next_token: str = "",
+    next_next_next_lower: str = "",
+):
     if lowered in MONTH_WORDS:
         probe_tokens = (next_token, next_next_token, next_next_next_token)
         probe_index = 0
@@ -180,9 +203,15 @@ def _is_plausible_start_tokens_cached(token: str, next_token: str, next_next_tok
             or next_lower in DATE_NAME_TO_OFFSET
             or bool(MERIDIEM_ONLY_PATTERN.fullmatch(next_lower))
         )
-    if is_expression_head(token):
+    if lowered in DIRECT_START_WORDS or lowered in NUMBER_WORDS:
         return True
-    if lowered in MODIFIER_TO_OFFSET and (next_lower in WEEKDAY_WORDS or is_month_token(next_token)):
+    if COMPACT_TIME_RANGE_PATTERN.fullmatch(token):
+        return True
+    if re.fullmatch(rf"(?ix)\d+(?:{MERIDIEM_PATTERN})", token):
+        return True
+    if _is_expression_head_cached(token, lowered):
+        return True
+    if lowered in MODIFIER_TO_OFFSET and (next_lower in WEEKDAY_WORDS or next_lower in MONTH_WORDS):
         return True
     if lowered in POSITION_TO_DELTA and next_lower in WEEKDAY_WORDS:
         return True

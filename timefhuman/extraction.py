@@ -6,7 +6,6 @@ from timefhuman.fastpath import _clone_renderer
 from timefhuman.scanner import (
     MERIDIEM_PATTERN,
     first_token,
-    iter_tokens,
     tokenize,
 )
 from timefhuman.semantics import (
@@ -60,6 +59,7 @@ TRAILING_SEPARATOR_TOKENS = frozenset({"-", "/", ":"})
 START_WORDS = DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA) | frozenset(
     NUMBER_WORDS
 ) | frozenset({"in", "dans", "for", "the", "past", "between"})
+BYPASS_START_MATCH_WORDS = DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA)
 DIRECT_START_PATTERN = "|".join(re.escape(word) for word in sorted(DIRECT_START_WORDS | frozenset(MODIFIER_TO_OFFSET) | frozenset(POSITION_TO_DELTA), key=len, reverse=True))
 NUMBER_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(NUMBER_WORDS, key=len, reverse=True))
 UNIT_WORD_PATTERN = "|".join(re.escape(word) for word in sorted(UNIT_ALIASES, key=len, reverse=True))
@@ -92,127 +92,54 @@ def _tokenize_cached(text: str):
     return tuple(tokenize(text))
 
 
-def _window_tokens(text: str, start_pos: int):
-    token_iter = iter(iter_tokens(text, start_pos))
-    first = next(token_iter, None)
-    if first is None or first[2] != start_pos:
-        return []
-
-    tokens = [first]
-    pending = None
-    while len(tokens) < EXTRACTION_TOKEN_LIMIT:
-        token = pending
-        if token is None:
-            token = next(token_iter, None)
-        pending = None
-        if token is None:
-            break
-
-        gap = text[tokens[-1][3] : token[2]]
-        if "\n" in gap or "\r" in gap:
-            probe = tokens + [token]
-            lookahead = next(token_iter, None)
-            if lookahead is not None:
-                probe.append(lookahead)
-            if not _allows_newline_continuation(probe, len(tokens)):
-                break
-            tokens.append(token)
-            pending = lookahead
-            continue
-
-        if token[0] == ".":
-            probe = tokens + [token]
-            lookahead = next(token_iter, None)
-            if lookahead is not None:
-                probe.append(lookahead)
-            if _is_weekday_period_continuation(probe, 0, len(tokens)):
-                tokens.append(token)
-                pending = lookahead
-                continue
-            if lookahead is not None:
-                pending = lookahead
-
-        if token[0] in ".?!":
-            tokens.append(token)
-            break
-        if token[0] == "-":
-            lookahead = next(token_iter, None)
-            if lookahead is None:
-                break
-            if lookahead[0] == "-":
-                break
-            if not is_expression_token(lookahead):
-                break
-            tokens.append(token)
-            pending = lookahead
-            continue
-        if token[0] == ",":
-            tokens.append(token)
-            continue
-        if is_expression_token(token):
-            tokens.append(token)
-            continue
-        break
-    return tokens
-
-
-def _window_tokens_from_index(text: str, tokens, start_index: int):
+def _window_end_index(text: str, tokens, start_index: int):
     if start_index >= len(tokens):
-        return []
+        return start_index
 
-    first = tokens[start_index]
-    tokens_window = [first]
-    index = start_index + 1
-    while len(tokens_window) < EXTRACTION_TOKEN_LIMIT and index < len(tokens):
+    end_index = start_index + 1
+    index = end_index
+    token_count = len(tokens)
+    while end_index - start_index < EXTRACTION_TOKEN_LIMIT and index < token_count:
         token = tokens[index]
         index += 1
 
-        gap = text[tokens_window[-1][3] : token[2]]
+        gap = text[tokens[end_index - 1][3] : token[2]]
         if "\n" in gap or "\r" in gap:
-            probe = tokens_window + [token]
-            if index < len(tokens):
+            probe = list(tokens[start_index:end_index]) + [token]
+            if index < token_count:
                 probe.append(tokens[index])
-            if not _allows_newline_continuation(probe, len(tokens_window)):
+            if not _allows_newline_continuation(probe, end_index - start_index):
                 break
-            tokens_window.append(token)
+            end_index += 1
             continue
 
         if token[0] == ".":
-            probe = tokens_window + [token]
-            if index < len(tokens):
+            probe = list(tokens[start_index:end_index]) + [token]
+            if index < token_count:
                 probe.append(tokens[index])
-            if _is_weekday_period_continuation(probe, 0, len(tokens_window)):
-                tokens_window.append(token)
+            if _is_weekday_period_continuation(probe, 0, end_index - start_index):
+                end_index += 1
                 continue
 
         if token[0] in ".?!":
-            tokens_window.append(token)
+            end_index += 1
             break
         if token[0] == "-":
-            if index >= len(tokens):
+            if index >= token_count:
                 break
             lookahead = tokens[index]
-            if lookahead[0] == "-":
+            if lookahead[0] == "-" or not is_expression_token(lookahead[0], lookahead[1]):
                 break
-            if not is_expression_token(lookahead):
-                break
-            tokens_window.append(token)
+            end_index += 1
             continue
         if token[0] == ",":
-            tokens_window.append(token)
+            end_index += 1
             continue
-        if is_expression_token(token):
-            tokens_window.append(token)
+        if is_expression_token(token[0], token[1]):
+            end_index += 1
             continue
         break
-    return tokens_window
-
-
-def _could_start_expression_token(token):
-    raw = token[0]
-    if token[1] in START_WORDS:
-        return True
-    return raw[:1].isdigit()
+    return end_index
 
 
 def prefer_extraction(text: str):
@@ -307,36 +234,48 @@ def _extract_segment(text: str, parse_candidate, base_offset: int = 0, miss_cach
     token_count = len(segment_tokens)
     while token_index < token_count:
         token = segment_tokens[token_index]
+        raw = token[0]
+        lowered = token[1]
         start = token[2]
         if start < cursor:
             token_index += 1
             continue
 
-        if not _could_start_expression_token(token):
+        if lowered not in START_WORDS and not raw[0].isdigit():
             token_index += 1
             continue
 
-        start_match = START_PATTERN.match(text, start)
-        if start_match is None:
-            token_index += 1
-            continue
-        match_end = start_match.end()
+        if lowered in BYPASS_START_MATCH_WORDS:
+            match_end = token[3]
+        else:
+            start_match = START_PATTERN.match(text, start)
+            if start_match is None:
+                token_index += 1
+                continue
+            match_end = start_match.end()
 
-        tokens = _window_tokens_from_index(text, segment_tokens, token_index)
-        if not tokens or not _is_plausible_start(tokens, 0):
+        if not _is_plausible_start(segment_tokens, token_index):
+            while token_index < token_count and segment_tokens[token_index][2] < match_end:
+                token_index += 1
+            continue
+
+        end_index = _window_end_index(text, segment_tokens, token_index)
+        if end_index <= token_index:
             while token_index < token_count and segment_tokens[token_index][2] < match_end:
                 token_index += 1
             continue
 
         saw_plausible_start = True
-        expression, next_index = _extract_longest_match(tokens, 0, text, parse_candidate, miss_cache, base_offset)
+        expression, next_index = _extract_longest_match(
+            segment_tokens, token_index, end_index, text, parse_candidate, miss_cache, base_offset
+        )
         if expression is None:
             while token_index < token_count and segment_tokens[token_index][2] < match_end:
                 token_index += 1
             continue
 
         results.extend(expression)
-        cursor = tokens[next_index - 1][3]
+        cursor = segment_tokens[next_index - 1][3]
         while token_index < token_count and segment_tokens[token_index][2] < cursor:
             token_index += 1
 
@@ -375,10 +314,11 @@ def _extract_segment_by_lines(text: str, parse_candidate, base_offset: int, miss
     return results, saw_plausible_start, saw_unresolved_segment
 
 
-def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate, miss_cache, base_offset: int = 0):
+def _extract_longest_match(tokens, start_index: int, limit_index: int, text: str, parse_candidate, miss_cache, base_offset: int = 0):
     last_candidate = None
     minimum_end_index = start_index + _minimum_candidate_token_count(tokens, start_index)
-    for end_index in range(len(tokens), minimum_end_index - 1, -1):
+    previous_token = tokens[start_index - 1][0] if start_index > 0 else ""
+    for end_index in range(limit_index, minimum_end_index - 1, -1):
         start = tokens[start_index][2]
         tail_token = tokens[end_index - 1]
         if tail_token[0] in TRAILING_SEPARATOR_TOKENS:
@@ -402,7 +342,10 @@ def _extract_longest_match(tokens, start_index: int, text: str, parse_candidate,
             and any(char.isalpha() for char in parse_candidate_text[:-1])
         ):
             parse_candidate_text = parse_candidate_text[:-1]
-        if _should_skip_candidate(text, parse_candidate_text, start, end):
+        before = text[start - 1] if start > 0 else ""
+        after = text[end] if end < len(text) else ""
+        next_token = tokens[end_index][0] if end_index < len(tokens) else ""
+        if _should_skip_candidate(parse_candidate_text, before, after, previous_token, next_token):
             continue
         if parse_candidate_text in miss_cache:
             continue
@@ -578,26 +521,42 @@ def _is_plausible_start(tokens, index: int):
     token = tokens[index][0]
     lowered = tokens[index][1]
     next_token = tokens[index + 1][0] if index + 1 < len(tokens) else ""
+    next_lower = tokens[index + 1][1] if index + 1 < len(tokens) else ""
     next_next_token = tokens[index + 2][0] if index + 2 < len(tokens) else ""
+    next_next_lower = tokens[index + 2][1] if index + 2 < len(tokens) else ""
     next_next_next_token = tokens[index + 3][0] if index + 3 < len(tokens) else ""
-    if is_plausible_start_tokens(token, next_token, next_next_token, next_next_next_token):
+    next_next_next_lower = tokens[index + 3][1] if index + 3 < len(tokens) else ""
+    if is_plausible_start_tokens(
+        token,
+        next_token,
+        next_next_token,
+        next_next_next_token,
+        lowered=lowered,
+        next_lowered=next_lower,
+        next_next_lowered=next_next_lower,
+        next_next_next_lowered=next_next_next_lower,
+    ):
         return True
     if lowered in MONTH_WORDS:
         probe_index = index + 1
         probe_token = next_token
+        probe_lower = next_lower
         while probe_token in {".", ","} and probe_index + 1 < len(tokens):
             probe_index += 1
             probe_token = tokens[probe_index][0]
-        if probe_token and is_month_context_token(probe_token):
+            probe_lower = tokens[probe_index][1]
+        if probe_token and is_month_context_token(probe_token, probe_lower):
             return True
         return False
     if lowered in WEEKDAY_WORDS:
         probe_index = index + 1
         probe_token = next_token
+        probe_lower = next_lower
         while probe_token in {".", ","} and probe_index + 1 < len(tokens):
             probe_index += 1
             probe_token = tokens[probe_index][0]
-        if probe_token and is_expression_token(probe_token):
+            probe_lower = tokens[probe_index][1]
+        if probe_token and is_expression_token(probe_token, probe_lower):
             return True
         return False
     if HYPHENATED_NUMERIC_DATE_PATTERN.fullmatch(token):
@@ -613,23 +572,17 @@ def _is_duration_value_token(token: str):
     return is_duration_value_token(token)
 
 
-def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
-    before = text[start - 1] if start > 0 else ""
-    after = text[end] if end < len(text) else ""
-
+def _should_skip_candidate(candidate: str, before: str, after: str, previous_token: str, next_token: str):
     if PHONE_LIKE_PATTERN.fullmatch(candidate):
         return True
     if REFERENCE_LIKE_NUMERIC_DATE_PATTERN.fullmatch(candidate):
         return True
     if BARE_HYPHEN_NUMERIC_PATTERN.fullmatch(candidate):
-        previous_token = _previous_token(text, start)
-        next_token = _next_token(text, end)
         if _looks_like_reference_token(previous_token) or _looks_like_reference_token(next_token):
             return True
 
     if SLASH_FRACTION_PATTERN.fullmatch(candidate):
-        previous_token = _previous_token(text, start)
-        next_token = _next_token(text, end).lower().strip(".,:;)")
+        next_token = next_token.lower().strip(".,:;)")
         if previous_token.isdigit() or next_token in {"percent", "%", "in", "inch", "inches"}:
             return True
 
@@ -643,19 +596,10 @@ def _should_skip_candidate(text: str, candidate: str, start: int, end: int):
         return True
 
     if LOWERCASE_SHORT_TIME_PATTERN.fullmatch(candidate):
-        previous_token = _previous_token(text, start)
         if _looks_like_identifier_token(previous_token):
             return True
 
     return False
-
-
-def _previous_token(text: str, start: int):
-    prefix_start = max(0, start - 64)
-    previous = ""
-    for token in iter_tokens(text, prefix_start, start):
-        previous = token[0]
-    return previous
 
 
 def _looks_like_identifier_token(token: str):
@@ -668,14 +612,6 @@ def _looks_like_identifier_token(token: str):
     if any(separator in token for separator in "._/-"):
         return True
     return False
-
-
-def _next_token(text: str, end: int):
-    window_end = min(len(text), end + 64)
-    for token in iter_tokens(text, end, window_end):
-        if token[0].strip():
-            return token[0]
-    return ""
 
 
 def _looks_like_reference_token(token: str):
