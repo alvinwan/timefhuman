@@ -47,10 +47,16 @@ DOCUMENT_WARMUP_TEXT = "\n".join(
     ) * 8
 )
 SHORT_SAMPLES = 7
-SHORT_TIMEOUT_SECONDS = 1
+SHORT_TIMEOUT_SECONDS = 2
 DOCUMENT_TIMEOUT_SECONDS = 2
 COLD_SAMPLE_GRACE_SECONDS = 60
 PERF_MODES = {"cold", "warmed"}
+BENCH_TIMEOUTS = {
+    "dateparser*": {
+        "short": 30,
+        "document": 30,
+    },
+}
 DOCUMENT_DATASETS = (
     ("core_corpus", "core_corpus", 7),
     ("seattle_html_76k", "seattle_html_76k", 5),
@@ -179,6 +185,12 @@ def build_benches():
     return benches
 
 
+def get_timeout_seconds(label, sample_kind):
+    timeout_key = "short" if sample_kind == "short" else "document"
+    default_timeout = SHORT_TIMEOUT_SECONDS if sample_kind == "short" else DOCUMENT_TIMEOUT_SECONDS
+    return BENCH_TIMEOUTS.get(label, {}).get(timeout_key, default_timeout)
+
+
 def load_document_datasets():
     datasets = {}
     for dataset_name, _, _ in DOCUMENT_DATASETS:
@@ -284,6 +296,7 @@ def benchmark_document(label, dataset_name, document_func, text, iterations, tim
         return None
 
     try:
+        timeout_seconds = get_timeout_seconds(label, "document")
         times = []
         count = None
         for _ in range(iterations):
@@ -308,6 +321,7 @@ def benchmark_short_perf(label, func, timeout_seconds=SHORT_TIMEOUT_SECONDS, sam
         return None
 
     try:
+        timeout_seconds = get_timeout_seconds(label, "short")
         samples_seconds = []
         for _ in range(samples):
             sample = _run_process_sample(label, perf_mode, "short", "", timeout_seconds)
@@ -368,8 +382,8 @@ def _warmup_short(func):
         func(text)
 
 
-def _warmup_document(document_func):
-    _timeout_call(DOCUMENT_TIMEOUT_SECONDS, document_func, DOCUMENT_WARMUP_TEXT)
+def _warmup_document(document_func, timeout_seconds):
+    _timeout_call(timeout_seconds, document_func, DOCUMENT_WARMUP_TEXT)
 
 
 def _emit_process_sample(perf_mode, label, sample_kind, sample_arg):
@@ -388,6 +402,7 @@ def _emit_process_sample(perf_mode, label, sample_kind, sample_arg):
             if func is None:
                 print(json.dumps({"status": "n/a"}))
                 return
+            timeout_seconds = get_timeout_seconds(label, "short")
             if perf_mode == "warmed":
                 _warmup_short(func)
 
@@ -397,7 +412,7 @@ def _emit_process_sample(perf_mode, label, sample_kind, sample_arg):
                     func(text)
                 return time.perf_counter() - start
 
-            seconds = _timeout_call(SHORT_TIMEOUT_SECONDS, run_short_batch)
+            seconds = _timeout_call(timeout_seconds, run_short_batch)
             print(json.dumps({"status": "ok", "seconds": seconds}))
             return
 
@@ -407,10 +422,11 @@ def _emit_process_sample(perf_mode, label, sample_kind, sample_arg):
             if document_func is None or text is None:
                 print(json.dumps({"status": "n/a"}))
                 return
+            timeout_seconds = get_timeout_seconds(label, "document")
             if perf_mode == "warmed":
-                _warmup_document(document_func)
+                _warmup_document(document_func, timeout_seconds)
             start = time.perf_counter()
-            result = _timeout_call(DOCUMENT_TIMEOUT_SECONDS, document_func, text)
+            result = _timeout_call(timeout_seconds, document_func, text)
             print(
                 json.dumps({
                     "status": "ok",
@@ -559,6 +575,7 @@ def count_document_member_matches(label, matches, expected):
 def run_document_correctness(bench, document_datasets):
     row = {"label": bench["label"]}
     document_runner = bench.get("document_dump_func") or get_document_runner(bench)
+    timeout_seconds = get_timeout_seconds(bench["label"], "document")
     for dataset_name in GOLD_DOCUMENT_DATASETS:
         key = f"{dataset_name}_correctness"
         group_key = f"{dataset_name}_group_correctness"
@@ -569,10 +586,10 @@ def run_document_correctness(bench, document_datasets):
             row[group_key] = None
             continue
         try:
-            matches = _timeout_call(DOCUMENT_TIMEOUT_SECONDS, document_runner, text)
+            matches = _timeout_call(timeout_seconds, document_runner, text)
         except BenchmarkTimeout:
-            row[key] = {"timeout": f">{DOCUMENT_TIMEOUT_SECONDS}s"}
-            row[group_key] = {"timeout": f">{DOCUMENT_TIMEOUT_SECONDS}s"}
+            row[key] = {"timeout": f">{timeout_seconds}s"}
+            row[group_key] = {"timeout": f">{timeout_seconds}s"}
             continue
         except Exception as exc:
             row[key] = {"error": type(exc).__name__}
@@ -677,7 +694,7 @@ def main():
         f"{'short (ms)':>10} {'acc':>8} "
         f"{'core (ms)':>10} {'#':>6} {'acc':>8} {'group':>8} "
         f"{'sea_76k (ms)':>15} {'#':>6} {'acc':>8} {'group':>8} "
-        f"{'sea_560k (ms)':>15} {'#':>6} {'acc':>8} {'group':>8}"
+        f"{'test_data_560k (ms)':>21} {'#':>6} {'acc':>8} {'group':>8}"
     )
 
     def format_correctness(value):
@@ -701,14 +718,14 @@ def main():
         if isinstance(value, (int, float)):
             return f"{value:.1f}"
         if isinstance(row["short_timeout"], str):
-            return row["short_timeout"].replace(">1s", ">1000ms")
+            return row["short_timeout"]
         return "n/a"
 
     def format_doc_ms(value):
         if isinstance(value, dict) and "seconds" in value:
             return f"{value['seconds'] * 1000.0:.1f}"
         if isinstance(value, dict) and "timeout" in value:
-            return value["timeout"].replace(">1s", ">1000ms")
+            return value["timeout"]
         if isinstance(value, dict) and "error" in value:
             return "error"
         if value is None:
