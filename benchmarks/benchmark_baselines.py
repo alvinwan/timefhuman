@@ -24,10 +24,33 @@ EXACT_CASES = [
     if len(expected) == 1 and isinstance(expected[0], datetime)
 ]
 SHORT_PERF_INPUTS = [text for text, _ in EXACT_CASES]
+SHORT_WARMUP_INPUTS = (
+    "review moved to January 9 2026 at 4:45 pm",
+    "follow up in 9 days",
+    "shipment arrived two weeks later",
+    "billing stays open from 6:15 am to 8:45 am",
+    "next Tuesday at noon",
+    "from March 18 2026 through April 2 2026",
+    "three hours ago we sent the revision",
+    "meeting on 2026-07-14 18:30",
+)
+DOCUMENT_WARMUP_TEXT = "\n".join(
+    (
+        "Operations memo 01: review moved to January 9 2026 at 4:45 pm.",
+        "Operations memo 02: follow up in 9 days with the accounting team.",
+        "Operations memo 03: shipment arrived two weeks later than planned.",
+        "Operations memo 04: billing stays open from 6:15 am to 8:45 am on weekdays.",
+        "Operations memo 05: next Tuesday at noon we start the rollout.",
+        "Operations memo 06: from March 18 2026 through April 2 2026 the office is under renovation.",
+        "Operations memo 07: three hours ago we sent the revised draft to legal.",
+        "Operations memo 08: meeting on 2026-07-14 18:30 with the field team.",
+    ) * 8
+)
 SHORT_SAMPLES = 7
 SHORT_TIMEOUT_SECONDS = 1
 DOCUMENT_TIMEOUT_SECONDS = 2
 COLD_SAMPLE_GRACE_SECONDS = 60
+PERF_MODES = {"cold", "warmed"}
 DOCUMENT_DATASETS = (
     ("core_corpus", "core_corpus", 7),
     ("seattle_html_76k", "seattle_html_76k", 5),
@@ -255,7 +278,7 @@ def _timeout_call(timeout_seconds, func, *args):
             signal.signal(signal.SIGALRM, previous_handler)
 
 
-def benchmark_document(label, dataset_name, document_func, text, iterations, timeout_seconds=DOCUMENT_TIMEOUT_SECONDS):
+def benchmark_document(label, dataset_name, document_func, text, iterations, timeout_seconds=DOCUMENT_TIMEOUT_SECONDS, perf_mode="cold"):
     del document_func
     if text is None:
         return None
@@ -264,7 +287,7 @@ def benchmark_document(label, dataset_name, document_func, text, iterations, tim
         times = []
         count = None
         for _ in range(iterations):
-            sample = _run_cold_sample(label, "document", dataset_name, timeout_seconds)
+            sample = _run_process_sample(label, perf_mode, "document", dataset_name, timeout_seconds)
             if "timeout" in sample:
                 return {"timeout": f">{timeout_seconds}s", "count": None}
             if "error" in sample:
@@ -280,14 +303,14 @@ def benchmark_document(label, dataset_name, document_func, text, iterations, tim
         return {"error": type(exc).__name__, "count": None}
 
 
-def benchmark_short_perf(label, func, timeout_seconds=SHORT_TIMEOUT_SECONDS, samples=SHORT_SAMPLES):
+def benchmark_short_perf(label, func, timeout_seconds=SHORT_TIMEOUT_SECONDS, samples=SHORT_SAMPLES, perf_mode="cold"):
     if func is None:
         return None
 
     try:
         samples_seconds = []
         for _ in range(samples):
-            sample = _run_cold_sample(label, "short", "", timeout_seconds)
+            sample = _run_process_sample(label, perf_mode, "short", "", timeout_seconds)
             if "timeout" in sample:
                 return f">{timeout_seconds}s"
             if "error" in sample:
@@ -298,12 +321,13 @@ def benchmark_short_perf(label, func, timeout_seconds=SHORT_TIMEOUT_SECONDS, sam
         return None
 
 
-def _run_cold_sample(label, sample_kind, sample_arg, timeout_seconds):
+def _run_process_sample(label, perf_mode, sample_kind, sample_arg, timeout_seconds):
     script_path = Path(__file__).resolve()
     cmd = [
         sys.executable,
         str(script_path),
-        "--cold-sample",
+        "--sample",
+        perf_mode,
         label,
         sample_kind,
         sample_arg,
@@ -339,7 +363,20 @@ def _run_cold_sample(label, sample_kind, sample_arg, timeout_seconds):
     return {"error": payload.get("error", "ChildProcessError")}
 
 
-def _emit_cold_sample(label, sample_kind, sample_arg):
+def _warmup_short(func):
+    for text in SHORT_WARMUP_INPUTS:
+        func(text)
+
+
+def _warmup_document(document_func):
+    _timeout_call(DOCUMENT_TIMEOUT_SECONDS, document_func, DOCUMENT_WARMUP_TEXT)
+
+
+def _emit_process_sample(perf_mode, label, sample_kind, sample_arg):
+    if perf_mode not in PERF_MODES:
+        print(json.dumps({"status": "error", "error": "UnknownPerfMode"}))
+        return
+
     bench = find_bench(label)
     if bench is None:
         print(json.dumps({"status": "error", "error": "UnknownBench"}))
@@ -351,6 +388,8 @@ def _emit_cold_sample(label, sample_kind, sample_arg):
             if func is None:
                 print(json.dumps({"status": "n/a"}))
                 return
+            if perf_mode == "warmed":
+                _warmup_short(func)
 
             def run_short_batch():
                 start = time.perf_counter()
@@ -368,6 +407,8 @@ def _emit_cold_sample(label, sample_kind, sample_arg):
             if document_func is None or text is None:
                 print(json.dumps({"status": "n/a"}))
                 return
+            if perf_mode == "warmed":
+                _warmup_document(document_func)
             start = time.perf_counter()
             result = _timeout_call(DOCUMENT_TIMEOUT_SECONDS, document_func, text)
             print(
@@ -546,7 +587,7 @@ def run_document_correctness(bench, document_datasets):
     return row
 
 
-def run_document_perf(bench, document_datasets):
+def run_document_perf(bench, document_datasets, perf_mode="cold"):
     document_results = {"label": bench["label"]}
     document_runner = get_document_runner(bench)
     for dataset_name, key, iterations in DOCUMENT_DATASETS:
@@ -558,6 +599,7 @@ def run_document_perf(bench, document_datasets):
                 document_runner,
                 text,
                 iterations,
+                perf_mode=perf_mode,
             ) if text is not None else None
         )
     return document_results
@@ -599,9 +641,14 @@ def merge_rows(correctness_rows, perf_rows):
 
 
 def main():
-    if len(sys.argv) >= 5 and sys.argv[1] == "--cold-sample":
-        _emit_cold_sample(sys.argv[2], sys.argv[3], sys.argv[4])
+    perf_mode = "cold"
+    if len(sys.argv) >= 6 and sys.argv[1] == "--sample":
+        _emit_process_sample(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
         return
+    if len(sys.argv) >= 3 and sys.argv[1] == "--perf-mode":
+        perf_mode = sys.argv[2]
+        if perf_mode not in PERF_MODES:
+            raise SystemExit(f"Unknown perf mode: {perf_mode}")
 
     benches = build_benches()
     document_datasets = load_document_datasets()
@@ -613,18 +660,18 @@ def main():
         correctness_row.update(run_document_correctness(bench, document_datasets))
         correctness_rows.append(correctness_row)
 
-        short_perf = benchmark_short_perf(bench["label"], bench["func"])
+        short_perf = benchmark_short_perf(bench["label"], bench["func"], perf_mode=perf_mode)
         perf_row = {
             "label": bench["label"],
             "short_ms": None if not isinstance(short_perf, (int, float)) else short_perf * len(SHORT_PERF_INPUTS) / 1000.0,
             "short_timeout": short_perf if isinstance(short_perf, str) else None,
         }
-        perf_row.update(run_document_perf(bench, document_datasets))
+        perf_row.update(run_document_perf(bench, document_datasets, perf_mode=perf_mode))
         perf_rows.append(perf_row)
 
     rows = merge_rows(correctness_rows, perf_rows)
 
-    print("benchmarks")
+    print(f"benchmarks ({perf_mode})")
     print(
         f"{'parser':24} "
         f"{'short (ms)':>10} {'acc':>8} "

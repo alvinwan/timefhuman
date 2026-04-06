@@ -18,6 +18,16 @@ These datasets are taken from datefinder's README: https://github.com/akoumjian/
 | datefinder.find_dates | *17.5* | 10/28 | *16.8* | [11](matches/datefinder.find_dates/core_corpus.md) | 9/14 | 7/13 | *84.5* | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/57 | 54/56 | *859.6* | [313](matches/datefinder.find_dates/test_data_560k.md) | 37/94 | 22/74 |
 | dateparser* | *>1000ms* | 15/28 | *>2s* | [14](matches/dateparser/core_corpus.md) | 9/14 | 7/13 | *>2s* | [90](matches/dateparser/seattle_html_76k.md) | 53/57 | 53/56 | *>2s* | n/a | timeout | timeout |
 
+### Warmed Fresh Process Reference
+
+Each timing sample starts in a fresh Python process, runs one untimed synthetic warmup batch, and then times the real benchmark input. This keeps benchmark inputs out of the warmup pass while approximating post-initialization steady-state latency. Correctness and counts are unchanged from the main table above, so only timing columns are shown here.
+
+| parser | short (ms) | core (ms) | sea_76k (ms) | sea_560k (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| timefhuman | *1.1* | *1.0* | <ins><strong>21.8</strong></ins> | <ins><strong>168.3</strong></ins> |
+| datefinder.find_dates | <ins><strong>1.0</strong></ins> | <ins><strong>0.8</strong></ins> | *68.9* | *848.8* |
+| dateparser* | *131.6* | *>2s* | *>2s* | *>2s* |
+
 ### Lower-Accuracy Baselines
 
 Seattle accuracy below `50/57`.
@@ -55,6 +65,12 @@ Run the combined baseline benchmark.
 
 ```bash
 .venv/bin/python benchmarks/benchmark_baselines.py
+```
+
+Run the warmed fresh-process variant used for the secondary timing table.
+
+```bash
+.venv/bin/python benchmarks/benchmark_baselines.py --perf-mode warmed
 ```
 
 Refresh the checked-in whole-document match dumps:
