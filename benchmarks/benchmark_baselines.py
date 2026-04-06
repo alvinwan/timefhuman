@@ -1,4 +1,6 @@
+import json
 import statistics
+import subprocess
 import sys
 import time
 from datetime import date, datetime, timedelta
@@ -14,41 +16,6 @@ from eval.short import DEFAULT_CASES
 from timefhuman import timefhuman
 from timefhuman.main import tfhConfig
 
-try:
-    import ctparse
-except ImportError:
-    ctparse = None
-
-try:
-    import datefinder
-except ImportError:
-    datefinder = None
-
-try:
-    import dateparser
-except ImportError:
-    dateparser = None
-
-try:
-    from dateparser.search import search_dates as dateparser_search_dates
-except ImportError:
-    dateparser_search_dates = None
-
-try:
-    import metadate
-except ImportError:
-    metadate = None
-
-try:
-    import parsedatetime
-except ImportError:
-    parsedatetime = None
-
-try:
-    import recurrent
-except ImportError:
-    recurrent = None
-
 
 NOW = datetime(2018, 8, 4, 14, 0)
 EXACT_CASES = [
@@ -60,6 +27,7 @@ SHORT_PERF_INPUTS = [text for text, _ in EXACT_CASES]
 SHORT_SAMPLES = 7
 SHORT_TIMEOUT_SECONDS = 1
 DOCUMENT_TIMEOUT_SECONDS = 2
+COLD_SAMPLE_GRACE_SECONDS = 60
 DOCUMENT_DATASETS = (
     ("core_corpus", "core_corpus", 7),
     ("seattle_html_76k", "seattle_html_76k", 5),
@@ -68,60 +36,123 @@ DOCUMENT_DATASETS = (
 GOLD_DOCUMENT_DATASETS = ("core_corpus", "seattle_html_76k", "test_data_560k")
 
 
-def build_benches():
+def _build_timefhuman_bench():
     cfg = tfhConfig(now=NOW)
     document_cfg = tfhConfig(now=NOW, infer_datetimes=False)
     match_cfg = tfhConfig(now=NOW, infer_datetimes=False, return_matched_text=True)
-    benches = [{
+    return {
         "label": "timefhuman",
         "func": lambda text: timefhuman(text, config=cfg),
         "document_func": lambda text: timefhuman(text, config=document_cfg),
         "document_dump_func": lambda text: timefhuman(text, config=match_cfg),
-    }]
+    }
 
-    if dateparser:
-        benches.append({
-            "label": "dateparser*",
-            "func": None,
-            "document_func": None,
-        })
-        benches[-1]["func"] = lambda text: dateparser.parse(text, settings={"RELATIVE_BASE": NOW})
-        if dateparser_search_dates:
-            benches[-1]["document_func"] = lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW})
-            benches[-1]["document_dump_func"] = lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW})
-    if parsedatetime:
-        calendar = parsedatetime.Calendar()
-        benches.append({
-            "label": "parsedatetime.parseDT",
-            "func": lambda text: calendar.parseDT(text, NOW),
-            "document_func": None,
-        })
-    if datefinder:
-        benches.append({
-            "label": "datefinder.find_dates",
-            "func": lambda text: list(datefinder.find_dates(text, base_date=NOW)),
-            "document_func": lambda text: list(datefinder.find_dates(text, base_date=NOW)),
-            "document_dump_func": lambda text: list(datefinder.find_dates(text, base_date=NOW, source=True, index=True)),
-        })
-    if ctparse:
-        benches.append({
-            "label": "ctparse.ctparse",
-            "func": lambda text: ctparse.ctparse(text, ts=NOW),
-            "document_func": None,
-        })
-    if recurrent:
-        benches.append({
-            "label": "recurrent.parse",
-            "func": lambda text: recurrent.parse(text, NOW),
-            "document_func": lambda text: recurrent.parse(text, NOW),
-        })
-    if metadate:
-        benches.append({
-            "label": "metadate.parse_date",
-            "func": lambda text: metadate.parse_date(text, reference_date=NOW, multi=True, use_c_scanner=True),
-            "document_func": None,
-        })
 
+def _build_dateparser_bench():
+    try:
+        import dateparser
+    except ImportError:
+        return None
+
+    try:
+        from dateparser.search import search_dates as dateparser_search_dates
+    except ImportError:
+        dateparser_search_dates = None
+
+    bench = {
+        "label": "dateparser*",
+        "func": lambda text: dateparser.parse(text, settings={"RELATIVE_BASE": NOW}),
+        "document_func": None,
+    }
+    if dateparser_search_dates:
+        bench["document_func"] = lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW})
+        bench["document_dump_func"] = lambda text: dateparser_search_dates(text, settings={"RELATIVE_BASE": NOW})
+    return bench
+
+
+def _build_parsedatetime_bench():
+    try:
+        import parsedatetime
+    except ImportError:
+        return None
+
+    calendar = parsedatetime.Calendar()
+    return {
+        "label": "parsedatetime.parseDT",
+        "func": lambda text: calendar.parseDT(text, NOW),
+        "document_func": None,
+    }
+
+
+def _build_datefinder_bench():
+    try:
+        import datefinder
+    except ImportError:
+        return None
+
+    return {
+        "label": "datefinder.find_dates",
+        "func": lambda text: list(datefinder.find_dates(text, base_date=NOW)),
+        "document_func": lambda text: list(datefinder.find_dates(text, base_date=NOW)),
+        "document_dump_func": lambda text: list(datefinder.find_dates(text, base_date=NOW, source=True, index=True)),
+    }
+
+
+def _build_ctparse_bench():
+    try:
+        import ctparse
+    except ImportError:
+        return None
+
+    return {
+        "label": "ctparse.ctparse",
+        "func": lambda text: ctparse.ctparse(text, ts=NOW),
+        "document_func": None,
+    }
+
+
+def _build_recurrent_bench():
+    try:
+        import recurrent
+    except ImportError:
+        return None
+
+    return {
+        "label": "recurrent.parse",
+        "func": lambda text: recurrent.parse(text, NOW),
+        "document_func": lambda text: recurrent.parse(text, NOW),
+    }
+
+
+def _build_metadate_bench():
+    try:
+        import metadate
+    except ImportError:
+        return None
+
+    return {
+        "label": "metadate.parse_date",
+        "func": lambda text: metadate.parse_date(text, reference_date=NOW, multi=True, use_c_scanner=True),
+        "document_func": None,
+    }
+
+
+BENCH_BUILDERS = {
+    "timefhuman": _build_timefhuman_bench,
+    "dateparser*": _build_dateparser_bench,
+    "parsedatetime.parseDT": _build_parsedatetime_bench,
+    "datefinder.find_dates": _build_datefinder_bench,
+    "ctparse.ctparse": _build_ctparse_bench,
+    "recurrent.parse": _build_recurrent_bench,
+    "metadate.parse_date": _build_metadate_bench,
+}
+
+def build_benches():
+    benches = []
+    for label in BENCH_BUILDERS:
+        bench = BENCH_BUILDERS[label]()
+        if bench is not None:
+            benches.append(bench)
     return benches
 
 
@@ -132,6 +163,13 @@ def load_document_datasets():
         if text is not None:
             datasets[dataset_name] = text
     return datasets
+
+
+def find_bench(label):
+    builder = BENCH_BUILDERS.get(label)
+    if builder is None:
+        return None
+    return builder()
 
 
 def normalize_exact_result(label, text, func):
@@ -217,51 +255,135 @@ def _timeout_call(timeout_seconds, func, *args):
             signal.signal(signal.SIGALRM, previous_handler)
 
 
-def benchmark_document(label, document_func, text, iterations, timeout_seconds=DOCUMENT_TIMEOUT_SECONDS):
-    if document_func is None or text is None:
+def benchmark_document(label, dataset_name, document_func, text, iterations, timeout_seconds=DOCUMENT_TIMEOUT_SECONDS):
+    del document_func
+    if text is None:
         return None
 
-    def run_once():
-        start = time.perf_counter()
-        result = _timeout_call(timeout_seconds, document_func, text)
-        return {
-            "seconds": time.perf_counter() - start,
-            "count": count_document_results(label, result),
-        }
-
     try:
-        warmup = run_once()
         times = []
+        count = None
         for _ in range(iterations):
-            times.append(run_once()["seconds"])
+            sample = _run_cold_sample(label, "document", dataset_name, timeout_seconds)
+            if "timeout" in sample:
+                return {"timeout": f">{timeout_seconds}s", "count": None}
+            if "error" in sample:
+                return {"error": sample["error"], "count": None}
+            times.append(sample["seconds"])
+            if count is None:
+                count = sample["count"]
         return {
             "seconds": statistics.median(times),
-            "count": warmup["count"],
+            "count": count,
         }
-    except BenchmarkTimeout:
-        return {"timeout": f">{timeout_seconds}s", "count": None}
     except Exception as exc:
         return {"error": type(exc).__name__, "count": None}
 
 
-def benchmark_short_perf(func, timeout_seconds=SHORT_TIMEOUT_SECONDS, samples=SHORT_SAMPLES):
+def benchmark_short_perf(label, func, timeout_seconds=SHORT_TIMEOUT_SECONDS, samples=SHORT_SAMPLES):
     if func is None:
         return None
 
-    def run_once():
-        start = time.perf_counter()
-        for text in SHORT_PERF_INPUTS:
-            func(text)
-        return time.perf_counter() - start
-
     try:
-        _timeout_call(timeout_seconds, run_once)
-        samples_seconds = [_timeout_call(timeout_seconds, run_once) for _ in range(samples)]
+        samples_seconds = []
+        for _ in range(samples):
+            sample = _run_cold_sample(label, "short", "", timeout_seconds)
+            if "timeout" in sample:
+                return f">{timeout_seconds}s"
+            if "error" in sample:
+                return None
+            samples_seconds.append(sample["seconds"])
         return statistics.median(samples_seconds) / len(SHORT_PERF_INPUTS) * 1e6
-    except BenchmarkTimeout:
-        return f">{timeout_seconds}s"
     except Exception:
         return None
+
+
+def _run_cold_sample(label, sample_kind, sample_arg, timeout_seconds):
+    script_path = Path(__file__).resolve()
+    cmd = [
+        sys.executable,
+        str(script_path),
+        "--cold-sample",
+        label,
+        sample_kind,
+        sample_arg,
+    ]
+    try:
+        completed = subprocess.run(
+            cmd,
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds + COLD_SAMPLE_GRACE_SECONDS,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return {"timeout": f">{timeout_seconds}s"}
+
+    output_lines = [line for line in completed.stdout.splitlines() if line.strip()]
+    if not output_lines:
+        error_name = "ChildProcessError" if completed.returncode else "NoOutput"
+        return {"error": error_name}
+
+    try:
+        payload = json.loads(output_lines[-1])
+    except json.JSONDecodeError:
+        return {"error": "InvalidChildOutput"}
+
+    if payload.get("status") == "ok":
+        return payload
+    if payload.get("status") == "timeout":
+        return {"timeout": f">{timeout_seconds}s"}
+    if payload.get("status") == "n/a":
+        return {"error": "NotAvailable"}
+    return {"error": payload.get("error", "ChildProcessError")}
+
+
+def _emit_cold_sample(label, sample_kind, sample_arg):
+    bench = find_bench(label)
+    if bench is None:
+        print(json.dumps({"status": "error", "error": "UnknownBench"}))
+        return
+
+    try:
+        if sample_kind == "short":
+            func = bench["func"]
+            if func is None:
+                print(json.dumps({"status": "n/a"}))
+                return
+
+            def run_short_batch():
+                start = time.perf_counter()
+                for text in SHORT_PERF_INPUTS:
+                    func(text)
+                return time.perf_counter() - start
+
+            seconds = _timeout_call(SHORT_TIMEOUT_SECONDS, run_short_batch)
+            print(json.dumps({"status": "ok", "seconds": seconds}))
+            return
+
+        if sample_kind == "document":
+            document_func = get_document_runner(bench)
+            text = load_document_datasets().get(sample_arg)
+            if document_func is None or text is None:
+                print(json.dumps({"status": "n/a"}))
+                return
+            start = time.perf_counter()
+            result = _timeout_call(DOCUMENT_TIMEOUT_SECONDS, document_func, text)
+            print(
+                json.dumps({
+                    "status": "ok",
+                    "seconds": time.perf_counter() - start,
+                    "count": count_document_results(label, result),
+                })
+            )
+            return
+
+        print(json.dumps({"status": "error", "error": "UnknownSampleKind"}))
+    except BenchmarkTimeout:
+        print(json.dumps({"status": "timeout"}))
+    except Exception as exc:
+        print(json.dumps({"status": "error", "error": type(exc).__name__}))
 
 
 def run_short_correctness(bench):
@@ -432,6 +554,7 @@ def run_document_perf(bench, document_datasets):
         document_results[key] = (
             benchmark_document(
                 bench["label"],
+                dataset_name,
                 document_runner,
                 text,
                 iterations,
@@ -476,6 +599,10 @@ def merge_rows(correctness_rows, perf_rows):
 
 
 def main():
+    if len(sys.argv) >= 5 and sys.argv[1] == "--cold-sample":
+        _emit_cold_sample(sys.argv[2], sys.argv[3], sys.argv[4])
+        return
+
     benches = build_benches()
     document_datasets = load_document_datasets()
     correctness_rows = []
@@ -486,7 +613,7 @@ def main():
         correctness_row.update(run_document_correctness(bench, document_datasets))
         correctness_rows.append(correctness_row)
 
-        short_perf = benchmark_short_perf(bench["func"])
+        short_perf = benchmark_short_perf(bench["label"], bench["func"])
         perf_row = {
             "label": bench["label"],
             "short_ms": None if not isinstance(short_perf, (int, float)) else short_perf * len(SHORT_PERF_INPUTS) / 1000.0,
