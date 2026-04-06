@@ -100,13 +100,13 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 ## Performance
 
-Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3. `acc` is member-level correctness for the dataset immediately to the left. `dateparser*` uses `dateparser.parse` for short inputs and `dateparser.search_dates` for document corpora.
+Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3. Timing columns are fresh-process cold-start medians, so parser caches do not carry across samples. `acc` is member-level correctness for the dataset immediately to the left. Most parsers use a `2s` timeout; `dateparser*` uses `30s`. `dateparser*` uses `dateparser.parse` for short inputs and `dateparser.search_dates` for document corpora.
 
-| parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | sea_560k (ms) | acc |
+| parser | short (ms) | acc | core (ms) | acc | sea_76k (ms) | acc | test_data_560k (ms) | acc |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| timefhuman | <ins><strong>0.1</strong></ins> | <ins><strong>28/28</strong></ins> | <ins><strong>0.1</strong></ins> | <ins><strong>14/14</strong></ins> | <ins><strong>4.9</strong></ins> | <ins><strong>57/57</strong></ins> | <ins><strong>26.9</strong></ins> | <ins><strong>94/94</strong></ins> |
-| datefinder | *0.3* | 10/28 | *0.2* | 9/14 | *38.6* | 54/57 | *485.4* | 37/94 |
-| dateparser* | *56.1* | 15/28 | *109.6* | 9/14 | *332.7* | 53/57 | *>2s* | timeout |
+| timefhuman | <ins><strong>2.5</strong></ins> | <ins><strong>28/28</strong></ins> | <ins><strong>2.7</strong></ins> | <ins><strong>14/14</strong></ins> | <ins><strong>23.0</strong></ins> | <ins><strong>57/57</strong></ins> | <ins><strong>168.0</strong></ins> | <ins><strong>94/94</strong></ins> |
+| datefinder | *18.8* | 10/28 | *17.6* | 9/14 | *85.8* | 54/57 | *915.6* | 37/94 |
+| dateparser* | *1216.4* | 15/28 | *1376.4* | 9/14 | *734.4* | 53/57 | *>30s* | timeout |
 
 `datefinder` and `dateparser*` both pick up extra HTML and metadata false positives on these corpora, so speed alone overstates quality. Lower-accuracy baselines are omitted here for readability. Full results, grouped correctness, repro commands, and raw match dumps are in [`benchmarks/README.md`](benchmarks/README.md).
 
