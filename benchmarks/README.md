@@ -18,6 +18,14 @@ These datasets are taken from datefinder's README: https://github.com/akoumjian/
 | datefinder.find_dates | *18.8* | 10/28 | *17.6* | [11](matches/datefinder.find_dates/core_corpus.md) | 9/14 | 7/13 | *85.8* | [57](matches/datefinder.find_dates/seattle_html_76k.md) | 54/57 | 54/56 | *915.6* | [313](matches/datefinder.find_dates/test_data_560k.md) | 37/94 | 22/74 |
 | dateparser* | *1216.4* | 15/28 | *1376.4* | [14](matches/dateparser/core_corpus.md) | 9/14 | 7/13 | *734.4* | [90](matches/dateparser/seattle_html_76k.md) | 53/57 | 53/56 | *>30s* | n/a | timeout | timeout |
 
+### Visual Summary
+
+The compact summary works best as one figure with two grouped-bar panels rather than a single shared axis: accuracy and latency use different units and different scales.
+
+![Benchmark snapshot comparing timefhuman and datefinder](plots/benchmark_snapshot.svg)
+
+This chart focuses on `timefhuman` vs. `datefinder.find_dates`, which is the clearest head-to-head comparison from the main table above. `dateparser*` stays in the tables because its larger timeout ceiling makes a compact side-by-side chart much less legible.
+
 ### Warmed Fresh Process Reference
 
 Each timing sample starts in a fresh Python process, runs one untimed synthetic warmup batch, and then times the real benchmark input. This keeps benchmark inputs out of the warmup pass while approximating post-initialization steady-state latency. Correctness and counts are unchanged from the main table above, so only timing columns are shown here.
