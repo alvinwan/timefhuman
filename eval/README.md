@@ -12,4 +12,4 @@ Current corpus status:
 - `core_corpus`: fully gold-annotated matched-text expectations.
 - `seattle_html_76k`: fully gold-annotated matched-text expectations; HTML itself stays external.
 - `test_data_560k`: broad sampled gold. Includes many checked-in positive matches plus forbidden false positives, but is not exhaustive.
-- `enron_emails`: broad sampled gold built from 256 evenly sampled `Date:` headers in the CMU Enron email corpus; raw mail stays external and is flattened by the downloader.
+- `enron_emails`: broad sampled gold built from 256 evenly sampled `Date:` headers plus curated body-text snippets with per-message send-time context; raw mail stays external and is flattened by the downloader.

@@ -3,6 +3,7 @@ import pytest
 from eval.corpora import (
     CORE_CORPUS_MATCHED_TEXT,
     CORE_CORPUS_TEXT,
+    ENRON_EMAILS_CONTEXT_CASES,
     SEATTLE_HTML_76K_MATCHED_TEXT,
     TEST_DATA_560K_FORBIDDEN,
     TEST_DATA_560K_MATCHED_TEXT,
@@ -39,3 +40,23 @@ def test_test_data_gold_matches(now):
     actual_match_spans = {(matched_text, span) for matched_text, span, _ in matches}
     for forbidden in TEST_DATA_560K_FORBIDDEN:
         assert forbidden not in actual_match_spans
+
+
+def enron_case_id(case):
+    return f"{case['source_path']}:{case['source_span'][0]}"
+
+
+@pytest.mark.parametrize("case", ENRON_EMAILS_CONTEXT_CASES, ids=enron_case_id)
+def test_enron_context_gold_matches(case):
+    config = tfhConfig(now=case["sent_at"], return_matched_text=True)
+    assert timefhuman(case["text"], config=config) == case["expected"]
+
+
+def test_enron_context_spans_match_corpus():
+    text = load_corpus_text("enron_emails")
+    if text is None:
+        pytest.skip("enron_emails not available; run python -m eval.download_corpora enron_emails")
+
+    for case in ENRON_EMAILS_CONTEXT_CASES:
+        start, end = case["source_span"]
+        assert text[start:end] == case["text"]

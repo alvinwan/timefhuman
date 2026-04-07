@@ -266,6 +266,112 @@ MATCHED_TEXT = [
     ('Mon, 26 Nov 2001 10:48:43 -0800', (1430124791, 1430124822), datetime.datetime(2001, 11, 26, 10, 48, 43, tzinfo=TZ_MINUS_0800)),  # zufferli-j/sent_items/99.
 ]
 
+# Curated body-text snippets with per-message send times for relative-date resolution.
+CONTEXT_MATCHED_TEXT_CASES = [
+    {
+        'source_path': 'kitchen-l/_americas/turbines/18.',
+        'source_span': (792106649, 792106692),
+        'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
+        'text': "Let's discuss first thing tomorrow morning.",
+        'expected': [
+            ('tomorrow morning', (26, 42), datetime.datetime(2001, 10, 4, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+        ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/turbines/18.',
+        'source_span': (792107847, 792107902),
+        'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
+        'text': 'Please review and forward comments by tomorrow morning.',
+        'expected': [
+            ('tomorrow morning', (38, 54), datetime.datetime(2001, 10, 4, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+        ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/turbines/18.',
+        'source_span': (792111624, 792111702),
+        'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
+        'text': 'I would appreciate if you could reserve a conference room for today from 2-3p.',
+        'expected': [
+            ('today', (62, 67), datetime.datetime(2001, 10, 3, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ('2-3p', (73, 77), (datetime.datetime(2001, 10, 3, 14, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 3, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
+        ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/turbines/18.',
+        'source_span': (792111891, 792111944),
+        'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
+        'text': 'I would like to reserve a conference room from 9a-4p.',
+        'expected': [
+            ('9a-4p', (47, 52), (datetime.datetime(2001, 10, 3, 9, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 3, 16, 0, 0, tzinfo=TZ_MINUS_0700))),
+        ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/turbines/18.',
+        'source_span': (792113414, 792113518),
+        'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
+        'text': 'Copy Lorie Leigh/Lisa Zarsky on your availability and they will coordinate a meeting for this afternoon.',
+        'expected': [
+            ('afternoon', (94, 103), datetime.datetime(2001, 10, 3, 15, 0, 0, tzinfo=TZ_MINUS_0700)),
+        ],
+    },
+    {
+        'source_path': 'stokley-c/chris_stokley/murray/51.',
+        'source_span': (1279308789, 1279308912),
+        'sent_at': datetime.datetime(2001, 7, 24, 7, 30, 58, tzinfo=TZ_MINUS_0700),
+        'text': 'We are setting up a meeting with CSC for this Wednesday to discuss the needs and start defining Iteration 2 of the project.',
+        'expected': [
+            ('this Wednesday', (41, 55), datetime.datetime(2001, 7, 25, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+        ],
+    },
+    {
+        'source_path': 'stokley-c/chris_stokley/murray/51.',
+        'source_span': (1279310319, 1279310349),
+        'sent_at': datetime.datetime(2001, 7, 24, 7, 30, 58, tzinfo=TZ_MINUS_0700),
+        'text': '07/24/2001\n10:00 AM - 11:00 AM',
+        'expected': [
+            ('07/24/2001\n10:00 AM - 11:00 AM', (0, 30), (datetime.datetime(2001, 7, 24, 10, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 7, 24, 11, 0, 0, tzinfo=TZ_MINUS_0700))),
+        ],
+    },
+    {
+        'source_path': 'stokley-c/chris_stokley/murray/8.',
+        'source_span': (1279379889, 1279379942),
+        'sent_at': datetime.datetime(2001, 10, 1, 17, 49, 14, tzinfo=TZ_MINUS_0700),
+        'text': 'I think we have a meeting schedule for tomorrow 10/2.',
+        'expected': [
+            ('tomorrow', (39, 47), datetime.datetime(2001, 10, 2, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ('10/2', (48, 52), datetime.datetime(2001, 10, 2, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+        ],
+    },
+    {
+        'source_path': 'stokley-c/chris_stokley/murray/8.',
+        'source_span': (1279383145, 1279383234),
+        'sent_at': datetime.datetime(2001, 10, 1, 17, 49, 14, tzinfo=TZ_MINUS_0700),
+        'text': 'I do have a few questions which I would like to discuss with you next week (9/24 - 9/26).',
+        'expected': [
+            ('9/24 - 9/26', (76, 87), (datetime.datetime(2001, 9, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 9, 26, 0, 0, 0, tzinfo=TZ_MINUS_0700))),
+        ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/turbines/65.',
+        'source_span': (792249453, 792249561),
+        'sent_at': datetime.datetime(2001, 6, 18, 22, 56, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'I will call you tomorrow morning to answer any questions you have on the turbine report or other activities.',
+        'expected': [
+            ('tomorrow morning', (16, 32), datetime.datetime(2001, 6, 19, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+        ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/turbines/65.',
+        'source_span': (792249562, 792249616),
+        'sent_at': datetime.datetime(2001, 6, 18, 22, 56, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'I will also be in Houston all day Thursday and Friday.',
+        'expected': [
+            ('Thursday', (34, 42), datetime.datetime(2001, 6, 21, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ('Friday', (47, 53), datetime.datetime(2001, 6, 22, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+        ],
+    },
+]
+
 FORBIDDEN = []
 
 DATA = {
@@ -274,5 +380,6 @@ DATA = {
     "gold_status": "broad_sample",
     "text": None,
     "expected": MATCHED_TEXT,
+    "context_expected": CONTEXT_MATCHED_TEXT_CASES,
     "forbidden": FORBIDDEN,
 }

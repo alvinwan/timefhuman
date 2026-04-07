@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from eval.corpus_data.core_corpus import DATA as CORE_CORPUS, MATCHED_TEXT as CORE_CORPUS_MATCHED_TEXT, TEXT as CORE_CORPUS_TEXT
 from eval.corpus_data.enron_emails import (
+    CONTEXT_MATCHED_TEXT_CASES as ENRON_EMAILS_CONTEXT_CASES,
     DATA as ENRON_EMAILS,
     FORBIDDEN as ENRON_EMAILS_FORBIDDEN,
     MATCHED_TEXT as ENRON_EMAILS_MATCHED_TEXT,
