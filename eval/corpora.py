@@ -1,6 +1,11 @@
 import os
 from pathlib import Path
 from eval.corpus_data.core_corpus import DATA as CORE_CORPUS, MATCHED_TEXT as CORE_CORPUS_MATCHED_TEXT, TEXT as CORE_CORPUS_TEXT
+from eval.corpus_data.enron_emails import (
+    DATA as ENRON_EMAILS,
+    FORBIDDEN as ENRON_EMAILS_FORBIDDEN,
+    MATCHED_TEXT as ENRON_EMAILS_MATCHED_TEXT,
+)
 from eval.corpus_data.seattle_html_76k import DATA as SEATTLE_HTML_76K, MATCHED_TEXT as SEATTLE_HTML_76K_MATCHED_TEXT
 from eval.corpus_data.test_data_560k import (
     DATA as TEST_DATA_560K,
@@ -29,6 +34,12 @@ CORPUS_FILES = {
         "datefinder_relpath": ("tests", "test_data.txt"),
         "download_url": "https://raw.githubusercontent.com/akoumjian/datefinder/master/tests/test_data.txt",
     },
+    "enron_emails": {
+        "cache_name": "enron_emails.txt",
+        "archive_name": "enron_mail_20150507.tar.gz",
+        "extracted_dir_name": "enron_mail_20150507",
+        "download_url": "https://www.cs.cmu.edu/~enron/enron_mail_20150507.tar.gz",
+    },
 }
 
 CORPORA = {
@@ -41,6 +52,9 @@ CORPORA = {
     "test_data_560k": {
         **TEST_DATA_560K,
     },
+    "enron_emails": {
+        **ENRON_EMAILS,
+    },
 }
 
 
@@ -50,6 +64,12 @@ def corpora_dir():
 
 def resolve_corpus_path(name: str):
     info = CORPUS_FILES[name]
+    if "datefinder_relpath" not in info:
+        cached_path = corpora_dir() / info["cache_name"]
+        if cached_path.exists():
+            return cached_path
+        return None
+
     datefinder_path = DATEFINDER_ROOT.joinpath(*info["datefinder_relpath"])
     if datefinder_path.exists():
         return datefinder_path
