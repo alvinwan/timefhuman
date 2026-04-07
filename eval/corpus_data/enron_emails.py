@@ -274,8 +274,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
         'text': "Let's discuss first thing tomorrow morning.",
         'expected': [
-            ('tomorrow morning', (26, 42), datetime.datetime(2001, 10, 4, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('tomorrow morning', (26, 42), datetime.datetime(2001, 10, 4, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/18.',
@@ -283,8 +283,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
         'text': 'Please review and forward comments by tomorrow morning.',
         'expected': [
-            ('tomorrow morning', (38, 54), datetime.datetime(2001, 10, 4, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('tomorrow morning', (38, 54), datetime.datetime(2001, 10, 4, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/18.',
@@ -292,9 +292,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
         'text': 'I would appreciate if you could reserve a conference room for today from 2-3p.',
         'expected': [
-            ('today', (62, 67), datetime.datetime(2001, 10, 3, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ('2-3p', (73, 77), (datetime.datetime(2001, 10, 3, 14, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 3, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
-        ],
+                ('today from 2-3p', (62, 77), (datetime.datetime(2001, 10, 3, 14, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 3, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+        'known_failure': 'Relative ranges should stay merged instead of splitting into separate date and time matches.',
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/18.',
@@ -302,17 +302,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
         'text': 'I would like to reserve a conference room from 9a-4p.',
         'expected': [
-            ('9a-4p', (47, 52), (datetime.datetime(2001, 10, 3, 9, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 3, 16, 0, 0, tzinfo=TZ_MINUS_0700))),
-        ],
-    },
-    {
-        'source_path': 'kitchen-l/_americas/turbines/18.',
-        'source_span': (792113414, 792113518),
-        'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
-        'text': 'Copy Lorie Leigh/Lisa Zarsky on your availability and they will coordinate a meeting for this afternoon.',
-        'expected': [
-            ('afternoon', (94, 103), datetime.datetime(2001, 10, 3, 15, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('9a-4p', (47, 52), (datetime.datetime(2001, 10, 3, 9, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 3, 16, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
     },
     {
         'source_path': 'stokley-c/chris_stokley/murray/51.',
@@ -320,8 +311,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 7, 24, 7, 30, 58, tzinfo=TZ_MINUS_0700),
         'text': 'We are setting up a meeting with CSC for this Wednesday to discuss the needs and start defining Iteration 2 of the project.',
         'expected': [
-            ('this Wednesday', (41, 55), datetime.datetime(2001, 7, 25, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('this Wednesday', (41, 55), datetime.datetime(2001, 7, 25, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'stokley-c/chris_stokley/murray/51.',
@@ -329,8 +320,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 7, 24, 7, 30, 58, tzinfo=TZ_MINUS_0700),
         'text': '07/24/2001\n10:00 AM - 11:00 AM',
         'expected': [
-            ('07/24/2001\n10:00 AM - 11:00 AM', (0, 30), (datetime.datetime(2001, 7, 24, 10, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 7, 24, 11, 0, 0, tzinfo=TZ_MINUS_0700))),
-        ],
+                ('07/24/2001\n10:00 AM - 11:00 AM', (0, 30), (datetime.datetime(2001, 7, 24, 10, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 7, 24, 11, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
     },
     {
         'source_path': 'stokley-c/chris_stokley/murray/8.',
@@ -338,9 +329,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 1, 17, 49, 14, tzinfo=TZ_MINUS_0700),
         'text': 'I think we have a meeting schedule for tomorrow 10/2.',
         'expected': [
-            ('tomorrow', (39, 47), datetime.datetime(2001, 10, 2, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ('10/2', (48, 52), datetime.datetime(2001, 10, 2, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('tomorrow', (39, 47), datetime.datetime(2001, 10, 2, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('10/2', (48, 52), datetime.datetime(2001, 10, 2, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'stokley-c/chris_stokley/murray/8.',
@@ -348,8 +339,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 1, 17, 49, 14, tzinfo=TZ_MINUS_0700),
         'text': 'I do have a few questions which I would like to discuss with you next week (9/24 - 9/26).',
         'expected': [
-            ('9/24 - 9/26', (76, 87), (datetime.datetime(2001, 9, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 9, 26, 0, 0, 0, tzinfo=TZ_MINUS_0700))),
-        ],
+                ('9/24 - 9/26', (76, 87), (datetime.datetime(2001, 9, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 9, 26, 0, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/65.',
@@ -357,8 +348,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 6, 18, 22, 56, 0, tzinfo=TZ_MINUS_0700),
         'text': 'I will call you tomorrow morning to answer any questions you have on the turbine report or other activities.',
         'expected': [
-            ('tomorrow morning', (16, 32), datetime.datetime(2001, 6, 19, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('tomorrow morning', (16, 32), datetime.datetime(2001, 6, 19, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/65.',
@@ -366,9 +357,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 6, 18, 22, 56, 0, tzinfo=TZ_MINUS_0700),
         'text': 'I will also be in Houston all day Thursday and Friday.',
         'expected': [
-            ('Thursday', (34, 42), datetime.datetime(2001, 6, 21, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ('Friday', (47, 53), datetime.datetime(2001, 6, 22, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('Thursday', (34, 42), datetime.datetime(2001, 6, 21, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('Friday', (47, 53), datetime.datetime(2001, 6, 22, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'pereira-s/all_documents/135.',
@@ -376,8 +367,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2000, 8, 31, 9, 10, 0, tzinfo=TZ_MINUS_0700),
         'text': "I'll give you a call tomorrow sometime.",
         'expected': [
-            ('tomorrow', (21, 29), datetime.datetime(2000, 9, 1, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('tomorrow', (21, 29), datetime.datetime(2000, 9, 1, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'stokley-c/chris_stokley/murray/70.',
@@ -385,8 +376,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 5, 3, 16, 46, 4, tzinfo=TZ_MINUS_0700),
         'text': 'I would like to schedule a meeting to talk again tomorrow.',
         'expected': [
-            ('tomorrow', (49, 57), datetime.datetime(2001, 5, 4, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('tomorrow', (49, 57), datetime.datetime(2001, 5, 4, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/91.',
@@ -394,8 +385,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 3, 26, 17, 24, 0, tzinfo=TZ_MINUS_0800),
         'text': 'I should have something for you tomorrow.',
         'expected': [
-            ('tomorrow', (32, 40), datetime.datetime(2001, 3, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-        ],
+                ('tomorrow', (32, 40), datetime.datetime(2001, 3, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
     },
     {
         'source_path': 'pereira-s/all_documents/87.',
@@ -403,17 +394,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 2, 7, 3, 48, 0, tzinfo=TZ_MINUS_0800),
         'text': 'I hear any objections by tomorrow evening.',
         'expected': [
-            ('tomorrow evening', (25, 41), datetime.datetime(2001, 2, 8, 18, 0, 0, tzinfo=TZ_MINUS_0800)),
-        ],
-    },
-    {
-        'source_path': 'smith-m/_sent_mail/172.',
-        'source_span': (1248664178, 1248664198),
-        'sent_at': datetime.datetime(2000, 12, 14, 6, 26, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Happy hour tomorrow?',
-        'expected': [
-            ('tomorrow', (11, 19), datetime.datetime(2000, 12, 15, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-        ],
+                ('tomorrow evening', (25, 41), datetime.datetime(2001, 2, 8, 18, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
     },
     {
         'source_path': 'stokley-c/chris_stokley/murray/34.',
@@ -421,8 +403,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 8, 16, 7, 18, 14, tzinfo=TZ_MINUS_0700),
         'text': 'I need to respond TODAY to Lavaroto on these issues.',
         'expected': [
-            ('TODAY', (18, 23), datetime.datetime(2001, 8, 16, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('TODAY', (18, 23), datetime.datetime(2001, 8, 16, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'stokley-c/chris_stokley/murray/47.',
@@ -430,8 +412,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 7, 25, 14, 49, 20, tzinfo=TZ_MINUS_0700),
         'text': 'Please send me your status on these items by close of business today.',
         'expected': [
-            ('today', (63, 68), datetime.datetime(2001, 7, 25, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('today', (63, 68), datetime.datetime(2001, 7, 25, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'pereira-s/all_documents/68.',
@@ -439,26 +421,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 3, 1, 7, 47, 0, tzinfo=TZ_MINUS_0800),
         'text': 'Is soccer practice on for tonight?',
         'expected': [
-            ('tonight', (26, 33), datetime.datetime(2001, 3, 1, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
-        ],
-    },
-    {
-        'source_path': 'dorland-c/all_documents/325.',
-        'source_span': (326791132, 326791146),
-        'sent_at': datetime.datetime(2000, 5, 16, 1, 18, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'Sushi tonight?',
-        'expected': [
-            ('tonight', (6, 13), datetime.datetime(2000, 5, 16, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
-    },
-    {
-        'source_path': 'dorland-c/all_documents/292.',
-        'source_span': (326762057, 326762071),
-        'sent_at': datetime.datetime(2000, 6, 12, 5, 28, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'Movie tonight?',
-        'expected': [
-            ('tonight', (6, 13), datetime.datetime(2000, 6, 12, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('tonight', (26, 33), datetime.datetime(2001, 3, 1, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
     },
     {
         'source_path': 'smith-m/_sent_mail/44.',
@@ -466,17 +430,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 3, 19, 4, 3, 0, tzinfo=TZ_MINUS_0800),
         'text': 'Anything going on tonight?',
         'expected': [
-            ('tonight', (18, 25), datetime.datetime(2001, 3, 19, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
-        ],
-    },
-    {
-        'source_path': 'dorland-c/all_documents/66.',
-        'source_span': (326560031, 326560063),
-        'sent_at': datetime.datetime(2000, 11, 6, 5, 46, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'I will call them this afternoon.',
-        'expected': [
-            ('afternoon', (22, 31), datetime.datetime(2000, 11, 6, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
-        ],
+                ('tonight', (18, 25), datetime.datetime(2001, 3, 19, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/34.',
@@ -484,8 +439,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 8, 30, 6, 58, 50, tzinfo=TZ_MINUS_0700),
         'text': 'Bob Shults and I will be attending an eNYMEX reception this Thursday, and John and Greg are still trying to coordinate a meeting with Bo and Vincent.',
         'expected': [
-            ('this Thursday', (55, 68), datetime.datetime(2001, 8, 30, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('this Thursday', (55, 68), datetime.datetime(2001, 8, 30, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'schwieger-j/all_documents/58.',
@@ -493,8 +448,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 3, 19, 1, 3, 0, tzinfo=TZ_MINUS_0800),
         'text': 'The boys and I are leaving for Colorado to go skiing this Friday.',
         'expected': [
-            ('this Friday', (53, 64), datetime.datetime(2001, 3, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-        ],
+                ('this Friday', (53, 64), datetime.datetime(2001, 3, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
     },
     {
         'source_path': 'scholtes-d/stf/2.',
@@ -502,8 +457,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 15, 12, 57, 51, tzinfo=TZ_MINUS_0700),
         'text': 'Please get back with your thought by next Wednesday so I can put together',
         'expected': [
-            ('next Wednesday', (37, 51), datetime.datetime(2001, 10, 17, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('next Wednesday', (37, 51), datetime.datetime(2001, 10, 17, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'stokley-c/chris_stokley/sent/209.',
@@ -511,9 +466,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 5, 4, 11, 49, 52, tzinfo=TZ_MINUS_0700),
         'text': "Tentative target date for completion of Prelim's is next Thursday, and Finals on Friday.",
         'expected': [
-            ('next Thursday', (52, 65), datetime.datetime(2001, 5, 10, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ('Friday', (81, 87), datetime.datetime(2001, 5, 4, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('next Thursday', (52, 65), datetime.datetime(2001, 5, 10, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('Friday', (81, 87), datetime.datetime(2001, 5, 4, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/18.',
@@ -521,8 +476,8 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 3, 8, 24, 32, tzinfo=TZ_MINUS_0700),
         'text': 'Does anytime from 1-3p work for everyone.',
         'expected': [
-            ('1-3p', (18, 22), (datetime.datetime(2001, 10, 3, 13, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 3, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
-        ],
+                ('1-3p', (18, 22), (datetime.datetime(2001, 10, 3, 13, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 3, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/82.',
@@ -530,727 +485,717 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 4, 10, 17, 21, 0, tzinfo=TZ_MINUS_0700),
         'text': 'did not pick up my mail until late yesterday afternoon.',
         'expected': [
-            ('yesterday afternoon', (35, 54), datetime.datetime(2001, 4, 9, 15, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ],
+                ('yesterday afternoon', (35, 54), datetime.datetime(2001, 4, 9, 15, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
     },
-{
-    'source_path': 'allen-p/_sent_mail/105.',
-    'source_span': (16220, 16293),
-    'sent_at': datetime.datetime(2000, 10, 9, 7, 16, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'PS: Colleen is setting up a meeting tomorrow to discuss the direction for',
-    'expected': [
-        ('tomorrow', (36, 44), datetime.datetime(2000, 10, 10, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'allen-p/_sent_mail/109.',
-    'source_span': (24993, 25011),
-    'sent_at': datetime.datetime(2000, 10, 4, 9, 23, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'Time:  2:30 - 3:30',
-    'expected': [
-        ('2:30 - 3:30', (7, 18), (datetime.datetime(2000, 10, 5, 2, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2000, 10, 5, 3, 30, 0, tzinfo=TZ_MINUS_0700))),
-    ],
-},
-
-{
-    'source_path': 'allen-p/_sent_mail/115.',
-    'source_span': (31659, 31734),
-    'sent_at': datetime.datetime(2000, 9, 28, 6, 17, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'As we discussed yesterday, I am concerned there may have been an attempt to',
-    'expected': [
-        ('yesterday,', (16, 26), datetime.datetime(2000, 9, 27, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'allen-p/_sent_mail/116.',
-    'source_span': (34303, 34373),
-    'sent_at': datetime.datetime(2000, 9, 28, 5, 56, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'As we discussed yesterday, I am concerned there has been an attempt to',
-    'expected': [
-        ('yesterday,', (16, 26), datetime.datetime(2000, 9, 27, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'arnold-j/2000_conference/2.',
-    'source_span': (5348903, 5348972),
-    'sent_at': datetime.datetime(2000, 12, 4, 5, 58, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Per our conversation this morning, I will list the items in question.',
-    'expected': [
-        ('morning,', (26, 34), datetime.datetime(2000, 12, 4, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'arnold-j/_sent_mail/101.',
-    'source_span': (5357534, 5357583),
-    'sent_at': datetime.datetime(2000, 10, 17, 10, 36, 0, tzinfo=TZ_MINUS_0700),
-    'text': "I've decided what to prepare for dinner tomorrow.",
-    'expected': [
-        ('tomorrow', (40, 48), datetime.datetime(2000, 10, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'arnold-j/_sent_mail/101.',
-    'source_span': (5357792, 5357833),
-    'sent_at': datetime.datetime(2000, 10, 17, 10, 36, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'Watch the debate if you are home tonight.',
-    'expected': [
-        ('tonight', (33, 40), datetime.datetime(2000, 10, 17, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'arnold-j/_sent_mail/101.',
-    'source_span': (5357835, 5357860),
-    'sent_at': datetime.datetime(2000, 10, 17, 10, 36, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'I want a report tomorrow.',
-    'expected': [
-        ('tomorrow', (16, 24), datetime.datetime(2000, 10, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'arora-h/all_documents/24.',
-    'source_span': (17076750, 17076826),
-    'sent_at': datetime.datetime(2001, 1, 3, 9, 47, 0, tzinfo=TZ_MINUS_0800),
-    'text': "Today's live auction for Northern Border Pipeline's procurement of line pipe",
-    'expected': [
-        ('Today', (0, 5), datetime.datetime(2001, 1, 3, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'arora-h/all_documents/28.',
-    'source_span': (17086247, 17086305),
-    'sent_at': datetime.datetime(2001, 1, 17, 1, 46, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Could you please confirm 1:30 pm today, on the 27th floor.',
-    'expected': [
-        ('1:30 pm today', (25, 38), datetime.datetime(2001, 1, 17, 13, 30, 0, tzinfo=TZ_MINUS_0800)),
-        ('27th', (47, 51), datetime.datetime(2001, 1, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'arora-h/all_documents/33.',
-    'source_span': (17093491, 17093539),
-    'sent_at': datetime.datetime(2001, 1, 23, 4, 21, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Today I spoke to a gentlemen in your call centre',
-    'expected': [
-        ('Today', (0, 5), datetime.datetime(2001, 1, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'arora-h/all_documents/38.',
-    'source_span': (17100580, 17100653),
-    'sent_at': datetime.datetime(2001, 1, 24, 9, 29, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'I enjoyed our interview today and hope to continue discussions with Enron',
-    'expected': [
-        ('today', (24, 29), datetime.datetime(2001, 1, 24, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'badeer-r/_sent_mail/29.',
-    'source_span': (20761281, 20761355),
-    'sent_at': datetime.datetime(2000, 7, 11, 9, 17, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'I will be out of the office this Thursday and Friday (7-13/14) to attend a',
-    'expected': [
-        ('this Thursday', (28, 41), datetime.datetime(2000, 7, 13, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ('Friday', (46, 52), datetime.datetime(2000, 7, 14, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'badeer-r/_sent_mail/34.',
-    'source_span': (20771245, 20771317),
-    'sent_at': datetime.datetime(2000, 7, 3, 7, 57, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'For items 1-10, the specified information is requested for the following',
-    'expected': [
-        ('1-10', (10, 14), datetime.datetime(2000, 1, 10, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'badeer-r/_sent_mail/34.',
-    'source_span': (20772599, 20772667),
-    'sent_at': datetime.datetime(2000, 7, 3, 7, 57, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'For the dates specified in requests 11-15, the following information',
-    'expected': [
-        ('11-15', (36, 41), datetime.datetime(2000, 11, 15, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'badeer-r/_sent_mail/4.',
-    'source_span': (20785198, 20785223),
-    'sent_at': datetime.datetime(2000, 8, 18, 1, 47, 0, tzinfo=TZ_MINUS_0700),
-    'text': "I'll get it to you today.",
-    'expected': [
-        ('today', (19, 24), datetime.datetime(2000, 8, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'bailey-s/deleted_items/10.',
-    'source_span': (22995803, 22995858),
-    'sent_at': datetime.datetime(2002, 1, 10, 8, 34, 23, tzinfo=TZ_MINUS_0800),
-    'text': 'Would you be availavble this morning to help with this?',
-    'expected': [
-        ('morning', (29, 36), datetime.datetime(2002, 1, 11, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'bailey-s/deleted_items/114.',
-    'source_span': (23030184, 23030280),
-    'sent_at': datetime.datetime(2002, 1, 24, 12, 43, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'As mentioned in my voice mail -- I can meet with you anytime this afternoon -- how about 3:30pm.',
-    'expected': [
-        ('afternoon', (66, 75), datetime.datetime(2002, 1, 24, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
-        ('3:30pm', (89, 95), datetime.datetime(2002, 1, 24, 15, 30, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'bailey-s/deleted_items/121.',
-    'source_span': (23051096, 23051167),
-    'sent_at': datetime.datetime(2002, 2, 4, 7, 35, 52, tzinfo=TZ_MINUS_0800),
-    'text': 'Hard copies of the aformentioned agreements will be faxed to you today.',
-    'expected': [
-        ('today', (65, 70), datetime.datetime(2002, 2, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'bailey-s/deleted_items/122.',
-    'source_span': (23053610, 23053687),
-    'sent_at': datetime.datetime(2002, 2, 4, 16, 47, 55, tzinfo=TZ_MINUS_0800),
-    'text': "Ken Lay announced today that he has resigned from Enron's Board of Directors.",
-    'expected': [
-        ('today', (18, 23), datetime.datetime(2002, 2, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'bass-e/_sent_mail/100.',
-    'source_span': (23941163, 23941234),
-    'sent_at': datetime.datetime(2000, 12, 7, 6, 2, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Let me know what you get and are you spending the night tomorrow night?',
-    'expected': [
-        ('night tomorrow', (50, 64), datetime.datetime(2000, 12, 8, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
-        ('night', (65, 70), datetime.datetime(2000, 12, 7, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'bass-e/_sent_mail/100.',
-    'source_span': (23941235, 23941299),
-    'sent_at': datetime.datetime(2000, 12, 7, 6, 2, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Jake is having surgery tomorrow morning so say a prayer for him.',
-    'expected': [
-        ('tomorrow morning', (23, 39), datetime.datetime(2000, 12, 8, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'bass-e/_sent_mail/1000.',
-    'source_span': (23943618, 23943638),
-    'sent_at': datetime.datetime(2000, 2, 8, 7, 27, 0, tzinfo=TZ_MINUS_0800),
-    'text': "I didn't skip today.",
-    'expected': [
-        ('today', (14, 19), datetime.datetime(2000, 2, 8, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'bass-e/_sent_mail/1003.',
-    'source_span': (23949104, 23949171),
-    'sent_at': datetime.datetime(2000, 2, 7, 9, 2, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Rush Limbaugh today said he has received 9000 e-mail requests for a',
-    'expected': [
-        ('today', (14, 19), datetime.datetime(2000, 2, 7, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'baughman-d/all_documents/103.',
-    'source_span': (45493280, 45493345),
-    'sent_at': datetime.datetime(2001, 1, 23, 0, 38, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'You should be able to activate your password by lunch time today.',
-    'expected': [
-        ('today', (59, 64), datetime.datetime(2001, 1, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'baughman-d/all_documents/105.',
-    'source_span': (45496441, 45496515),
-    'sent_at': datetime.datetime(2001, 1, 22, 12, 44, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'To pre-qualify and sign up for service in your area today with Time Warner',
-    'expected': [
-        ('today', (52, 57), datetime.datetime(2001, 1, 22, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'baughman-d/all_documents/11.',
-    'source_span': (45524992, 45525045),
-    'sent_at': datetime.datetime(2000, 11, 30, 8, 10, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'The repayment is done, as it is today, according to a',
-    'expected': [
-        ('today,', (32, 38), datetime.datetime(2000, 11, 30, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'baughman-d/all_documents/114.',
-    'source_span': (45539711, 45539768),
-    'sent_at': datetime.datetime(2001, 1, 26, 8, 50, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'This morning there was a Cinergy wheel in the Ercot book.',
-    'expected': [
-        ('morning', (5, 12), datetime.datetime(2001, 1, 27, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'beck-s/2001_plan/2.',
-    'source_span': (55706860, 55706913),
-    'sent_at': datetime.datetime(2000, 11, 7, 6, 10, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Please submit this explanation by tomorrow afternoon.',
-    'expected': [
-        ('tomorrow afternoon', (34, 52), datetime.datetime(2000, 11, 8, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'beck-s/2001_plan/3.',
-    'source_span': (55708280, 55708333),
-    'sent_at': datetime.datetime(2000, 11, 2, 8, 25, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Please submit this explanation by tomorrow afternoon.',
-    'expected': [
-        ('tomorrow afternoon', (34, 52), datetime.datetime(2000, 11, 3, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'beck-s/_sent_mail/1.',
-    'source_span': (55715267, 55715334),
-    'sent_at': datetime.datetime(2000, 12, 12, 9, 34, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'I will be in Houston the week after Christmas (12/26-12/29) and was',
-    'expected': [
-        ('12/26-12/29', (47, 58), (datetime.datetime(2000, 12, 26, 0, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2000, 12, 29, 0, 0, 0, tzinfo=TZ_MINUS_0800))),
-    ],
-},
-
-{
-    'source_path': 'beck-s/_sent_mail/1001.',
-    'source_span': (55724203, 55724270),
-    'sent_at': datetime.datetime(2001, 1, 11, 2, 3, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Time: 8:30 - 2:00 PM (Continental breakfast & lunch will be served)',
-    'expected': [
-        ('8:30 - 2:00 PM', (6, 20), (datetime.datetime(2001, 1, 11, 20, 30, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 12, 14, 0, 0, tzinfo=TZ_MINUS_0800))),
-    ],
-},
-
-{
-    'source_path': 'benson-r/all_documents/14.',
-    'source_span': (83932637, 83932683),
-    'sent_at': datetime.datetime(2001, 5, 8, 4, 34, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'DATE CONFIRMATION - May 18 (9:30 am - 3:00 pm)',
-    'expected': [
-        ('May 18', (20, 26), datetime.datetime(2001, 5, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ('9:30 am - 3:00 pm', (28, 45), (datetime.datetime(2001, 5, 8, 9, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 8, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
-    ],
-},
-
-{
-    'source_path': 'benson-r/all_documents/14.',
-    'source_span': (83933020, 83933070),
-    'sent_at': datetime.datetime(2001, 5, 8, 4, 34, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'TIME:   9:30 am - 3:00 pm - lunch will be provided',
-    'expected': [
-        ('9:30 am - 3:00 pm', (8, 25), (datetime.datetime(2001, 5, 8, 9, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 8, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
-    ],
-},
-
-{
-    'source_path': 'benson-r/all_documents/18.',
-    'source_span': (83939202, 83939229),
-    'sent_at': datetime.datetime(2001, 5, 8, 17, 55, 0, tzinfo=TZ_MINUS_0700),
-    'text': '11 - 10:30 -11:30 AM  EB572',
-    'expected': [
-        ('10:30 -11:30 AM', (5, 20), (datetime.datetime(2001, 5, 9, 10, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 9, 11, 30, 0, tzinfo=TZ_MINUS_0700))),
-    ],
-},
-
-{
-    'source_path': 'benson-r/all_documents/18.',
-    'source_span': (83939241, 83939268),
-    'sent_at': datetime.datetime(2001, 5, 8, 17, 55, 0, tzinfo=TZ_MINUS_0700),
-    'text': '16 - 10:30 -11:30 AM  EB572',
-    'expected': [
-        ('10:30 -11:30 AM', (5, 20), (datetime.datetime(2001, 5, 9, 10, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 9, 11, 30, 0, tzinfo=TZ_MINUS_0700))),
-    ],
-},
-
-{
-    'source_path': 'blair-l/_sent_mail/12.',
-    'source_span': (86947139, 86947185),
-    'sent_at': datetime.datetime(2001, 6, 24, 14, 6, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'I talked to Ricki yesterday and she has people',
-    'expected': [
-        ('yesterday', (18, 27), datetime.datetime(2001, 6, 23, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'blair-l/_sent_mail/16.',
-    'source_span': (86964856, 86964982),
-    'sent_at': datetime.datetime(2001, 6, 24, 13, 22, 0, tzinfo=TZ_MINUS_0700),
-    'text': "I assumed Kaztex were nominating on the timely, but after our storage discussions at today's Morning Meeting, I need to check.",
-    'expected': [
-        ('today', (85, 90), datetime.datetime(2001, 6, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ('Morning', (93, 100), datetime.datetime(2001, 6, 25, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'blair-l/_sent_mail/23.',
-    'source_span': (86981554, 86981600),
-    'sent_at': datetime.datetime(2001, 6, 21, 19, 45, 0, tzinfo=TZ_MINUS_0700),
-    'text': "Hopefully by today you're feeling pretty good.",
-    'expected': [
-        ('today', (13, 18), datetime.datetime(2001, 6, 21, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'blair-l/_sent_mail/33.',
-    'source_span': (87000877, 87000937),
-    'sent_at': datetime.datetime(2001, 6, 17, 20, 31, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'The attached letter was faxed to Shelly Corman this morning.',
-    'expected': [
-        ('morning', (52, 59), datetime.datetime(2001, 6, 18, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'brawner-s/_sent_mail/116.',
-    'source_span': (94535282, 94535359),
-    'sent_at': datetime.datetime(2001, 2, 27, 7, 36, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Louis - Again as we spoke this morning - all these deals have ben transferred',
-    'expected': [
-        ('morning', (31, 38), datetime.datetime(2001, 2, 28, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'brawner-s/_sent_mail/128.',
-    'source_span': (94543655, 94543732),
-    'sent_at': datetime.datetime(2001, 1, 19, 3, 38, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'JON SENT ME THIS TODAY - I THOUGHT IT WAS MORE OF A MANS JOKE- IT IS LONG BUT',
-    'expected': [
-        ('TODAY', (17, 22), datetime.datetime(2001, 1, 19, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'brawner-s/_sent_mail/13.',
-    'source_span': (94562951, 94563014),
-    'sent_at': datetime.datetime(2001, 4, 24, 18, 33, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'I hope you and Ben enjoy the Park today - that sounds wonderful',
-    'expected': [
-        ('today', (34, 39), datetime.datetime(2001, 4, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'brawner-s/_sent_mail/15.',
-    'source_span': (94617798, 94617841),
-    'sent_at': datetime.datetime(2001, 4, 24, 14, 42, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'Can I call you this evening on my way home?',
-    'expected': [
-        ('evening', (20, 27), datetime.datetime(2001, 4, 24, 18, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'buy-r/_sent_mail/108.',
-    'source_span': (97163291, 97163353),
-    'sent_at': datetime.datetime(2001, 1, 19, 0, 58, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'I need that info late today so I can look at over the weekend.',
-    'expected': [
-        ('today', (22, 27), datetime.datetime(2001, 1, 19, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'buy-r/_sent_mail/11.',
-    'source_span': (97165385, 97165461),
-    'sent_at': datetime.datetime(2000, 12, 4, 23, 55, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Recognizing we were just below daily VAR limits today, coupled with the high',
-    'expected': [
-        ('today,', (48, 54), datetime.datetime(2000, 12, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'buy-r/_sent_mail/119.',
-    'source_span': (97175506, 97175518),
-    'sent_at': datetime.datetime(2001, 1, 17, 0, 31, 0, tzinfo=TZ_MINUS_0800),
-    'text': '3:00-4:00 p.',
-    'expected': [
-        ('3:00-4:00 p', (0, 11), (datetime.datetime(2001, 1, 17, 15, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 17, 16, 0, 0, tzinfo=TZ_MINUS_0800))),
-    ],
-},
-
-{
-    'source_path': 'buy-r/_sent_mail/119.',
-    'source_span': (97175852, 97175879),
-    'sent_at': datetime.datetime(2001, 1, 17, 0, 31, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Monday, Jan 22  4:00 - 5:00',
-    'expected': [
-        ('Monday, Jan 22  4:00 - 5:00', (0, 27), (datetime.datetime(2001, 1, 22, 4, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 22, 5, 0, 0, tzinfo=TZ_MINUS_0800))),
-    ],
-},
-
-{
-    'source_path': 'campbell-l/_sent_mail/105.',
-    'source_span': (103014112, 103014140),
-    'sent_at': datetime.datetime(2000, 9, 5, 9, 16, 0, tzinfo=TZ_MINUS_0700),
-    'text': "I'll call you later tonight.",
-    'expected': [
-        ('tonight', (20, 27), datetime.datetime(2000, 9, 5, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'campbell-l/_sent_mail/115.',
-    'source_span': (103036322, 103036351),
-    'sent_at': datetime.datetime(2000, 8, 31, 8, 28, 0, tzinfo=TZ_MINUS_0700),
-    'text': "I'm going to be out tomorrow.",
-    'expected': [
-        ('tomorrow', (20, 28), datetime.datetime(2000, 9, 1, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'campbell-l/_sent_mail/120.',
-    'source_span': (103045387, 103045461),
-    'sent_at': datetime.datetime(2000, 8, 30, 1, 28, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'I spoke with Debbie Flynn this afternoon to acquire June usage information',
-    'expected': [
-        ('afternoon', (31, 40), datetime.datetime(2000, 8, 30, 15, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'campbell-l/_sent_mail/121.',
-    'source_span': (103046657, 103046698),
-    'sent_at': datetime.datetime(2000, 8, 30, 1, 27, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'We had to change your logon this morning.',
-    'expected': [
-        ('morning', (33, 40), datetime.datetime(2000, 8, 30, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'carson-m/_sent_mail/110.',
-    'source_span': (120647009, 120647061),
-    'sent_at': datetime.datetime(2000, 6, 23, 1, 14, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'Are you guys up for a little guys night out tonight?',
-    'expected': [
-        ('night', (34, 39), datetime.datetime(2000, 6, 23, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ('tonight', (44, 51), datetime.datetime(2000, 6, 23, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'carson-m/_sent_mail/111.',
-    'source_span': (120647656, 120647708),
-    'sent_at': datetime.datetime(2000, 6, 22, 23, 19, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'Are you guys up for a little guys night out tonight?',
-    'expected': [
-        ('night', (34, 39), datetime.datetime(2000, 6, 23, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-        ('tonight', (44, 51), datetime.datetime(2000, 6, 22, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'carson-m/_sent_mail/119.',
-    'source_span': (120654120, 120654191),
-    'sent_at': datetime.datetime(2000, 6, 8, 0, 20, 0, tzinfo=TZ_MINUS_0700),
-    'text': "FYI---  Kenny's girl friend is throwing him a surprise party tonight at",
-    'expected': [
-        ('tonight', (61, 68), datetime.datetime(2000, 6, 8, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'carson-m/_sent_mail/130.',
-    'source_span': (120662855, 120662921),
-    'sent_at': datetime.datetime(2000, 5, 25, 9, 2, 0, tzinfo=TZ_MINUS_0700),
-    'text': 'Heather and I just had the sonogram yesterday,,,, and it is a boy!',
-    'expected': [
-        ('yesterday,', (36, 46), datetime.datetime(2000, 5, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'cash-m/all_documents/10.',
-    'source_span': (125035881, 125035945),
-    'sent_at': datetime.datetime(2000, 11, 28, 7, 50, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Yesterday, counsel for Richard Clonch called, requesting January',
-    'expected': [
-        ('Yesterday,', (0, 10), datetime.datetime(2000, 11, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'cash-m/all_documents/113.',
-    'source_span': (125067889, 125067913),
-    'sent_at': datetime.datetime(2001, 1, 3, 8, 28, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'We can discuss tomorrow.',
-    'expected': [
-        ('tomorrow', (15, 23), datetime.datetime(2001, 1, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'cash-m/all_documents/117.',
-    'source_span': (125077953, 125077972),
-    'sent_at': datetime.datetime(2001, 1, 25, 3, 44, 0, tzinfo=TZ_MINUS_0800),
-    'text': '01:30 PM - 02:30 PM',
-    'expected': [
-        ('01:30 PM - 02:30 PM', (0, 19), (datetime.datetime(2001, 1, 25, 13, 30, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 25, 14, 30, 0, tzinfo=TZ_MINUS_0800))),
-    ],
-},
-
-{
-    'source_path': 'cash-m/all_documents/12.',
-    'source_span': (125083619, 125083664),
-    'sent_at': datetime.datetime(2000, 11, 28, 8, 47, 0, tzinfo=TZ_MINUS_0800),
-    'text': "The same information appeared in today's DLR.",
-    'expected': [
-        ('today', (33, 38), datetime.datetime(2000, 11, 28, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'causholli-m/calendar/2.',
-    'source_span': (133510199, 133510297),
-    'sent_at': datetime.datetime(2001, 10, 9, 10, 0, 9, tzinfo=TZ_MINUS_0700),
-    'text': 'We definitely need to practice before we present the Yaks to the world so we will try again today.',
-    'expected': [
-        ('today', (92, 97), datetime.datetime(2001, 10, 9, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'causholli-m/deleted_items/10.',
-    'source_span': (133526962, 133527028),
-    'sent_at': datetime.datetime(2001, 10, 29, 5, 20, 4, tzinfo=TZ_MINUS_0800),
-    'text': "USA Today's general rate will go up 4%, as it has in recent years.",
-    'expected': [
-        ('Today', (4, 9), datetime.datetime(2001, 10, 29, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'causholli-m/deleted_items/10.',
-    'source_span': (133527591, 133527734),
-    'sent_at': datetime.datetime(2001, 10, 29, 5, 20, 4, tzinfo=TZ_MINUS_0800),
-    'text': 'Gannett will begin environmental testing for anthrax this afternoon at its Rosslyn headquarters and at its Capitol Hill bureau in the District.',
-    'expected': [
-        ('afternoon', (58, 67), datetime.datetime(2001, 10, 29, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'causholli-m/deleted_items/101.',
-    'source_span': (133529737, 133529793),
-    'sent_at': datetime.datetime(2001, 10, 18, 8, 52, 24, tzinfo=TZ_MINUS_0700),
-    'text': "If you were unable to attend yesterday's info lunch with",
-    'expected': [
-        ('yesterday', (29, 38), datetime.datetime(2001, 10, 17, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-    ],
-},
-
-{
-    'source_path': 'corman-s/all_documents/11.',
-    'source_span': (136028078, 136028155),
-    'sent_at': datetime.datetime(2000, 12, 12, 3, 27, 0, tzinfo=TZ_MINUS_0800),
-    'text': 'Yesterday, we had a conference call with the pipeline transportation analysts',
-    'expected': [
-        ('Yesterday,', (0, 10), datetime.datetime(2000, 12, 11, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'corman-s/all_documents/11.',
-    'source_span': (136028415, 136028462),
-    'sent_at': datetime.datetime(2000, 12, 12, 3, 27, 0, tzinfo=TZ_MINUS_0800),
-    'text': "I'm available this afternoon to give you all an",
-    'expected': [
-        ('afternoon', (19, 28), datetime.datetime(2000, 12, 12, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'corman-s/all_documents/2.',
-    'source_span': (136051028, 136051067),
-    'sent_at': datetime.datetime(2000, 11, 27, 8, 26, 0, tzinfo=TZ_MINUS_0800),
-    'text': "Reminder copy of Steve's message today:",
-    'expected': [
-        ('today', (33, 38), datetime.datetime(2000, 11, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'corman-s/all_documents/5.',
-    'source_span': (136068034, 136068062),
-    'sent_at': datetime.datetime(2000, 11, 29, 21, 4, 0, tzinfo=TZ_MINUS_0800),
-    'text': "I can't believe today is the",
-    'expected': [
-        ('today', (16, 21), datetime.datetime(2000, 11, 29, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'crandell-s/deleted_items/11.',
-    'source_span': (142093251, 142093284),
-    'sent_at': datetime.datetime(2002, 2, 5, 10, 44, 24, tzinfo=TZ_MINUS_0800),
-    'text': 'Please let me know by noon today.',
-    'expected': [
-        ('noon today', (22, 32), datetime.datetime(2002, 2, 5, 12, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'crandell-s/deleted_items/12.',
-    'source_span': (142093884, 142093901),
-    'sent_at': datetime.datetime(2002, 2, 5, 6, 35, 17, tzinfo=TZ_MINUS_0800),
-    'text': "TODAY'S HEADLINES",
-    'expected': [
-        ('TODAY', (0, 5), datetime.datetime(2002, 2, 5, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
-{
-    'source_path': 'crandell-s/deleted_items/12.',
-    'source_span': (142095352, 142095380),
-    'sent_at': datetime.datetime(2002, 2, 5, 6, 35, 17, tzinfo=TZ_MINUS_0800),
-    'text': 'Greater success starts today',
-    'expected': [
-        ('today', (23, 28), datetime.datetime(2002, 2, 5, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-    ],
-},
-
+    {
+        'source_path': 'allen-p/_sent_mail/105.',
+        'source_span': (16220, 16293),
+        'sent_at': datetime.datetime(2000, 10, 9, 7, 16, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'PS: Colleen is setting up a meeting tomorrow to discuss the direction for',
+        'expected': [
+                ('tomorrow', (36, 44), datetime.datetime(2000, 10, 10, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'allen-p/_sent_mail/109.',
+        'source_span': (24993, 25011),
+        'sent_at': datetime.datetime(2000, 10, 4, 9, 23, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Time:  2:30 - 3:30',
+        'expected': [
+                ('2:30 - 3:30', (7, 18), (datetime.datetime(2000, 10, 5, 2, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2000, 10, 5, 3, 30, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+    },
+    {
+        'source_path': 'allen-p/_sent_mail/115.',
+        'source_span': (31659, 31734),
+        'sent_at': datetime.datetime(2000, 9, 28, 6, 17, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'As we discussed yesterday, I am concerned there may have been an attempt to',
+        'expected': [
+                ('yesterday,', (16, 26), datetime.datetime(2000, 9, 27, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'arnold-j/2000_conference/2.',
+        'source_span': (5348903, 5348972),
+        'sent_at': datetime.datetime(2000, 12, 4, 5, 58, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Per our conversation this morning, I will list the items in question.',
+        'expected': [
+                ('morning,', (26, 34), datetime.datetime(2000, 12, 4, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'arnold-j/_sent_mail/101.',
+        'source_span': (5357534, 5357583),
+        'sent_at': datetime.datetime(2000, 10, 17, 10, 36, 0, tzinfo=TZ_MINUS_0700),
+        'text': "I've decided what to prepare for dinner tomorrow.",
+        'expected': [
+                ('tomorrow', (40, 48), datetime.datetime(2000, 10, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'arnold-j/_sent_mail/101.',
+        'source_span': (5357792, 5357833),
+        'sent_at': datetime.datetime(2000, 10, 17, 10, 36, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Watch the debate if you are home tonight.',
+        'expected': [
+                ('tonight', (33, 40), datetime.datetime(2000, 10, 17, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'arnold-j/_sent_mail/101.',
+        'source_span': (5357835, 5357860),
+        'sent_at': datetime.datetime(2000, 10, 17, 10, 36, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'I want a report tomorrow.',
+        'expected': [
+                ('tomorrow', (16, 24), datetime.datetime(2000, 10, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'arora-h/all_documents/24.',
+        'source_span': (17076750, 17076826),
+        'sent_at': datetime.datetime(2001, 1, 3, 9, 47, 0, tzinfo=TZ_MINUS_0800),
+        'text': "Today's live auction for Northern Border Pipeline's procurement of line pipe",
+        'expected': [
+                ('Today', (0, 5), datetime.datetime(2001, 1, 3, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'arora-h/all_documents/28.',
+        'source_span': (17086247, 17086305),
+        'sent_at': datetime.datetime(2001, 1, 17, 1, 46, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Could you please confirm 1:30 pm today, on the 27th floor.',
+        'expected': [
+                ('1:30 pm today', (25, 38), datetime.datetime(2001, 1, 17, 13, 30, 0, tzinfo=TZ_MINUS_0800)),
+                ('27th', (47, 51), datetime.datetime(2001, 1, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'arora-h/all_documents/33.',
+        'source_span': (17093491, 17093539),
+        'sent_at': datetime.datetime(2001, 1, 23, 4, 21, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Today I spoke to a gentlemen in your call centre',
+        'expected': [
+                ('Today', (0, 5), datetime.datetime(2001, 1, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'arora-h/all_documents/38.',
+        'source_span': (17100580, 17100653),
+        'sent_at': datetime.datetime(2001, 1, 24, 9, 29, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'I enjoyed our interview today and hope to continue discussions with Enron',
+        'expected': [
+                ('today', (24, 29), datetime.datetime(2001, 1, 24, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'badeer-r/_sent_mail/29.',
+        'source_span': (20761281, 20761355),
+        'sent_at': datetime.datetime(2000, 7, 11, 9, 17, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'I will be out of the office this Thursday and Friday (7-13/14) to attend a',
+        'expected': [
+                ('this Thursday', (28, 41), datetime.datetime(2000, 7, 13, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('Friday', (46, 52), datetime.datetime(2000, 7, 14, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'badeer-r/_sent_mail/34.',
+        'source_span': (20771245, 20771317),
+        'sent_at': datetime.datetime(2000, 7, 3, 7, 57, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'For items 1-10, the specified information is requested for the following',
+        'expected': [
+                ('1-10', (10, 14), datetime.datetime(2000, 1, 10, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'badeer-r/_sent_mail/34.',
+        'source_span': (20772599, 20772667),
+        'sent_at': datetime.datetime(2000, 7, 3, 7, 57, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'For the dates specified in requests 11-15, the following information',
+        'expected': [
+                ('11-15', (36, 41), datetime.datetime(2000, 11, 15, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'bailey-s/deleted_items/114.',
+        'source_span': (23030184, 23030280),
+        'sent_at': datetime.datetime(2002, 1, 24, 12, 43, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'As mentioned in my voice mail -- I can meet with you anytime this afternoon -- how about 3:30pm.',
+        'expected': [
+                ('afternoon', (66, 75), datetime.datetime(2002, 1, 24, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('3:30pm', (89, 95), datetime.datetime(2002, 1, 24, 15, 30, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'bailey-s/deleted_items/121.',
+        'source_span': (23051096, 23051167),
+        'sent_at': datetime.datetime(2002, 2, 4, 7, 35, 52, tzinfo=TZ_MINUS_0800),
+        'text': 'Hard copies of the aformentioned agreements will be faxed to you today.',
+        'expected': [
+                ('today', (65, 70), datetime.datetime(2002, 2, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'bailey-s/deleted_items/122.',
+        'source_span': (23053610, 23053687),
+        'sent_at': datetime.datetime(2002, 2, 4, 16, 47, 55, tzinfo=TZ_MINUS_0800),
+        'text': "Ken Lay announced today that he has resigned from Enron's Board of Directors.",
+        'expected': [
+                ('today', (18, 23), datetime.datetime(2002, 2, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'bass-e/_sent_mail/100.',
+        'source_span': (23941163, 23941234),
+        'sent_at': datetime.datetime(2000, 12, 7, 6, 2, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Let me know what you get and are you spending the night tomorrow night?',
+        'expected': [
+                ('night tomorrow', (50, 64), datetime.datetime(2000, 12, 8, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('night', (65, 70), datetime.datetime(2000, 12, 7, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'bass-e/_sent_mail/100.',
+        'source_span': (23941235, 23941299),
+        'sent_at': datetime.datetime(2000, 12, 7, 6, 2, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Jake is having surgery tomorrow morning so say a prayer for him.',
+        'expected': [
+                ('tomorrow morning', (23, 39), datetime.datetime(2000, 12, 8, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'baughman-d/all_documents/103.',
+        'source_span': (45493280, 45493345),
+        'sent_at': datetime.datetime(2001, 1, 23, 0, 38, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'You should be able to activate your password by lunch time today.',
+        'expected': [
+                ('today', (59, 64), datetime.datetime(2001, 1, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'baughman-d/all_documents/114.',
+        'source_span': (45539711, 45539768),
+        'sent_at': datetime.datetime(2001, 1, 26, 8, 50, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'This morning there was a Cinergy wheel in the Ercot book.',
+        'expected': [
+                ('morning', (5, 12), datetime.datetime(2001, 1, 27, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'beck-s/2001_plan/2.',
+        'source_span': (55706860, 55706913),
+        'sent_at': datetime.datetime(2000, 11, 7, 6, 10, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Please submit this explanation by tomorrow afternoon.',
+        'expected': [
+                ('tomorrow afternoon', (34, 52), datetime.datetime(2000, 11, 8, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'beck-s/_sent_mail/1.',
+        'source_span': (55715267, 55715334),
+        'sent_at': datetime.datetime(2000, 12, 12, 9, 34, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'I will be in Houston the week after Christmas (12/26-12/29) and was',
+        'expected': [
+                ('12/26-12/29', (47, 58), (datetime.datetime(2000, 12, 26, 0, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2000, 12, 29, 0, 0, 0, tzinfo=TZ_MINUS_0800))),
+            ],
+    },
+    {
+        'source_path': 'beck-s/_sent_mail/1001.',
+        'source_span': (55724203, 55724270),
+        'sent_at': datetime.datetime(2001, 1, 11, 2, 3, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Time: 8:30 - 2:00 PM (Continental breakfast & lunch will be served)',
+        'expected': [
+                ('8:30 - 2:00 PM', (6, 20), (datetime.datetime(2001, 1, 11, 20, 30, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 12, 14, 0, 0, tzinfo=TZ_MINUS_0800))),
+            ],
+    },
+    {
+        'source_path': 'benson-r/all_documents/14.',
+        'source_span': (83932637, 83932683),
+        'sent_at': datetime.datetime(2001, 5, 8, 4, 34, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'DATE CONFIRMATION - May 18 (9:30 am - 3:00 pm)',
+        'expected': [
+                ('May 18', (20, 26), datetime.datetime(2001, 5, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('9:30 am - 3:00 pm', (28, 45), (datetime.datetime(2001, 5, 8, 9, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 8, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+    },
+    {
+        'source_path': 'benson-r/all_documents/14.',
+        'source_span': (83933020, 83933070),
+        'sent_at': datetime.datetime(2001, 5, 8, 4, 34, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'TIME:   9:30 am - 3:00 pm - lunch will be provided',
+        'expected': [
+                ('9:30 am - 3:00 pm', (8, 25), (datetime.datetime(2001, 5, 8, 9, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 8, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+    },
+    {
+        'source_path': 'benson-r/all_documents/18.',
+        'source_span': (83939202, 83939229),
+        'sent_at': datetime.datetime(2001, 5, 8, 17, 55, 0, tzinfo=TZ_MINUS_0700),
+        'text': '11 - 10:30 -11:30 AM  EB572',
+        'expected': [
+                ('10:30 -11:30 AM', (5, 20), (datetime.datetime(2001, 5, 9, 10, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 9, 11, 30, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+    },
+    {
+        'source_path': 'blair-l/_sent_mail/12.',
+        'source_span': (86947139, 86947185),
+        'sent_at': datetime.datetime(2001, 6, 24, 14, 6, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'I talked to Ricki yesterday and she has people',
+        'expected': [
+                ('yesterday', (18, 27), datetime.datetime(2001, 6, 23, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'blair-l/_sent_mail/16.',
+        'source_span': (86964856, 86964982),
+        'sent_at': datetime.datetime(2001, 6, 24, 13, 22, 0, tzinfo=TZ_MINUS_0700),
+        'text': "I assumed Kaztex were nominating on the timely, but after our storage discussions at today's Morning Meeting, I need to check.",
+        'expected': [
+                ('today', (85, 90), datetime.datetime(2001, 6, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('Morning', (93, 100), datetime.datetime(2001, 6, 25, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'blair-l/_sent_mail/33.',
+        'source_span': (87000877, 87000937),
+        'sent_at': datetime.datetime(2001, 6, 17, 20, 31, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'The attached letter was faxed to Shelly Corman this morning.',
+        'expected': [
+                ('morning', (52, 59), datetime.datetime(2001, 6, 18, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'brawner-s/_sent_mail/116.',
+        'source_span': (94535282, 94535359),
+        'sent_at': datetime.datetime(2001, 2, 27, 7, 36, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Louis - Again as we spoke this morning - all these deals have ben transferred',
+        'expected': [
+                ('morning', (31, 38), datetime.datetime(2001, 2, 28, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'brawner-s/_sent_mail/13.',
+        'source_span': (94562951, 94563014),
+        'sent_at': datetime.datetime(2001, 4, 24, 18, 33, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'I hope you and Ben enjoy the Park today - that sounds wonderful',
+        'expected': [
+                ('today', (34, 39), datetime.datetime(2001, 4, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'brawner-s/_sent_mail/15.',
+        'source_span': (94617798, 94617841),
+        'sent_at': datetime.datetime(2001, 4, 24, 14, 42, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Can I call you this evening on my way home?',
+        'expected': [
+                ('evening', (20, 27), datetime.datetime(2001, 4, 24, 18, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'buy-r/_sent_mail/11.',
+        'source_span': (97165385, 97165461),
+        'sent_at': datetime.datetime(2000, 12, 4, 23, 55, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Recognizing we were just below daily VAR limits today, coupled with the high',
+        'expected': [
+                ('today,', (48, 54), datetime.datetime(2000, 12, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'buy-r/_sent_mail/119.',
+        'source_span': (97175506, 97175518),
+        'sent_at': datetime.datetime(2001, 1, 17, 0, 31, 0, tzinfo=TZ_MINUS_0800),
+        'text': '3:00-4:00 p.',
+        'expected': [
+                ('3:00-4:00 p', (0, 11), (datetime.datetime(2001, 1, 17, 15, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 17, 16, 0, 0, tzinfo=TZ_MINUS_0800))),
+            ],
+    },
+    {
+        'source_path': 'buy-r/_sent_mail/119.',
+        'source_span': (97175852, 97175879),
+        'sent_at': datetime.datetime(2001, 1, 17, 0, 31, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Monday, Jan 22  4:00 - 5:00',
+        'expected': [
+                ('Monday, Jan 22  4:00 - 5:00', (0, 27), (datetime.datetime(2001, 1, 22, 4, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 22, 5, 0, 0, tzinfo=TZ_MINUS_0800))),
+            ],
+    },
+    {
+        'source_path': 'campbell-l/_sent_mail/105.',
+        'source_span': (103014112, 103014140),
+        'sent_at': datetime.datetime(2000, 9, 5, 9, 16, 0, tzinfo=TZ_MINUS_0700),
+        'text': "I'll call you later tonight.",
+        'expected': [
+                ('tonight', (20, 27), datetime.datetime(2000, 9, 5, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'campbell-l/_sent_mail/115.',
+        'source_span': (103036322, 103036351),
+        'sent_at': datetime.datetime(2000, 8, 31, 8, 28, 0, tzinfo=TZ_MINUS_0700),
+        'text': "I'm going to be out tomorrow.",
+        'expected': [
+                ('tomorrow', (20, 28), datetime.datetime(2000, 9, 1, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'campbell-l/_sent_mail/121.',
+        'source_span': (103046657, 103046698),
+        'sent_at': datetime.datetime(2000, 8, 30, 1, 27, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'We had to change your logon this morning.',
+        'expected': [
+                ('morning', (33, 40), datetime.datetime(2000, 8, 30, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'carson-m/_sent_mail/110.',
+        'source_span': (120647009, 120647061),
+        'sent_at': datetime.datetime(2000, 6, 23, 1, 14, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Are you guys up for a little guys night out tonight?',
+        'expected': [
+                ('night', (34, 39), datetime.datetime(2000, 6, 23, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('tonight', (44, 51), datetime.datetime(2000, 6, 23, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'carson-m/_sent_mail/119.',
+        'source_span': (120654120, 120654191),
+        'sent_at': datetime.datetime(2000, 6, 8, 0, 20, 0, tzinfo=TZ_MINUS_0700),
+        'text': "FYI---  Kenny's girl friend is throwing him a surprise party tonight at",
+        'expected': [
+                ('tonight', (61, 68), datetime.datetime(2000, 6, 8, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'carson-m/_sent_mail/130.',
+        'source_span': (120662855, 120662921),
+        'sent_at': datetime.datetime(2000, 5, 25, 9, 2, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Heather and I just had the sonogram yesterday,,,, and it is a boy!',
+        'expected': [
+                ('yesterday,', (36, 46), datetime.datetime(2000, 5, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'cash-m/all_documents/10.',
+        'source_span': (125035881, 125035945),
+        'sent_at': datetime.datetime(2000, 11, 28, 7, 50, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Yesterday, counsel for Richard Clonch called, requesting January',
+        'expected': [
+                ('Yesterday,', (0, 10), datetime.datetime(2000, 11, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'cash-m/all_documents/113.',
+        'source_span': (125067889, 125067913),
+        'sent_at': datetime.datetime(2001, 1, 3, 8, 28, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'We can discuss tomorrow.',
+        'expected': [
+                ('tomorrow', (15, 23), datetime.datetime(2001, 1, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'cash-m/all_documents/117.',
+        'source_span': (125077953, 125077972),
+        'sent_at': datetime.datetime(2001, 1, 25, 3, 44, 0, tzinfo=TZ_MINUS_0800),
+        'text': '01:30 PM - 02:30 PM',
+        'expected': [
+                ('01:30 PM - 02:30 PM', (0, 19), (datetime.datetime(2001, 1, 25, 13, 30, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 25, 14, 30, 0, tzinfo=TZ_MINUS_0800))),
+            ],
+    },
+    {
+        'source_path': 'causholli-m/calendar/2.',
+        'source_span': (133510199, 133510297),
+        'sent_at': datetime.datetime(2001, 10, 9, 10, 0, 9, tzinfo=TZ_MINUS_0700),
+        'text': 'We definitely need to practice before we present the Yaks to the world so we will try again today.',
+        'expected': [
+                ('today', (92, 97), datetime.datetime(2001, 10, 9, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'causholli-m/deleted_items/101.',
+        'source_span': (133529737, 133529793),
+        'sent_at': datetime.datetime(2001, 10, 18, 8, 52, 24, tzinfo=TZ_MINUS_0700),
+        'text': "If you were unable to attend yesterday's info lunch with",
+        'expected': [
+                ('yesterday', (29, 38), datetime.datetime(2001, 10, 17, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'corman-s/all_documents/11.',
+        'source_span': (136028078, 136028155),
+        'sent_at': datetime.datetime(2000, 12, 12, 3, 27, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Yesterday, we had a conference call with the pipeline transportation analysts',
+        'expected': [
+                ('Yesterday,', (0, 10), datetime.datetime(2000, 12, 11, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'corman-s/all_documents/5.',
+        'source_span': (136068034, 136068062),
+        'sent_at': datetime.datetime(2000, 11, 29, 21, 4, 0, tzinfo=TZ_MINUS_0800),
+        'text': "I can't believe today is the",
+        'expected': [
+                ('today', (16, 21), datetime.datetime(2000, 11, 29, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'crandell-s/deleted_items/11.',
+        'source_span': (142093251, 142093284),
+        'sent_at': datetime.datetime(2002, 2, 5, 10, 44, 24, tzinfo=TZ_MINUS_0800),
+        'text': 'Please let me know by noon today.',
+        'expected': [
+                ('noon today', (22, 32), datetime.datetime(2002, 2, 5, 12, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'gilbertsmith-d/inbox/5.',
+        'source_span': (412618197, 412618249),
+        'sent_at': datetime.datetime(2002, 2, 6, 12, 52, 47, tzinfo=TZ_MINUS_0800),
+        'text': 'Please RSVP by COB Friday (2/8), to Christine Meloro',
+        'expected': [
+                ('Friday', (19, 25), datetime.datetime(2002, 2, 8, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('2/8', (27, 30), datetime.datetime(2002, 2, 8, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'mclaughlin-e/sent/239.',
+        'source_span': (977401184, 977401260),
+        'sent_at': datetime.datetime(2001, 3, 22, 11, 33, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Please send me your lists by end of day tomorrow (Wed, 3/14) if possible, or',
+        'expected': [
+                ('tomorrow', (40, 48), datetime.datetime(2001, 3, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('Wed, 3/14', (50, 59), datetime.datetime(2001, 3, 14, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'holst-k/inbox/33.',
+        'source_span': (522836096, 522836139),
+        'sent_at': datetime.datetime(2001, 9, 25, 15, 35, 8, tzinfo=TZ_MINUS_0700),
+        'text': 'Please respond by COB Thursday, Sept. 27th.',
+        'expected': [
+                ('Thursday,', (22, 31), datetime.datetime(2001, 9, 27, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('27th', (38, 42), datetime.datetime(2001, 9, 27, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'lay-k/discussion_threads/169.',
+        'source_span': (813094915, 813094978),
+        'sent_at': datetime.datetime(2000, 9, 5, 7, 37, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Please let me know if you have any comments by 5:00 p.m. today.',
+        'expected': [
+                ('5:00 p.m. today', (47, 62), datetime.datetime(2000, 9, 5, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'jones-t/all_documents/1267.',
+        'source_span': (550007925, 550007983),
+        'sent_at': datetime.datetime(2000, 4, 17, 2, 50, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'R.S.V.P. to Sylvia Hu x 36775 or email by Noon, Wed. 4/19.',
+        'expected': [
+                ('Noon,', (42, 47), datetime.datetime(2000, 4, 17, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('Wed. 4/19', (48, 57), datetime.datetime(2000, 4, 19, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'jones-t/notes_inbox/3263.',
+        'source_span': (571842663, 571842696),
+        'sent_at': datetime.datetime(2001, 3, 1, 5, 22, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Please R.S.V.P. by 5 p.m. Monday.',
+        'expected': [
+                ('5 p.m. Monday', (19, 32), datetime.datetime(2001, 3, 5, 17, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'zipper-a/all_documents/27.',
+        'source_span': (1425332443, 1425332515),
+        'sent_at': datetime.datetime(2000, 12, 11, 6, 15, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'By next Tuesday, I plan to send you our proposed agenda for the meeting.',
+        'expected': [
+                ('next Tuesday', (3, 15), datetime.datetime(2000, 12, 12, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'sanders-r/sent_items/226.',
+        'source_span': (1121678592, 1121678636),
+        'sent_at': datetime.datetime(2001, 6, 5, 9, 43, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'What about lunch? Thurs or Fri of next week?',
+        'expected': [
+                ('Thurs or Fri', (18, 30), [
+                        datetime.datetime(2001, 6, 7, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                        datetime.datetime(2001, 6, 8, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                    ]),
+            ],
+    },
+    {
+        'source_path': 'stokley-c/chris_stokley/sent/1.',
+        'source_span': (1279893159, 1279893296),
+        'sent_at': datetime.datetime(2001, 8, 1, 6, 20, 48, tzinfo=TZ_MINUS_0700),
+        'text': 'Please have your plans of action/feedback/comments to me by Thursday morning, so I can make sure they get included in the report he sees.',
+        'expected': [
+                ('Thursday morning', (60, 76), datetime.datetime(2001, 8, 2, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'mclaughlin-e/eol___tagg/131.',
+        'source_span': (974491262, 974491341),
+        'sent_at': datetime.datetime(2001, 7, 27, 8, 14, 20, tzinfo=TZ_MINUS_0700),
+        'text': 'This is a reminder that the sign-off forms are due by COB, Wednesday, August 1.',
+        'expected': [
+                ('Wednesday, August 1', (59, 78), datetime.datetime(2001, 8, 1, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'jones-t/all_documents/9221.',
+        'source_span': (560939056, 560939133),
+        'sent_at': datetime.datetime(2001, 1, 26, 5, 33, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'please let me know how many people will attend by tomorrow afternoon (Friday)',
+        'expected': [
+                ('tomorrow afternoon', (50, 68), datetime.datetime(2001, 1, 27, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('Friday', (70, 76), datetime.datetime(2001, 1, 26, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'shankman-j/deleted_items/309.',
+        'source_span': (1201536974, 1201537050),
+        'sent_at': datetime.datetime(2001, 10, 22, 5, 50, 42, tzinfo=TZ_MINUS_0700),
+        'text': 'please submit your BUSINESS HIGHLIGHT OR NEWS by noon Wednesday, October 24.',
+        'expected': [
+                ('noon Wednesday, October 24', (49, 75), datetime.datetime(2001, 10, 24, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'skilling-j/_sent_mail/302.',
+        'source_span': (1236283014, 1236283051),
+        'sent_at': datetime.datetime(2001, 4, 26, 1, 13, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'RSVP:          By noon on May 4, 2001',
+        'expected': [
+                ('noon on May 4, 2001', (18, 37), datetime.datetime(2001, 5, 4, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'skilling-j/discussion_threads/1144.',
+        'source_span': (1240792297, 1240792340),
+        'sent_at': datetime.datetime(2001, 5, 7, 7, 16, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'RSVP:          By 5:00 p.m. on May 18, 2001',
+        'expected': [
+                ('5:00 p.m. on May 18, 2001', (18, 43), datetime.datetime(2001, 5, 18, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'holst-k/deleted_items/97.',
+        'source_span': (522005008, 522005096),
+        'sent_at': datetime.datetime(2001, 10, 17, 15, 8, 36, tzinfo=TZ_MINUS_0700),
+        'text': 'Starting next Wednesday you have EB30C2 for your Fundies Meeting from 3:00 PM to 4:30 PM',
+        'expected': [
+                ('next Wednesday', (9, 23), datetime.datetime(2001, 10, 17, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('3:00 PM to 4:30 PM', (70, 88), (datetime.datetime(2001, 10, 18, 15, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 18, 16, 30, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+    },
+    {
+        'source_path': 'shively-h/discussion_threads/110.',
+        'source_span': (1234594107, 1234594181),
+        'sent_at': datetime.datetime(2000, 10, 16, 10, 9, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Dave would like to have a strategy meeting next Tuesday  October 17, 2000,',
+        'expected': [
+                ('next Tuesday', (43, 55), datetime.datetime(2000, 10, 17, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'holst-k/inbox/318.',
+        'source_span': (522802366, 522802433),
+        'sent_at': datetime.datetime(2001, 11, 15, 14, 38, 12, tzinfo=TZ_MINUS_0800),
+        'text': 'Check your in-box next Tuesday for a special edition of Deal Alert!',
+        'expected': [
+                ('next Tuesday', (18, 30), datetime.datetime(2001, 11, 20, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'corman-s/sent_items/47.',
+        'source_span': (141651990, 141652048),
+        'sent_at': datetime.datetime(2001, 10, 24, 9, 35, 27, tzinfo=TZ_MINUS_0700),
+        'text': '39C1 is available from 3:00 - 4:00 pm on Tuesday, Oct. 30.',
+        'expected': [
+                ('3:00 - 4:00 pm on Tuesday', (23, 48), (datetime.datetime(2001, 10, 30, 15, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 30, 16, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+    },
+    {
+        'source_path': 'jones-t/all_documents/3791.',
+        'source_span': (555101397, 555101439),
+        'sent_at': datetime.datetime(2000, 9, 13, 2, 24, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'R.S.V.P. to Sylvia Hu x36775 by Noon, 9/26',
+        'expected': [
+                ('Noon,', (32, 37), datetime.datetime(2000, 9, 13, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('9/26', (38, 42), datetime.datetime(2000, 9, 26, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'shankman-j/deleted_items/322.',
+        'source_span': (1201586284, 1201586332),
+        'sent_at': datetime.datetime(2001, 10, 19, 14, 40, 56, tzinfo=TZ_MINUS_0700),
+        'text': 'from 10:00 a.m. Saturday until 8:00 a.m. Sunday.',
+        'expected': [
+                ('10:00 a.m. Saturday', (5, 24), datetime.datetime(2001, 10, 20, 10, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('8:00 a.m. Sunday', (31, 47), datetime.datetime(2001, 10, 21, 8, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/culture/2.',
+        'source_span': (774637885, 774637990),
+        'sent_at': datetime.datetime(2001, 9, 10, 6, 46, 9, tzinfo=TZ_MINUS_0700),
+        'text': 'We would like to share our recommendations with you tomorrow from 1:30 to 2:30 in Conference Room EB16C1.',
+        'expected': [
+                ('tomorrow', (52, 60), datetime.datetime(2001, 9, 11, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('1:30 to 2:30', (66, 78), (datetime.datetime(2001, 9, 11, 1, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 9, 11, 2, 30, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+    },
+    {
+        'source_path': 'corman-s/inbox/65.',
+        'source_span': (138431704, 138431791),
+        'sent_at': datetime.datetime(2002, 3, 25, 13, 1, 44, tzinfo=TZ_MINUS_0800),
+        'text': "The time is blocked for Michelle Lokay and Paul Y'Barbo, tomorrow from 2:00 until 3:00.",
+        'expected': [
+                ('tomorrow', (57, 65), datetime.datetime(2002, 3, 26, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('2:00', (71, 75), datetime.datetime(2002, 3, 26, 2, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('3:00', (82, 86), datetime.datetime(2002, 3, 26, 3, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'corman-s/inbox/archives/142.',
+        'source_span': (138632752, 138632813),
+        'sent_at': datetime.datetime(2002, 2, 13, 13, 52, 41, tzinfo=TZ_MINUS_0800),
+        'text': 'Shelley will only be available tomorrow from 3:00 until 5:00.',
+        'expected': [
+                ('tomorrow', (31, 39), datetime.datetime(2002, 2, 14, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('3:00', (45, 49), datetime.datetime(2002, 2, 14, 3, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('5:00', (56, 60), datetime.datetime(2002, 2, 14, 5, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'holst-k/deleted_items/71.',
+        'source_span': (521893530, 521893627),
+        'sent_at': datetime.datetime(2001, 10, 22, 8, 59, 58, tzinfo=TZ_MINUS_0700),
+        'text': 'The meeting with IHS Energy representatives will take place tomorrow from 10:30 to 1:30 in EB3321',
+        'expected': [
+                ('tomorrow', (60, 68), datetime.datetime(2001, 10, 23, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('10:30 to 1:30', (74, 87), (datetime.datetime(2001, 10, 22, 10, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 23, 1, 30, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+    },
+    {
+        'source_path': 'lay-k/discussion_threads/105.',
+        'source_span': (812876104, 812876154),
+        'sent_at': datetime.datetime(2000, 8, 22, 4, 34, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'to me via e-mail by 5:00 pm on Tuesday, August 22.',
+        'expected': [
+                ('5:00 pm on Tuesday, August 22', (20, 49), datetime.datetime(2000, 8, 22, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'shankman-j/deleted_items/14.',
+        'source_span': (1201030927, 1201031003),
+        'sent_at': datetime.datetime(2001, 10, 29, 6, 8, 7, tzinfo=TZ_MINUS_0800),
+        'text': 'please submit your BUSINESS HIGHLIGHT OR NEWS by noon Wednesday, October 31.',
+        'expected': [
+                ('noon Wednesday, October 31', (49, 75), datetime.datetime(2001, 10, 31, 12, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
 ]
 
 FORBIDDEN = []

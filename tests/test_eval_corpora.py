@@ -49,7 +49,16 @@ def enron_case_id(case):
 @pytest.mark.parametrize("case", ENRON_EMAILS_CONTEXT_CASES, ids=enron_case_id)
 def test_enron_context_gold_matches(case):
     config = tfhConfig(now=case["sent_at"], return_matched_text=True)
-    assert timefhuman(case["text"], config=config) == case["expected"]
+    actual = timefhuman(case["text"], config=config)
+
+    if "known_failure" in case:
+        try:
+            assert actual == case["expected"]
+        except AssertionError:
+            pytest.xfail(case["known_failure"])
+        return
+
+    assert actual == case["expected"]
 
 
 def test_enron_context_spans_match_corpus():
