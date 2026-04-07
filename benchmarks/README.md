@@ -22,7 +22,7 @@ These datasets are taken from datefinder's README: https://github.com/akoumjian/
 
 The compact summary works best as one figure with two grouped-bar panels rather than a single shared axis: accuracy and latency use different units and different scales.
 
-![Benchmark snapshot comparing timefhuman and datefinder](plots/benchmark_snapshot.svg)
+![Benchmark snapshot comparing timefhuman and datefinder](summary.svg)
 
 This chart focuses on `timefhuman` vs. `datefinder.find_dates`, which is the clearest head-to-head comparison from the main table above. `dateparser*` stays in the tables because its larger timeout ceiling makes a compact side-by-side chart much less legible.
 

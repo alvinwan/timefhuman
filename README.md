@@ -102,7 +102,7 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3. Timing columns are fresh-process cold-start medians, so parser caches do not carry across samples.
 
-![Benchmark snapshot comparing timefhuman and datefinder](benchmarks/plots/benchmark_snapshot.svg)
+![Benchmark snapshot comparing timefhuman and datefinder](benchmarks/summary.svg)
 
 `acc` is member-level correctness for the dataset immediately to the left. Most parsers use a `2s` timeout; `dateparser*` uses `30s`. `dateparser*` uses `dateparser.parse` for short inputs and `dateparser.search_dates` for document corpora.
 
