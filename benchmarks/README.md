@@ -20,11 +20,11 @@ These datasets are taken from datefinder's README: https://github.com/akoumjian/
 
 ### Visual Summary
 
-The compact summary works best as one figure with two grouped-bar panels rather than a single shared axis: accuracy and latency use different units and different scales.
+A two-panel summary of accuracy and latency.
 
 ![Benchmark snapshot comparing timefhuman and datefinder](summary.svg)
 
-This chart focuses on `timefhuman` vs. `datefinder.find_dates`, which is the clearest head-to-head comparison from the main table above. `dateparser*` stays in the tables because its larger timeout ceiling makes a compact side-by-side chart much less legible.
+This chart focuses on `timefhuman` vs. `datefinder.find_dates`. See the tables below for `dateparser*` and the lower-accuracy baselines.
 
 ### Warmed Fresh Process Reference
 

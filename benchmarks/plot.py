@@ -4,6 +4,7 @@
 Usage:
     python3 benchmarks/plot.py
     python3 benchmarks/plot.py --output benchmarks/summary.svg
+    python3 benchmarks/plot.py --with-title
 """
 
 from __future__ import annotations
@@ -36,15 +37,8 @@ SERIES = (
 DATASETS = ("short", "core", "sea_76k", "test_data_560k")
 
 WIDTH = 1180
-HEIGHT = 620
 PADDING = 60
-TITLE_Y = 58
-SUBTITLE_Y = 86
-LEGEND_Y = 126
 PANEL_GAP = 20
-PANEL_TOP = 154
-PANEL_HEIGHT = 380
-PANEL_WIDTH = (WIDTH - PADDING * 2 - PANEL_GAP) / 2
 FONT = "ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
 
 BG = "var(--bg)"
@@ -66,6 +60,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("benchmarks/summary.svg"),
         help="Where to write the SVG chart.",
+    )
+    parser.add_argument(
+        "--with-title",
+        action="store_true",
+        help="Include the standalone chart title and subtitle.",
     )
     return parser.parse_args()
 
@@ -97,8 +96,29 @@ def fmt_ms(value: float) -> str:
     return f"{value:.1f}"
 
 
-def panel_origin(index: int) -> tuple[float, float]:
-    return PADDING + index * (PANEL_WIDTH + PANEL_GAP), PANEL_TOP
+def layout(with_title: bool) -> dict[str, float]:
+    height = 620 if with_title else 500
+    title_y = 58 if with_title else 0
+    subtitle_y = 86 if with_title else 0
+    legend_y = 126 if with_title else 38
+    panel_top = 154 if with_title else 66
+    panel_height = 380 if with_title else 368
+    panel_width = (WIDTH - PADDING * 2 - PANEL_GAP) / 2
+    footer_y = height - 24
+    return {
+        "height": height,
+        "title_y": title_y,
+        "subtitle_y": subtitle_y,
+        "legend_y": legend_y,
+        "panel_top": panel_top,
+        "panel_height": panel_height,
+        "panel_width": panel_width,
+        "footer_y": footer_y,
+    }
+
+
+def panel_origin(index: int, spec: dict[str, float]) -> tuple[float, float]:
+    return PADDING + index * (spec["panel_width"] + PANEL_GAP), spec["panel_top"]
 
 
 def style_block():
@@ -129,27 +149,27 @@ def style_block():
 </style>""".strip()
 
 
-def draw_panel_frame(elements, x, y, title, subtitle):
-    elements.append(svg_rect(x, y, PANEL_WIDTH, PANEL_HEIGHT, PANEL, rx=18, stroke=PANEL_STROKE))
+def draw_panel_frame(elements, x, y, width, height, title, subtitle):
+    elements.append(svg_rect(x, y, width, height, PANEL, rx=18, stroke=PANEL_STROKE))
     elements.append(svg_text(x + 24, y + 28, title, size=20, weight="700"))
     elements.append(svg_text(x + 24, y + 46, subtitle, size=12, fill=MUTED))
 
 
-def draw_legend(elements):
+def draw_legend(elements, legend_y: float):
     legend_x = WIDTH - PADDING - 386
     for index, series in enumerate(SERIES):
         x = legend_x + index * 180
-        elements.append(svg_rect(x, LEGEND_Y - 14, 18, 18, series["color"], rx=4))
-        elements.append(svg_text(x + 28, LEGEND_Y, series["name"], size=14, weight="700"))
+        elements.append(svg_rect(x, legend_y - 14, 18, 18, series["color"], rx=4))
+        elements.append(svg_text(x + 28, legend_y, series["name"], size=14, weight="700"))
 
 
-def draw_grouped_bars(elements, values_key, x, y, subtitle, y_ticks, y_formatter, projector, best_rule):
-    draw_panel_frame(elements, x, y, subtitle[0], subtitle[1])
+def draw_grouped_bars(elements, values_key, x, y, width, height, subtitle, y_ticks, y_formatter, projector, best_rule):
+    draw_panel_frame(elements, x, y, width, height, subtitle[0], subtitle[1])
 
     axis_left = x + 56
-    axis_right = x + PANEL_WIDTH - 24
+    axis_right = x + width - 24
     axis_top = y + 78
-    axis_bottom = y + PANEL_HEIGHT - 54
+    axis_bottom = y + height - 54
     axis_width = axis_right - axis_left
     axis_height = axis_bottom - axis_top
     group_width = axis_width / len(DATASETS)
@@ -194,12 +214,14 @@ def draw_grouped_bars(elements, values_key, x, y, subtitle, y_ticks, y_formatter
             )
 
 
-def draw_accuracy_panel(elements):
+def draw_accuracy_panel(elements, spec: dict[str, float]):
     draw_grouped_bars(
         elements,
         "accuracy",
-        *panel_origin(0),
-        subtitle=("Accuracy", "Member-level correctness, higher is better"),
+        *panel_origin(0, spec),
+        spec["panel_width"],
+        spec["panel_height"],
+        subtitle=("Accuracy", "Member acc"),
         y_ticks=(0, 25, 50, 75, 100),
         y_formatter=lambda tick: str(int(tick)),
         projector=lambda value: value / 100.0,
@@ -207,7 +229,7 @@ def draw_accuracy_panel(elements):
     )
 
 
-def draw_latency_panel(elements):
+def draw_latency_panel(elements, spec: dict[str, float]):
     log_min = math.log10(1)
     log_max = math.log10(1000)
 
@@ -217,8 +239,10 @@ def draw_latency_panel(elements):
     draw_grouped_bars(
         elements,
         "latency_ms",
-        *panel_origin(1),
-        subtitle=("Latency", "Fresh-process cold median (ms), lower is better"),
+        *panel_origin(1, spec),
+        spec["panel_width"],
+        spec["panel_height"],
+        subtitle=("Latency", "Cold median ms"),
         y_ticks=(1, 10, 100, 1000),
         y_formatter=lambda tick: f"{int(tick)}",
         projector=projector,
@@ -226,40 +250,38 @@ def draw_latency_panel(elements):
     )
 
 
-def build_svg():
+def build_svg(with_title: bool = False):
+    spec = layout(with_title)
     elements = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" '
-        f'viewBox="0 0 {WIDTH} {HEIGHT}" fill="none">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{spec["height"]}" '
+        f'viewBox="0 0 {WIDTH} {spec["height"]}" fill="none">',
         style_block(),
-        svg_rect(0, 0, WIDTH, HEIGHT, BG, rx=0),
-        svg_text(PADDING, TITLE_Y, "Benchmark Snapshot", size=32, weight="800"),
-        svg_text(
-            PADDING,
-            SUBTITLE_Y,
-            "timefhuman vs. datefinder from benchmarks/README.md main results",
-            size=15,
-            fill=MUTED,
-        ),
+        svg_rect(0, 0, WIDTH, spec["height"], BG, rx=0),
     ]
-    draw_legend(elements)
-    draw_accuracy_panel(elements)
-    draw_latency_panel(elements)
-    elements.append(
-        svg_text(
-            PADDING,
-            HEIGHT - 40,
-            "Accuracy uses member-level coverage. Latency uses a log scale because the corpora span two orders of magnitude.",
-            size=12,
-            fill=MUTED,
+    if with_title:
+        elements.extend(
+            [
+                svg_text(PADDING, spec["title_y"], "Benchmark Snapshot", size=32, weight="800"),
+                svg_text(
+                    PADDING,
+                    spec["subtitle_y"],
+                    "timefhuman vs. datefinder from benchmarks/README.md main results",
+                    size=15,
+                    fill=MUTED,
+                ),
+            ]
         )
-    )
+    draw_legend(elements, spec["legend_y"])
+    draw_accuracy_panel(elements, spec)
+    draw_latency_panel(elements, spec)
+    elements.append(svg_text(PADDING, spec["footer_y"], "Cold medians; log latency axis.", size=12, fill=MUTED))
     elements.append("</svg>")
     return "\n".join(elements)
 
 
 def main():
     args = parse_args()
-    args.output.write_text(build_svg(), encoding="utf-8")
+    args.output.write_text(build_svg(with_title=args.with_title), encoding="utf-8")
     print(args.output)
 
 
