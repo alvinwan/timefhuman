@@ -37,8 +37,10 @@ SERIES = (
 DATASETS = ("short", "core", "sea_76k", "test_data_560k")
 
 WIDTH = 1180
-PADDING = 60
-PANEL_GAP = 20
+TITLE_PADDING = 60
+EMBED_PADDING = 0
+TITLE_PANEL_GAP = 20
+EMBED_PANEL_GAP = 8
 FONT = "ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
 
 BG = "var(--bg)"
@@ -97,16 +99,20 @@ def fmt_ms(value: float) -> str:
 
 
 def layout(with_title: bool) -> dict[str, float]:
-    height = 620 if with_title else 500
+    outer_pad = TITLE_PADDING if with_title else EMBED_PADDING
+    panel_gap = TITLE_PANEL_GAP if with_title else EMBED_PANEL_GAP
+    height = 620 if with_title else 424
     title_y = 58 if with_title else 0
     subtitle_y = 86 if with_title else 0
-    legend_y = 126 if with_title else 38
-    panel_top = 154 if with_title else 66
-    panel_height = 380 if with_title else 368
-    panel_width = (WIDTH - PADDING * 2 - PANEL_GAP) / 2
-    footer_y = height - 24
+    legend_y = 126 if with_title else 18
+    panel_top = 154 if with_title else 40
+    panel_height = 380 if with_title else 344
+    panel_width = (WIDTH - outer_pad * 2 - panel_gap) / 2
+    footer_y = height - 4
     return {
         "height": height,
+        "outer_pad": outer_pad,
+        "panel_gap": panel_gap,
         "title_y": title_y,
         "subtitle_y": subtitle_y,
         "legend_y": legend_y,
@@ -118,7 +124,7 @@ def layout(with_title: bool) -> dict[str, float]:
 
 
 def panel_origin(index: int, spec: dict[str, float]) -> tuple[float, float]:
-    return PADDING + index * (spec["panel_width"] + PANEL_GAP), spec["panel_top"]
+    return spec["outer_pad"] + index * (spec["panel_width"] + spec["panel_gap"]), spec["panel_top"]
 
 
 def style_block():
@@ -155,8 +161,9 @@ def draw_panel_frame(elements, x, y, width, height, title, subtitle):
     elements.append(svg_text(x + 24, y + 46, subtitle, size=12, fill=MUTED))
 
 
-def draw_legend(elements, legend_y: float):
-    legend_x = WIDTH - PADDING - 386
+def draw_legend(elements, spec: dict[str, float]):
+    legend_x = WIDTH - spec["outer_pad"] - 386
+    legend_y = spec["legend_y"]
     for index, series in enumerate(SERIES):
         x = legend_x + index * 180
         elements.append(svg_rect(x, legend_y - 14, 18, 18, series["color"], rx=4))
@@ -242,7 +249,7 @@ def draw_latency_panel(elements, spec: dict[str, float]):
         *panel_origin(1, spec),
         spec["panel_width"],
         spec["panel_height"],
-        subtitle=("Latency", "Cold median ms"),
+        subtitle=("Latency", "Cold-start median latencies"),
         y_ticks=(1, 10, 100, 1000),
         y_formatter=lambda tick: f"{int(tick)}",
         projector=projector,
@@ -261,9 +268,9 @@ def build_svg(with_title: bool = False):
     if with_title:
         elements.extend(
             [
-                svg_text(PADDING, spec["title_y"], "Benchmark Snapshot", size=32, weight="800"),
+                svg_text(TITLE_PADDING, spec["title_y"], "Benchmark Snapshot", size=32, weight="800"),
                 svg_text(
-                    PADDING,
+                    TITLE_PADDING,
                     spec["subtitle_y"],
                     "timefhuman vs. datefinder from benchmarks/README.md main results",
                     size=15,
@@ -271,10 +278,10 @@ def build_svg(with_title: bool = False):
                 ),
             ]
         )
-    draw_legend(elements, spec["legend_y"])
+    draw_legend(elements, spec)
     draw_accuracy_panel(elements, spec)
     draw_latency_panel(elements, spec)
-    elements.append(svg_text(PADDING, spec["footer_y"], "Cold medians; log latency axis.", size=12, fill=MUTED))
+    elements.append(svg_text(spec["outer_pad"], spec["footer_y"], "Log latency axis.", size=12, fill=MUTED))
     elements.append("</svg>")
     return "\n".join(elements)
 
