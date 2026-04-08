@@ -1,0 +1,322 @@
+{
+  "profile": "document",
+  "timing": "cold",
+  "rows": [
+    {
+      "label": "timefhuman",
+      "short": {
+        "median_ms": 0.09291367834001514,
+        "correctness": {
+          "matched": 28,
+          "total": 28
+        }
+      },
+      "core_corpus": {
+        "median_ms": 2.6005410036304966,
+        "count": 13,
+        "member": {
+          "matched": 14,
+          "total": 14
+        },
+        "group": {
+          "matched": 13,
+          "total": 13
+        }
+      },
+      "seattle_html_76k": {
+        "median_ms": 32.05566600081511,
+        "count": 56,
+        "member": {
+          "matched": 57,
+          "total": 57
+        },
+        "group": {
+          "matched": 56,
+          "total": 56
+        }
+      },
+      "test_data_560k": {
+        "median_ms": 230.83729200152447,
+        "count": 557,
+        "member": {
+          "matched": 94,
+          "total": 94
+        },
+        "group": {
+          "matched": 74,
+          "total": 74
+        }
+      }
+    },
+    {
+      "label": "dateparser*",
+      "short": {
+        "median_ms": 40.55206546425844,
+        "correctness": {
+          "matched": 15,
+          "total": 28
+        }
+      },
+      "core_corpus": {
+        "median_ms": 1319.8636660017655,
+        "count": 14,
+        "member": {
+          "matched": 9,
+          "total": 14
+        },
+        "group": {
+          "matched": 7,
+          "total": 13
+        }
+      },
+      "seattle_html_76k": {
+        "median_ms": 719.0444590014522,
+        "count": 90,
+        "member": {
+          "matched": 53,
+          "total": 57
+        },
+        "group": {
+          "matched": 53,
+          "total": 56
+        }
+      },
+      "test_data_560k": {
+        "timeout": ">30s",
+        "count": null,
+        "member": {
+          "timeout": ">30s"
+        },
+        "group": {
+          "timeout": ">30s"
+        }
+      }
+    },
+    {
+      "label": "parsedatetime.parseDT",
+      "short": {
+        "median_ms": 0.16484821441866057,
+        "correctness": {
+          "matched": 13,
+          "total": 28
+        }
+      },
+      "core_corpus": {
+        "median_ms": 7.5970000034431,
+        "count": 1,
+        "member": {
+          "matched": 0,
+          "total": 14
+        },
+        "group": {
+          "matched": 0,
+          "total": 13
+        }
+      },
+      "seattle_html_76k": {
+        "median_ms": 1212.4073329978273,
+        "count": 1,
+        "member": {
+          "matched": 0,
+          "total": 57
+        },
+        "group": {
+          "matched": 0,
+          "total": 56
+        }
+      },
+      "test_data_560k": {
+        "timeout": ">2s",
+        "count": null,
+        "member": {
+          "timeout": ">2s"
+        },
+        "group": {
+          "timeout": ">2s"
+        }
+      }
+    },
+    {
+      "label": "recurrent.parse",
+      "short": {
+        "median_ms": 0.6843883927233817,
+        "correctness": {
+          "matched": 13,
+          "total": 28
+        }
+      },
+      "core_corpus": {
+        "median_ms": 14.585875003831461,
+        "count": 1,
+        "member": {
+          "matched": 0,
+          "total": 14
+        },
+        "group": {
+          "matched": 0,
+          "total": 13
+        }
+      },
+      "seattle_html_76k": {
+        "error": "TypeError",
+        "count": null,
+        "member": {
+          "error": "TypeError"
+        },
+        "group": {
+          "error": "TypeError"
+        }
+      },
+      "test_data_560k": {
+        "timeout": ">2s",
+        "count": null,
+        "member": {
+          "timeout": ">2s"
+        },
+        "group": {
+          "timeout": ">2s"
+        }
+      }
+    },
+    {
+      "label": "metadate.parse_date",
+      "short": {
+        "median_ms": 0.10171128555417194,
+        "correctness": {
+          "matched": 10,
+          "total": 28
+        }
+      },
+      "core_corpus": {
+        "median_ms": 1.4416249978239648,
+        "count": 10,
+        "member": {
+          "matched": 8,
+          "total": 14
+        },
+        "group": {
+          "matched": 6,
+          "total": 13
+        }
+      },
+      "seattle_html_76k": {
+        "median_ms": 10.71349999983795,
+        "count": 90,
+        "member": {
+          "matched": 2,
+          "total": 57
+        },
+        "group": {
+          "matched": 2,
+          "total": 56
+        }
+      },
+      "test_data_560k": {
+        "median_ms": 111.23475000204053,
+        "count": 1538,
+        "member": {
+          "matched": 25,
+          "total": 94
+        },
+        "group": {
+          "matched": 19,
+          "total": 74
+        }
+      }
+    },
+    {
+      "label": "datefinder.find_dates",
+      "short": {
+        "median_ms": 1.7424791785742855,
+        "correctness": {
+          "matched": 10,
+          "total": 28
+        }
+      },
+      "core_corpus": {
+        "median_ms": 45.88783299550414,
+        "count": 11,
+        "member": {
+          "matched": 10,
+          "total": 14
+        },
+        "group": {
+          "matched": 8,
+          "total": 13
+        }
+      },
+      "seattle_html_76k": {
+        "median_ms": 144.59949999582022,
+        "count": 57,
+        "member": {
+          "matched": 54,
+          "total": 57
+        },
+        "group": {
+          "matched": 54,
+          "total": 56
+        }
+      },
+      "test_data_560k": {
+        "median_ms": 1214.8288750031497,
+        "count": 313,
+        "member": {
+          "matched": 37,
+          "total": 94
+        },
+        "group": {
+          "matched": 22,
+          "total": 74
+        }
+      }
+    },
+    {
+      "label": "ctparse.ctparse",
+      "short": {
+        "median_ms": 7.7655922499876135,
+        "correctness": {
+          "matched": 6,
+          "total": 28
+        }
+      },
+      "core_corpus": {
+        "median_ms": 279.2586659998051,
+        "count": 1,
+        "member": {
+          "matched": 1,
+          "total": 14
+        },
+        "group": {
+          "matched": 1,
+          "total": 13
+        }
+      },
+      "seattle_html_76k": {
+        "timeout": ">2s",
+        "count": null,
+        "member": {
+          "timeout": ">2s"
+        },
+        "group": {
+          "timeout": ">2s"
+        }
+      },
+      "test_data_560k": {
+        "timeout": ">2s",
+        "count": null,
+        "member": {
+          "timeout": ">2s"
+        },
+        "group": {
+          "timeout": ">2s"
+        }
+      }
+    }
+  ],
+  "datasets": [
+    "core_corpus",
+    "seattle_html_76k",
+    "test_data_560k"
+  ],
+  "short_cases": 28
+}

@@ -96,15 +96,15 @@ You can also use natural language descriptions of dates and times.
 [datetime.datetime(2018, 7, 5, 14, 0)]
 ```
 
-See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](tests/test_e2e.py).
+See more examples in [`datasets/cases/short.py`](datasets/cases/short.py) and [`tests/test_e2e.py`](tests/test_e2e.py).
 
 ## Performance
 
-Cold medians on an Apple M3 MacBook Air, Python 3.13.3.
+Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
 
-![Benchmark snapshot comparing timefhuman and datefinder](benchmarks/summary.svg)
+![Enron benchmark summary](benchmarks/svg/case.svg)
 
-`acc` is member-level correctness. Most parsers use a `2s` timeout; `dateparser*` uses `30s`. Full tables and notes are in [`benchmarks/README.md`](benchmarks/README.md).
+`100` manually reviewed snippets from the Enron Email Dataset, each resolved against its email's send time. Left: member-level datetime coverage. Right: median same-process latency per snippet. Full Enron results and the separate cold-start document benchmarks are in [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Advanced Usage
 

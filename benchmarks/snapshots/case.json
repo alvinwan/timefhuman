@@ -1,0 +1,137 @@
+{
+  "profile": "case",
+  "timing": "same_process",
+  "dataset": "enron_emails",
+  "cases": 100,
+  "published_metric": "member",
+  "rows": [
+    {
+      "label": "timefhuman",
+      "exact": {
+        "matched": 48,
+        "total": 100
+      },
+      "group": {
+        "matched": 61,
+        "total": 105
+      },
+      "member": {
+        "matched": 85,
+        "total": 136
+      },
+      "median_ms": 0.24502149972249754,
+      "timeouts": 0,
+      "errors": {}
+    },
+    {
+      "label": "parsedatetime.parseDT",
+      "exact": {
+        "matched": 40,
+        "total": 100
+      },
+      "group": {
+        "matched": 42,
+        "total": 105
+      },
+      "member": {
+        "matched": 51,
+        "total": 136
+      },
+      "median_ms": 0.17531300181872211,
+      "timeouts": 0,
+      "errors": {}
+    },
+    {
+      "label": "recurrent.parse",
+      "exact": {
+        "matched": 39,
+        "total": 100
+      },
+      "group": {
+        "matched": 41,
+        "total": 105
+      },
+      "member": {
+        "matched": 50,
+        "total": 136
+      },
+      "median_ms": 0.9737084983498789,
+      "timeouts": 0,
+      "errors": {}
+    },
+    {
+      "label": "ctparse.ctparse",
+      "exact": {
+        "matched": 29,
+        "total": 100
+      },
+      "group": {
+        "matched": 30,
+        "total": 105
+      },
+      "member": {
+        "matched": 38,
+        "total": 136
+      },
+      "median_ms": 16.32793749740813,
+      "timeouts": 0,
+      "errors": {}
+    },
+    {
+      "label": "dateparser*",
+      "exact": {
+        "matched": 2,
+        "total": 100
+      },
+      "group": {
+        "matched": 15,
+        "total": 105
+      },
+      "member": {
+        "matched": 18,
+        "total": 136
+      },
+      "median_ms": 57.65270849587978,
+      "timeouts": 0,
+      "errors": {}
+    },
+    {
+      "label": "datefinder.find_dates",
+      "exact": {
+        "matched": 0,
+        "total": 100
+      },
+      "group": {
+        "matched": 9,
+        "total": 105
+      },
+      "member": {
+        "matched": 15,
+        "total": 136
+      },
+      "median_ms": 0.06212500011315569,
+      "timeouts": 0,
+      "errors": {}
+    },
+    {
+      "label": "metadate.parse_date",
+      "exact": {
+        "matched": 0,
+        "total": 100
+      },
+      "group": {
+        "matched": 0,
+        "total": 105
+      },
+      "member": {
+        "matched": 0,
+        "total": 136
+      },
+      "median_ms": 0.02516699896659702,
+      "timeouts": 0,
+      "errors": {
+        "TypeError": 95
+      }
+    }
+  ]
+}

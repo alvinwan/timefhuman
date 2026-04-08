@@ -41,5 +41,19 @@ DATA = {
     "source_hint": "datefinder bench/corpus_core.txt",
     "gold_status": "full",
     "text": TEXT,
-    "expected": MATCHED_TEXT,
+    "cases": [
+        {
+            "id": "document",
+            "mode": "document",
+            "source": "inline",
+            "text": TEXT,
+            "assertion": "exact",
+            "expected": MATCHED_TEXT,
+            "config": {
+                "infer_datetimes": False,
+                "return_matched_text": True,
+            },
+            "tags": ("document",),
+        },
+    ],
 }

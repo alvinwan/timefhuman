@@ -1,5 +1,5 @@
 import pytest
-from eval.short import CUSTOM_CONFIG_CASES, DEFAULT_CASES, MATCHED_TEXT_CASES, NO_INFERENCE_CASES
+from datasets.cases.short import CUSTOM_CONFIG_CASES, DEFAULT_CASES, MATCHED_TEXT_CASES, NO_INFERENCE_CASES
 from timefhuman import timefhuman
 from timefhuman.main import tfhConfig
 

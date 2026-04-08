@@ -1,7 +1,7 @@
 import datetime
 from zoneinfo import ZoneInfo
 
-from eval.corpus_data._shared import localized_datetime
+from datasets.cases._shared import localized_datetime
 from timefhuman import Direction
 
 
@@ -319,3 +319,66 @@ MATCHED_TEXT_CASES = [
         )],
     ),
 ]
+
+DEFAULT_NOW = datetime.datetime(2018, 8, 4, 14, 0)
+
+
+def _snippet_case(case_id, text, expected, tags, config=None):
+    return {
+        "id": case_id,
+        "mode": "snippet",
+        "text": text,
+        "assertion": "exact",
+        "expected": expected,
+        "tags": tuple(tags),
+        "config": config or {},
+    }
+
+
+CASES = []
+
+for index, (text, expected) in enumerate(DEFAULT_CASES):
+    CASES.append(_snippet_case(f"default-{index}", text, expected, ("default",)))
+
+for index, (text, expected) in enumerate(NO_INFERENCE_CASES):
+    CASES.append(
+        _snippet_case(
+            f"no-inference-{index}",
+            text,
+            expected,
+            ("no_inference",),
+            config={"infer_datetimes": False},
+        )
+    )
+
+for index, (config_kwargs, text, expected) in enumerate(CUSTOM_CONFIG_CASES):
+    CASES.append(
+        _snippet_case(
+            f"custom-config-{index}",
+            text,
+            expected,
+            ("custom_config",),
+            config=config_kwargs,
+        )
+    )
+
+for index, (text, expected) in enumerate(MATCHED_TEXT_CASES):
+    CASES.append(
+        _snippet_case(
+            f"matched-text-{index}",
+            text,
+            expected,
+            ("matched_text",),
+            config={"return_matched_text": True},
+        )
+    )
+
+
+DATA = {
+    "id": "short",
+    "source_hint": "checked-in short cases",
+    "gold_status": "full",
+    "text": None,
+    "defaults": {"now": DEFAULT_NOW},
+    "cases": CASES,
+}
