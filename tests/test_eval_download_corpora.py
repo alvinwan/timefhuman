@@ -1,4 +1,4 @@
-from eval.download_corpora import build_enron_corpus_text, write_enron_corpus_text
+from datasets.utils.enron import build_enron_corpus_text, write_enron_corpus_text
 
 
 def test_build_enron_corpus_text_sorts_paths_and_normalizes_trailing_newlines(tmp_path):

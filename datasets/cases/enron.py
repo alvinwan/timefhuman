@@ -1,6 +1,6 @@
 import datetime
 
-from eval.corpus_data._shared import fixed_offset
+from datasets.cases._shared import fixed_offset
 
 
 TZ_MINUS_0800 = fixed_offset(-480)
@@ -995,7 +995,22 @@ DATA = {
     "source_hint": "CMU Enron Email Dataset (May 7, 2015)",
     "gold_status": "context_sample",
     "text": None,
-    "expected": None,
-    "context_expected": CONTEXT_MATCHED_TEXT_CASES,
-    "forbidden": FORBIDDEN,
+    "cases": [
+        {
+            "id": f"{case['source_path']}:{case['source_span'][0]}",
+            "mode": "snippet",
+            "text": case["text"],
+            "assertion": "exact",
+            "expected": case["expected"],
+            "config": {
+                "now": case["sent_at"],
+                "return_matched_text": True,
+            },
+            "tags": ("context",),
+            "source_path": case["source_path"],
+            "source_span": case["source_span"],
+            "known_failure": case.get("known_failure"),
+        }
+        for case in CONTEXT_MATCHED_TEXT_CASES
+    ],
 }

@@ -65,5 +65,18 @@ DATA = {
     "source_hint": "datefinder tests/seattle_weekly.html",
     "gold_status": "full",
     "text": None,
-    "expected": MATCHED_TEXT,
+    "cases": [
+        {
+            "id": "document",
+            "mode": "document",
+            "source": "dataset",
+            "assertion": "exact",
+            "expected": MATCHED_TEXT,
+            "config": {
+                "infer_datetimes": False,
+                "return_matched_text": True,
+            },
+            "tags": ("document",),
+        },
+    ],
 }

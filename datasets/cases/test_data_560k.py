@@ -1,6 +1,6 @@
 import datetime
 
-from eval.corpus_data._shared import localized_datetime
+from datasets.cases._shared import localized_datetime
 
 
 MATCHED_TEXT = [
@@ -145,6 +145,19 @@ DATA = {
     "source_hint": "datefinder tests/test_data.txt",
     "gold_status": "broad_sample",
     "text": None,
-    "expected": MATCHED_TEXT,
-    "forbidden": FORBIDDEN,
+    "cases": [
+        {
+            "id": "document",
+            "mode": "document",
+            "source": "dataset",
+            "assertion": "contains",
+            "expected": MATCHED_TEXT,
+            "forbidden": FORBIDDEN,
+            "config": {
+                "infer_datetimes": False,
+                "return_matched_text": True,
+            },
+            "tags": ("document",),
+        },
+    ],
 }
