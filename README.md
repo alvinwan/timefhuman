@@ -100,6 +100,8 @@ See more examples in [`eval/short.py`](eval/short.py) and [`tests/test_e2e.py`](
 
 ## Performance
 
+Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3.
+
 ![Enron benchmark summary](benchmarks/enron_summary.svg)
 
 `100` manually reviewed snippets from the Enron Email Dataset, each resolved against its email's send time. Left: member-level datetime coverage. Right: same-process median latency per snippet. Full Enron results and the cold-start public-corpus benchmarks are in [`benchmarks/README.md`](benchmarks/README.md).
