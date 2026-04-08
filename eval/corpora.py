@@ -4,8 +4,6 @@ from eval.corpus_data.core_corpus import DATA as CORE_CORPUS, MATCHED_TEXT as CO
 from eval.corpus_data.enron_emails import (
     CONTEXT_MATCHED_TEXT_CASES as ENRON_EMAILS_CONTEXT_CASES,
     DATA as ENRON_EMAILS,
-    FORBIDDEN as ENRON_EMAILS_FORBIDDEN,
-    MATCHED_TEXT as ENRON_EMAILS_MATCHED_TEXT,
 )
 from eval.corpus_data.seattle_html_76k import DATA as SEATTLE_HTML_76K, MATCHED_TEXT as SEATTLE_HTML_76K_MATCHED_TEXT
 from eval.corpus_data.test_data_560k import (
