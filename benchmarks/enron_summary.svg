@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="344" viewBox="0 0 980 344" fill="none" role="img" aria-labelledby="title desc">
+<title id="title">Enron contextual benchmark summary</title>
+<desc id="desc">Member accuracy and median per-snippet latency across reviewed Enron email snippets.</desc>
+<style>
+  svg {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --panel: #fafbfc;
+    --panel-stroke: #e4e7ec;
+    --grid: #eceef2;
+    --axis: #d5d8df;
+    --text: #1c1f24;
+    --muted: #5d6674;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    svg {
+      --bg: #0e1117;
+      --panel: #151a23;
+      --panel-stroke: #2f3847;
+      --grid: #2a3140;
+      --axis: #3a4456;
+      --text: #f3f5f8;
+      --muted: #b7bfcb;
+    }
+  }
+</style>
+<rect x="0" y="0" width="980" height="344" rx="0" fill="var(--bg)" stroke="none" stroke-width="1" />
+<rect x="0.0" y="28" width="480.0" height="296" rx="14" fill="var(--panel)" stroke="var(--panel-stroke)" stroke-width="1" />
+<text x="16.0" y="54" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="600" text-anchor="start">Enron Email Dataset Accuracy</text>
+<text x="16.0" y="72" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">Member accuracy on reviewed email snippets; higher is better</text>
+<line x1="134.0" y1="84" x2="134.0" y2="292" stroke="var(--grid)" />
+<text x="134.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">0%</text>
+<line x1="300.0" y1="84" x2="300.0" y2="292" stroke="var(--grid)" />
+<text x="300.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">50%</text>
+<line x1="466.0" y1="84" x2="466.0" y2="292" stroke="var(--grid)" />
+<text x="466.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">100%</text>
+<line x1="134.0" y1="292" x2="466.0" y2="292" stroke="var(--axis)" />
+<text x="16.0" y="99.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">timefhuman</text>
+<rect x="134.0" y="84" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="134.0" y="84" width="207.5" height="22" rx="6" fill="#1f7a5a" stroke="none" stroke-width="1" />
+<text x="349.5" y="99.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">62.5%</text>
+<text x="16.0" y="136.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">parsedatetime</text>
+<rect x="134.0" y="121" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="134.0" y="121" width="124.5" height="22" rx="6" fill="#5f6875" stroke="none" stroke-width="1" />
+<text x="266.5" y="136.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">37.5%</text>
+<text x="16.0" y="173.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">recurrent</text>
+<rect x="134.0" y="158" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="134.0" y="158" width="122.05882352941177" height="22" rx="6" fill="#727c89" stroke="none" stroke-width="1" />
+<text x="264.05882352941177" y="173.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">36.8%</text>
+<text x="16.0" y="210.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">ctparse</text>
+<rect x="134.0" y="195" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="134.0" y="195" width="92.76470588235294" height="22" rx="6" fill="#858f9c" stroke="none" stroke-width="1" />
+<text x="234.76470588235293" y="210.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">27.9%</text>
+<text x="16.0" y="247.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">dateparser</text>
+<rect x="134.0" y="232" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="134.0" y="232" width="43.94117647058824" height="22" rx="6" fill="#98a2af" stroke="none" stroke-width="1" />
+<text x="185.94117647058823" y="247.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">13.2%</text>
+<text x="16.0" y="284.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">datefinder</text>
+<rect x="134.0" y="269" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="134.0" y="269" width="36.61764705882353" height="22" rx="6" fill="#acb5c1" stroke="none" stroke-width="1" />
+<text x="178.61764705882354" y="284.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">11.0%</text>
+<rect x="500.0" y="28" width="480.0" height="296" rx="14" fill="var(--panel)" stroke="var(--panel-stroke)" stroke-width="1" />
+<text x="516.0" y="54" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="600" text-anchor="start">Enron Email Dataset Latency</text>
+<text x="516.0" y="72" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">Median same-process per-snippet latency; lower is better</text>
+<line x1="634.0" y1="84" x2="634.0" y2="292" stroke="var(--grid)" />
+<text x="634.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">0.1</text>
+<line x1="717.0" y1="84" x2="717.0" y2="292" stroke="var(--grid)" />
+<text x="717.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">1</text>
+<line x1="800.0" y1="84" x2="800.0" y2="292" stroke="var(--grid)" />
+<text x="800.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">10</text>
+<line x1="883.0" y1="84" x2="883.0" y2="292" stroke="var(--grid)" />
+<text x="883.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">100</text>
+<line x1="966.0" y1="84" x2="966.0" y2="292" stroke="var(--grid)" />
+<text x="966.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">1000</text>
+<line x1="634.0" y1="292" x2="966.0" y2="292" stroke="var(--axis)" />
+<text x="516.0" y="99.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">timefhuman</text>
+<rect x="634.0" y="84" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="634.0" y="84" width="49.5821563949784" height="22" rx="6" fill="#1f7a5a" stroke="none" stroke-width="1" />
+<text x="691.5821563949784" y="99.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">0.4 ms</text>
+<text x="516.0" y="136.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">parsedatetime</text>
+<rect x="634.0" y="121" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="634.0" y="121" width="56.62894342192851" height="22" rx="6" fill="#5f6875" stroke="none" stroke-width="1" />
+<text x="698.6289434219285" y="136.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">0.5 ms</text>
+<text x="516.0" y="173.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">recurrent</text>
+<rect x="634.0" y="158" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="634.0" y="158" width="88.71906943874932" height="22" rx="6" fill="#727c89" stroke="none" stroke-width="1" />
+<text x="730.7190694387493" y="173.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">1.2 ms</text>
+<text x="516.0" y="210.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">ctparse</text>
+<rect x="634.0" y="195" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="634.0" y="195" width="206.5692827564821" height="22" rx="6" fill="#858f9c" stroke="none" stroke-width="1" />
+<text x="848.5692827564822" y="210.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">30.8 ms</text>
+<text x="516.0" y="247.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">dateparser</text>
+<rect x="634.0" y="232" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="634.0" y="232" width="272.72736377222094" height="22" rx="6" fill="#98a2af" stroke="none" stroke-width="1" />
+<text x="914.727363772221" y="247.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">193.1 ms</text>
+<text x="516.0" y="284.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">datefinder</text>
+<rect x="634.0" y="269" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
+<rect x="634.0" y="269" width="16.974836116422388" height="22" rx="6" fill="#acb5c1" stroke="none" stroke-width="1" />
+<text x="658.9748361164224" y="284.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">0.2 ms</text>
+</svg>

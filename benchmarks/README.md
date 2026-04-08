@@ -2,6 +2,21 @@
 
 Benchmarks were run on an Apple M3 MacBook Air with 16 GB RAM, macOS 26.3.1, Python 3.13.3. Timing columns are fresh-process cold-start medians, so parser caches do not carry across samples.
 
+## Enron Email Dataset
+
+`100` manually reviewed snippets from the Enron Email Dataset, each resolved against its email's send time. `member acc` is the published Enron metric: matched datetimes over expected datetimes, with list and range members counted individually. The latency column below is same-process median per snippet, not a cold-start figure.
+
+![Enron benchmark summary](enron_summary.svg)
+
+| parser | member acc | median per snippet (ms) |
+| --- | ---: | ---: |
+| timefhuman | <ins><strong>85/136</strong></ins> | 0.4 |
+| parsedatetime.parseDT | 51/136 | 0.5 |
+| recurrent.parse | 50/136 | 2.7 |
+| ctparse.ctparse | 38/136 | 30.8 |
+| dateparser* | 18/136 | 193.1 |
+| datefinder.find_dates | 15/136 | <ins><strong>0.2</strong></ins> |
+
 `acc` is the correctness score for the dataset immediately to the left.
 - Document `acc` is member-level coverage: lists and ranges still count as correct when a baseline finds the individual members separately.
 - Document `group` is grouped correctness: lists and ranges only count when they are returned as one grouped result.
@@ -66,6 +81,18 @@ Run the combined baseline benchmark.
 
 ```bash
 .venv/bin/python benchmarks/benchmark_baselines.py
+```
+
+Run the Enron contextual benchmark and refresh the checked-in snapshot.
+
+```bash
+.venv/bin/python benchmarks/benchmark_enron_context.py --write-json benchmarks/enron_context_snapshot.json
+```
+
+Refresh the Enron summary SVG.
+
+```bash
+.venv/bin/python benchmarks/plot_enron_context.py
 ```
 
 Run the warmed fresh-process variant used for the secondary timing table.
