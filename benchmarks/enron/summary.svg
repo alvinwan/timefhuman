@@ -65,37 +65,35 @@
 <text x="516.0" y="72" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">Median same-process per-snippet latency; lower is better</text>
 <line x1="634.0" y1="84" x2="634.0" y2="292" stroke="var(--grid)" />
 <text x="634.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">0.1</text>
-<line x1="717.0" y1="84" x2="717.0" y2="292" stroke="var(--grid)" />
-<text x="717.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">1</text>
-<line x1="800.0" y1="84" x2="800.0" y2="292" stroke="var(--grid)" />
-<text x="800.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">10</text>
-<line x1="883.0" y1="84" x2="883.0" y2="292" stroke="var(--grid)" />
-<text x="883.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">100</text>
+<line x1="744.6666666666666" y1="84" x2="744.6666666666666" y2="292" stroke="var(--grid)" />
+<text x="744.6666666666666" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">1</text>
+<line x1="855.3333333333333" y1="84" x2="855.3333333333333" y2="292" stroke="var(--grid)" />
+<text x="855.3333333333333" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">10</text>
 <line x1="966.0" y1="84" x2="966.0" y2="292" stroke="var(--grid)" />
-<text x="966.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">1000</text>
+<text x="966.0" y="310" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">100</text>
 <line x1="634.0" y1="292" x2="966.0" y2="292" stroke="var(--axis)" />
 <text x="516.0" y="99.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">timefhuman</text>
 <rect x="634.0" y="84" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
-<rect x="634.0" y="84" width="49.5821563949784" height="22" rx="6" fill="#1f7a5a" stroke="none" stroke-width="1" />
-<text x="691.5821563949784" y="99.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">0.4 ms</text>
+<rect x="634.0" y="84" width="16.042420088290974" height="22" rx="6" fill="#1f7a5a" stroke="none" stroke-width="1" />
+<text x="658.042420088291" y="99.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">0.1 ms</text>
 <text x="516.0" y="136.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">parsedatetime</text>
 <rect x="634.0" y="121" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
-<rect x="634.0" y="121" width="56.62894342192851" height="22" rx="6" fill="#5f6875" stroke="none" stroke-width="1" />
-<text x="698.6289434219285" y="136.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">0.5 ms</text>
+<rect x="634.0" y="121" width="47.77469011479525" height="22" rx="6" fill="#5f6875" stroke="none" stroke-width="1" />
+<text x="689.7746901147952" y="136.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">0.3 ms</text>
 <text x="516.0" y="173.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">recurrent</text>
 <rect x="634.0" y="158" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
-<rect x="634.0" y="158" width="88.71906943874932" height="22" rx="6" fill="#727c89" stroke="none" stroke-width="1" />
-<text x="730.7190694387493" y="173.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">1.2 ms</text>
+<rect x="634.0" y="158" width="113.26364512278683" height="22" rx="6" fill="#727c89" stroke="none" stroke-width="1" />
+<text x="755.2636451227868" y="173.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">1.1 ms</text>
 <text x="516.0" y="210.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">ctparse</text>
 <rect x="634.0" y="195" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
-<rect x="634.0" y="195" width="206.5692827564821" height="22" rx="6" fill="#858f9c" stroke="none" stroke-width="1" />
-<text x="848.5692827564822" y="210.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">30.8 ms</text>
+<rect x="634.0" y="195" width="253.06582804206874" height="22" rx="6" fill="#858f9c" stroke="none" stroke-width="1" />
+<text x="895.0658280420687" y="210.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">19.4 ms</text>
 <text x="516.0" y="247.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">dateparser</text>
 <rect x="634.0" y="232" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
-<rect x="634.0" y="232" width="272.72736377222094" height="22" rx="6" fill="#98a2af" stroke="none" stroke-width="1" />
-<text x="914.727363772221" y="247.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">193.1 ms</text>
+<rect x="634.0" y="232" width="311.5210761097179" height="22" rx="6" fill="#98a2af" stroke="none" stroke-width="1" />
+<text x="953.5210761097179" y="247.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">65.3 ms</text>
 <text x="516.0" y="284.84" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">datefinder</text>
 <rect x="634.0" y="269" width="332.0" height="22" rx="6" fill="none" stroke="var(--grid)" stroke-width="1" />
-<rect x="634.0" y="269" width="16.974836116422388" height="22" rx="6" fill="#acb5c1" stroke="none" stroke-width="1" />
-<text x="658.9748361164224" y="284.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">0.2 ms</text>
+<rect x="634.0" y="269" width="0.0" height="22" rx="6" fill="#acb5c1" stroke="none" stroke-width="1" />
+<text x="642.0" y="284.84" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">&lt;0.1 ms</text>
 </svg>

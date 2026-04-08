@@ -8,7 +8,10 @@ import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+BENCHMARKS_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(BENCHMARKS_ROOT) not in sys.path:
+    sys.path.insert(0, str(BENCHMARKS_ROOT))
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 

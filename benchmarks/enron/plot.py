@@ -6,8 +6,8 @@ from xml.sax.saxutils import escape
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-SNAPSHOT_PATH = SCRIPT_DIR / "enron_context_snapshot.json"
-DEFAULT_OUTPUT = SCRIPT_DIR / "enron_summary.svg"
+SNAPSHOT_PATH = SCRIPT_DIR / "snapshot.json"
+DEFAULT_OUTPUT = SCRIPT_DIR / "summary.svg"
 
 PARSER_LABELS = {
     "timefhuman": "timefhuman",

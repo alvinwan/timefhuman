@@ -17,7 +17,7 @@
         "matched": 85,
         "total": 136
       },
-      "median_ms": 0.3957084991270676,
+      "median_ms": 0.13962449884274974,
       "timeouts": 0,
       "errors": {}
     },
@@ -35,7 +35,7 @@
         "matched": 51,
         "total": 136
       },
-      "median_ms": 0.4811454982700525,
+      "median_ms": 0.27020850029657595,
       "timeouts": 0,
       "errors": {}
     },
@@ -53,7 +53,7 @@
         "matched": 50,
         "total": 136
       },
-      "median_ms": 1.17193749974831,
+      "median_ms": 1.0555205008131452,
       "timeouts": 0,
       "errors": {}
     },
@@ -71,7 +71,7 @@
         "matched": 38,
         "total": 136
       },
-      "median_ms": 30.81672900043486,
+      "median_ms": 19.35260400023253,
       "timeouts": 0,
       "errors": {}
     },
@@ -89,7 +89,7 @@
         "matched": 18,
         "total": 136
       },
-      "median_ms": 193.13983350002673,
+      "median_ms": 65.30545850000635,
       "timeouts": 0,
       "errors": {}
     },
@@ -107,7 +107,7 @@
         "matched": 15,
         "total": 136
       },
-      "median_ms": 0.16014600078051444,
+      "median_ms": 0.08266650002042297,
       "timeouts": 0,
       "errors": {}
     },
@@ -125,7 +125,7 @@
         "matched": 0,
         "total": 136
       },
-      "median_ms": 0.024665998353157192,
+      "median_ms": 0.026458998036105186,
       "timeouts": 0,
       "errors": {
         "TypeError": 95
