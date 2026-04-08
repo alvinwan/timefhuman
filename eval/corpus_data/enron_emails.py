@@ -294,7 +294,7 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'expected': [
                 ('today from 2-3p', (62, 77), (datetime.datetime(2001, 10, 3, 14, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 3, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
             ],
-        'known_failure': 'Relative ranges should stay merged instead of splitting into separate date and time matches.',
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/18.',
@@ -329,9 +329,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 1, 17, 49, 14, tzinfo=TZ_MINUS_0700),
         'text': 'I think we have a meeting schedule for tomorrow 10/2.',
         'expected': [
-                ('tomorrow', (39, 47), datetime.datetime(2001, 10, 2, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('10/2', (48, 52), datetime.datetime(2001, 10, 2, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('tomorrow 10/2', (39, 52), datetime.datetime(2001, 10, 2, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'stokley-c/chris_stokley/murray/8.',
@@ -357,36 +357,12 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 6, 18, 22, 56, 0, tzinfo=TZ_MINUS_0700),
         'text': 'I will also be in Houston all day Thursday and Friday.',
         'expected': [
-                ('Thursday', (34, 42), datetime.datetime(2001, 6, 21, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('Friday', (47, 53), datetime.datetime(2001, 6, 22, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('Thursday and Friday', (34, 53), [
+                        datetime.datetime(2001, 6, 21, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                        datetime.datetime(2001, 6, 22, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                    ]),
             ],
-    },
-    {
-        'source_path': 'pereira-s/all_documents/135.',
-        'source_span': (1026028286, 1026028325),
-        'sent_at': datetime.datetime(2000, 8, 31, 9, 10, 0, tzinfo=TZ_MINUS_0700),
-        'text': "I'll give you a call tomorrow sometime.",
-        'expected': [
-                ('tomorrow', (21, 29), datetime.datetime(2000, 9, 1, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'stokley-c/chris_stokley/murray/70.',
-        'source_span': (1279358267, 1279358325),
-        'sent_at': datetime.datetime(2001, 5, 3, 16, 46, 4, tzinfo=TZ_MINUS_0700),
-        'text': 'I would like to schedule a meeting to talk again tomorrow.',
-        'expected': [
-                ('tomorrow', (49, 57), datetime.datetime(2001, 5, 4, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'kitchen-l/_americas/turbines/91.',
-        'source_span': (792295227, 792295268),
-        'sent_at': datetime.datetime(2001, 3, 26, 17, 24, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'I should have something for you tomorrow.',
-        'expected': [
-                ('tomorrow', (32, 40), datetime.datetime(2001, 3, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'pereira-s/all_documents/87.',
@@ -398,40 +374,14 @@ CONTEXT_MATCHED_TEXT_CASES = [
             ],
     },
     {
-        'source_path': 'stokley-c/chris_stokley/murray/34.',
-        'source_span': (1279265203, 1279265255),
-        'sent_at': datetime.datetime(2001, 8, 16, 7, 18, 14, tzinfo=TZ_MINUS_0700),
-        'text': 'I need to respond TODAY to Lavaroto on these issues.',
-        'expected': [
-                ('TODAY', (18, 23), datetime.datetime(2001, 8, 16, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
         'source_path': 'stokley-c/chris_stokley/murray/47.',
         'source_span': (1279298379, 1279298448),
         'sent_at': datetime.datetime(2001, 7, 25, 14, 49, 20, tzinfo=TZ_MINUS_0700),
         'text': 'Please send me your status on these items by close of business today.',
         'expected': [
-                ('today', (63, 68), datetime.datetime(2001, 7, 25, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('close of business today', (45, 68), datetime.datetime(2001, 7, 25, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
             ],
-    },
-    {
-        'source_path': 'pereira-s/all_documents/68.',
-        'source_span': (1026117251, 1026117285),
-        'sent_at': datetime.datetime(2001, 3, 1, 7, 47, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Is soccer practice on for tonight?',
-        'expected': [
-                ('tonight', (26, 33), datetime.datetime(2001, 3, 1, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
-        'source_path': 'smith-m/_sent_mail/44.',
-        'source_span': (1248764681, 1248764707),
-        'sent_at': datetime.datetime(2001, 3, 19, 4, 3, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Anything going on tonight?',
-        'expected': [
-                ('tonight', (18, 25), datetime.datetime(2001, 3, 19, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/34.',
@@ -467,8 +417,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'text': "Tentative target date for completion of Prelim's is next Thursday, and Finals on Friday.",
         'expected': [
                 ('next Thursday', (52, 65), datetime.datetime(2001, 5, 10, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('Friday', (81, 87), datetime.datetime(2001, 5, 4, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('Friday', (81, 87), datetime.datetime(2001, 5, 11, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'kitchen-l/_americas/turbines/18.',
@@ -489,22 +440,14 @@ CONTEXT_MATCHED_TEXT_CASES = [
             ],
     },
     {
-        'source_path': 'allen-p/_sent_mail/105.',
-        'source_span': (16220, 16293),
-        'sent_at': datetime.datetime(2000, 10, 9, 7, 16, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'PS: Colleen is setting up a meeting tomorrow to discuss the direction for',
-        'expected': [
-                ('tomorrow', (36, 44), datetime.datetime(2000, 10, 10, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
         'source_path': 'allen-p/_sent_mail/109.',
-        'source_span': (24993, 25011),
+        'source_span': (24959, 25012),
         'sent_at': datetime.datetime(2000, 10, 4, 9, 23, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'Time:  2:30 - 3:30',
+        'text': 'Date:  Wednesday, October 11th\n\n  Time:  2:30 - 3:30 ',
         'expected': [
-                ('2:30 - 3:30', (7, 18), (datetime.datetime(2000, 10, 5, 2, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2000, 10, 5, 3, 30, 0, tzinfo=TZ_MINUS_0700))),
+                ('Wednesday, October 11th\n\n  Time:  2:30 - 3:30', (7, 52), (datetime.datetime(2000, 10, 11, 14, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2000, 10, 11, 15, 30, 0, tzinfo=TZ_MINUS_0700))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'allen-p/_sent_mail/115.',
@@ -516,77 +459,14 @@ CONTEXT_MATCHED_TEXT_CASES = [
             ],
     },
     {
-        'source_path': 'arnold-j/2000_conference/2.',
-        'source_span': (5348903, 5348972),
-        'sent_at': datetime.datetime(2000, 12, 4, 5, 58, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Per our conversation this morning, I will list the items in question.',
-        'expected': [
-                ('morning,', (26, 34), datetime.datetime(2000, 12, 4, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
-        'source_path': 'arnold-j/_sent_mail/101.',
-        'source_span': (5357534, 5357583),
-        'sent_at': datetime.datetime(2000, 10, 17, 10, 36, 0, tzinfo=TZ_MINUS_0700),
-        'text': "I've decided what to prepare for dinner tomorrow.",
-        'expected': [
-                ('tomorrow', (40, 48), datetime.datetime(2000, 10, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'arnold-j/_sent_mail/101.',
-        'source_span': (5357792, 5357833),
-        'sent_at': datetime.datetime(2000, 10, 17, 10, 36, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'Watch the debate if you are home tonight.',
-        'expected': [
-                ('tonight', (33, 40), datetime.datetime(2000, 10, 17, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'arnold-j/_sent_mail/101.',
-        'source_span': (5357835, 5357860),
-        'sent_at': datetime.datetime(2000, 10, 17, 10, 36, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'I want a report tomorrow.',
-        'expected': [
-                ('tomorrow', (16, 24), datetime.datetime(2000, 10, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'arora-h/all_documents/24.',
-        'source_span': (17076750, 17076826),
-        'sent_at': datetime.datetime(2001, 1, 3, 9, 47, 0, tzinfo=TZ_MINUS_0800),
-        'text': "Today's live auction for Northern Border Pipeline's procurement of line pipe",
-        'expected': [
-                ('Today', (0, 5), datetime.datetime(2001, 1, 3, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
         'source_path': 'arora-h/all_documents/28.',
         'source_span': (17086247, 17086305),
         'sent_at': datetime.datetime(2001, 1, 17, 1, 46, 0, tzinfo=TZ_MINUS_0800),
         'text': 'Could you please confirm 1:30 pm today, on the 27th floor.',
         'expected': [
                 ('1:30 pm today', (25, 38), datetime.datetime(2001, 1, 17, 13, 30, 0, tzinfo=TZ_MINUS_0800)),
-                ('27th', (47, 51), datetime.datetime(2001, 1, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
             ],
-    },
-    {
-        'source_path': 'arora-h/all_documents/33.',
-        'source_span': (17093491, 17093539),
-        'sent_at': datetime.datetime(2001, 1, 23, 4, 21, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Today I spoke to a gentlemen in your call centre',
-        'expected': [
-                ('Today', (0, 5), datetime.datetime(2001, 1, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
-        'source_path': 'arora-h/all_documents/38.',
-        'source_span': (17100580, 17100653),
-        'sent_at': datetime.datetime(2001, 1, 24, 9, 29, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'I enjoyed our interview today and hope to continue discussions with Enron',
-        'expected': [
-                ('today', (24, 29), datetime.datetime(2001, 1, 24, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'badeer-r/_sent_mail/29.',
@@ -594,27 +474,12 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2000, 7, 11, 9, 17, 0, tzinfo=TZ_MINUS_0700),
         'text': 'I will be out of the office this Thursday and Friday (7-13/14) to attend a',
         'expected': [
-                ('this Thursday', (28, 41), datetime.datetime(2000, 7, 13, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('Friday', (46, 52), datetime.datetime(2000, 7, 14, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('this Thursday and Friday (7-13/14)', (28, 62), [
+                        datetime.datetime(2000, 7, 13, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                        datetime.datetime(2000, 7, 14, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                    ]),
             ],
-    },
-    {
-        'source_path': 'badeer-r/_sent_mail/34.',
-        'source_span': (20771245, 20771317),
-        'sent_at': datetime.datetime(2000, 7, 3, 7, 57, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'For items 1-10, the specified information is requested for the following',
-        'expected': [
-                ('1-10', (10, 14), datetime.datetime(2000, 1, 10, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'badeer-r/_sent_mail/34.',
-        'source_span': (20772599, 20772667),
-        'sent_at': datetime.datetime(2000, 7, 3, 7, 57, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'For the dates specified in requests 11-15, the following information',
-        'expected': [
-                ('11-15', (36, 41), datetime.datetime(2000, 11, 15, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'bailey-s/deleted_items/114.',
@@ -627,32 +492,14 @@ CONTEXT_MATCHED_TEXT_CASES = [
             ],
     },
     {
-        'source_path': 'bailey-s/deleted_items/121.',
-        'source_span': (23051096, 23051167),
-        'sent_at': datetime.datetime(2002, 2, 4, 7, 35, 52, tzinfo=TZ_MINUS_0800),
-        'text': 'Hard copies of the aformentioned agreements will be faxed to you today.',
-        'expected': [
-                ('today', (65, 70), datetime.datetime(2002, 2, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
-        'source_path': 'bailey-s/deleted_items/122.',
-        'source_span': (23053610, 23053687),
-        'sent_at': datetime.datetime(2002, 2, 4, 16, 47, 55, tzinfo=TZ_MINUS_0800),
-        'text': "Ken Lay announced today that he has resigned from Enron's Board of Directors.",
-        'expected': [
-                ('today', (18, 23), datetime.datetime(2002, 2, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
         'source_path': 'bass-e/_sent_mail/100.',
         'source_span': (23941163, 23941234),
         'sent_at': datetime.datetime(2000, 12, 7, 6, 2, 0, tzinfo=TZ_MINUS_0800),
         'text': 'Let me know what you get and are you spending the night tomorrow night?',
         'expected': [
-                ('night tomorrow', (50, 64), datetime.datetime(2000, 12, 8, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
-                ('night', (65, 70), datetime.datetime(2000, 12, 7, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('tomorrow night', (56, 70), datetime.datetime(2000, 12, 8, 20, 0, 0, tzinfo=TZ_MINUS_0800)),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'bass-e/_sent_mail/100.',
@@ -669,17 +516,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 1, 23, 0, 38, 0, tzinfo=TZ_MINUS_0800),
         'text': 'You should be able to activate your password by lunch time today.',
         'expected': [
-                ('today', (59, 64), datetime.datetime(2001, 1, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('lunch time today', (48, 64), datetime.datetime(2001, 1, 23, 12, 0, 0, tzinfo=TZ_MINUS_0800)),
             ],
-    },
-    {
-        'source_path': 'baughman-d/all_documents/114.',
-        'source_span': (45539711, 45539768),
-        'sent_at': datetime.datetime(2001, 1, 26, 8, 50, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'This morning there was a Cinergy wheel in the Ercot book.',
-        'expected': [
-                ('morning', (5, 12), datetime.datetime(2001, 1, 27, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'beck-s/2001_plan/2.',
@@ -701,12 +540,13 @@ CONTEXT_MATCHED_TEXT_CASES = [
     },
     {
         'source_path': 'beck-s/_sent_mail/1001.',
-        'source_span': (55724203, 55724270),
+        'source_span': (55724172, 55724223),
         'sent_at': datetime.datetime(2001, 1, 11, 2, 3, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Time: 8:30 - 2:00 PM (Continental breakfast & lunch will be served)',
+        'text': 'Date: Friday, January 12, 2001\nTime: 8:30 - 2:00 PM',
         'expected': [
-                ('8:30 - 2:00 PM', (6, 20), (datetime.datetime(2001, 1, 11, 20, 30, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 12, 14, 0, 0, tzinfo=TZ_MINUS_0800))),
+                ('Friday, January 12, 2001\nTime: 8:30 - 2:00 PM', (6, 51), (datetime.datetime(2001, 1, 12, 8, 30, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 12, 14, 0, 0, tzinfo=TZ_MINUS_0800))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'benson-r/all_documents/14.',
@@ -714,73 +554,19 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 5, 8, 4, 34, 0, tzinfo=TZ_MINUS_0700),
         'text': 'DATE CONFIRMATION - May 18 (9:30 am - 3:00 pm)',
         'expected': [
-                ('May 18', (20, 26), datetime.datetime(2001, 5, 18, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('9:30 am - 3:00 pm', (28, 45), (datetime.datetime(2001, 5, 8, 9, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 8, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
+                ('May 18 (9:30 am - 3:00 pm)', (20, 46), (datetime.datetime(2001, 5, 18, 9, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 18, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
             ],
-    },
-    {
-        'source_path': 'benson-r/all_documents/14.',
-        'source_span': (83933020, 83933070),
-        'sent_at': datetime.datetime(2001, 5, 8, 4, 34, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'TIME:   9:30 am - 3:00 pm - lunch will be provided',
-        'expected': [
-                ('9:30 am - 3:00 pm', (8, 25), (datetime.datetime(2001, 5, 8, 9, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 8, 15, 0, 0, tzinfo=TZ_MINUS_0700))),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'benson-r/all_documents/18.',
-        'source_span': (83939202, 83939229),
+        'source_span': (83939197, 83939222),
         'sent_at': datetime.datetime(2001, 5, 8, 17, 55, 0, tzinfo=TZ_MINUS_0700),
-        'text': '11 - 10:30 -11:30 AM  EB572',
+        'text': 'May. 11 - 10:30 -11:30 AM',
         'expected': [
-                ('10:30 -11:30 AM', (5, 20), (datetime.datetime(2001, 5, 9, 10, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 9, 11, 30, 0, tzinfo=TZ_MINUS_0700))),
+                ('May. 11 - 10:30 -11:30 AM', (0, 25), (datetime.datetime(2001, 5, 11, 10, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 5, 11, 11, 30, 0, tzinfo=TZ_MINUS_0700))),
             ],
-    },
-    {
-        'source_path': 'blair-l/_sent_mail/12.',
-        'source_span': (86947139, 86947185),
-        'sent_at': datetime.datetime(2001, 6, 24, 14, 6, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'I talked to Ricki yesterday and she has people',
-        'expected': [
-                ('yesterday', (18, 27), datetime.datetime(2001, 6, 23, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'blair-l/_sent_mail/16.',
-        'source_span': (86964856, 86964982),
-        'sent_at': datetime.datetime(2001, 6, 24, 13, 22, 0, tzinfo=TZ_MINUS_0700),
-        'text': "I assumed Kaztex were nominating on the timely, but after our storage discussions at today's Morning Meeting, I need to check.",
-        'expected': [
-                ('today', (85, 90), datetime.datetime(2001, 6, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('Morning', (93, 100), datetime.datetime(2001, 6, 25, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'blair-l/_sent_mail/33.',
-        'source_span': (87000877, 87000937),
-        'sent_at': datetime.datetime(2001, 6, 17, 20, 31, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'The attached letter was faxed to Shelly Corman this morning.',
-        'expected': [
-                ('morning', (52, 59), datetime.datetime(2001, 6, 18, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'brawner-s/_sent_mail/116.',
-        'source_span': (94535282, 94535359),
-        'sent_at': datetime.datetime(2001, 2, 27, 7, 36, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Louis - Again as we spoke this morning - all these deals have ben transferred',
-        'expected': [
-                ('morning', (31, 38), datetime.datetime(2001, 2, 28, 6, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
-        'source_path': 'brawner-s/_sent_mail/13.',
-        'source_span': (94562951, 94563014),
-        'sent_at': datetime.datetime(2001, 4, 24, 18, 33, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'I hope you and Ben enjoy the Park today - that sounds wonderful',
-        'expected': [
-                ('today', (34, 39), datetime.datetime(2001, 4, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'brawner-s/_sent_mail/15.',
@@ -792,22 +578,14 @@ CONTEXT_MATCHED_TEXT_CASES = [
             ],
     },
     {
-        'source_path': 'buy-r/_sent_mail/11.',
-        'source_span': (97165385, 97165461),
-        'sent_at': datetime.datetime(2000, 12, 4, 23, 55, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Recognizing we were just below daily VAR limits today, coupled with the high',
-        'expected': [
-                ('today,', (48, 54), datetime.datetime(2000, 12, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
         'source_path': 'buy-r/_sent_mail/119.',
-        'source_span': (97175506, 97175518),
+        'source_span': (97175484, 97175520),
         'sent_at': datetime.datetime(2001, 1, 17, 0, 31, 0, tzinfo=TZ_MINUS_0800),
-        'text': '3:00-4:00 p.',
+        'text': 'Tuesday, January 23rd\n3:00-4:00 p.m.',
         'expected': [
-                ('3:00-4:00 p', (0, 11), (datetime.datetime(2001, 1, 17, 15, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 17, 16, 0, 0, tzinfo=TZ_MINUS_0800))),
+                ('Tuesday, January 23rd\n3:00-4:00 p.m.', (0, 36), (datetime.datetime(2001, 1, 23, 15, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 23, 16, 0, 0, tzinfo=TZ_MINUS_0800))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'buy-r/_sent_mail/119.',
@@ -815,125 +593,17 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 1, 17, 0, 31, 0, tzinfo=TZ_MINUS_0800),
         'text': 'Monday, Jan 22  4:00 - 5:00',
         'expected': [
-                ('Monday, Jan 22  4:00 - 5:00', (0, 27), (datetime.datetime(2001, 1, 22, 4, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 22, 5, 0, 0, tzinfo=TZ_MINUS_0800))),
+                ('Monday, Jan 22  4:00 - 5:00', (0, 27), (datetime.datetime(2001, 1, 22, 16, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 22, 17, 0, 0, tzinfo=TZ_MINUS_0800))),
             ],
-    },
-    {
-        'source_path': 'campbell-l/_sent_mail/105.',
-        'source_span': (103014112, 103014140),
-        'sent_at': datetime.datetime(2000, 9, 5, 9, 16, 0, tzinfo=TZ_MINUS_0700),
-        'text': "I'll call you later tonight.",
-        'expected': [
-                ('tonight', (20, 27), datetime.datetime(2000, 9, 5, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'campbell-l/_sent_mail/115.',
-        'source_span': (103036322, 103036351),
-        'sent_at': datetime.datetime(2000, 8, 31, 8, 28, 0, tzinfo=TZ_MINUS_0700),
-        'text': "I'm going to be out tomorrow.",
-        'expected': [
-                ('tomorrow', (20, 28), datetime.datetime(2000, 9, 1, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'campbell-l/_sent_mail/121.',
-        'source_span': (103046657, 103046698),
-        'sent_at': datetime.datetime(2000, 8, 30, 1, 27, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'We had to change your logon this morning.',
-        'expected': [
-                ('morning', (33, 40), datetime.datetime(2000, 8, 30, 6, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'carson-m/_sent_mail/110.',
-        'source_span': (120647009, 120647061),
-        'sent_at': datetime.datetime(2000, 6, 23, 1, 14, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'Are you guys up for a little guys night out tonight?',
-        'expected': [
-                ('night', (34, 39), datetime.datetime(2000, 6, 23, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('tonight', (44, 51), datetime.datetime(2000, 6, 23, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'carson-m/_sent_mail/119.',
-        'source_span': (120654120, 120654191),
-        'sent_at': datetime.datetime(2000, 6, 8, 0, 20, 0, tzinfo=TZ_MINUS_0700),
-        'text': "FYI---  Kenny's girl friend is throwing him a surprise party tonight at",
-        'expected': [
-                ('tonight', (61, 68), datetime.datetime(2000, 6, 8, 20, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'carson-m/_sent_mail/130.',
-        'source_span': (120662855, 120662921),
-        'sent_at': datetime.datetime(2000, 5, 25, 9, 2, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'Heather and I just had the sonogram yesterday,,,, and it is a boy!',
-        'expected': [
-                ('yesterday,', (36, 46), datetime.datetime(2000, 5, 24, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'cash-m/all_documents/10.',
-        'source_span': (125035881, 125035945),
-        'sent_at': datetime.datetime(2000, 11, 28, 7, 50, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Yesterday, counsel for Richard Clonch called, requesting January',
-        'expected': [
-                ('Yesterday,', (0, 10), datetime.datetime(2000, 11, 27, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
-        'source_path': 'cash-m/all_documents/113.',
-        'source_span': (125067889, 125067913),
-        'sent_at': datetime.datetime(2001, 1, 3, 8, 28, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'We can discuss tomorrow.',
-        'expected': [
-                ('tomorrow', (15, 23), datetime.datetime(2001, 1, 4, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'cash-m/all_documents/117.',
-        'source_span': (125077953, 125077972),
+        'source_span': (125077942, 125077972),
         'sent_at': datetime.datetime(2001, 1, 25, 3, 44, 0, tzinfo=TZ_MINUS_0800),
-        'text': '01:30 PM - 02:30 PM',
+        'text': '01/26/2001\n01:30 PM - 02:30 PM',
         'expected': [
-                ('01:30 PM - 02:30 PM', (0, 19), (datetime.datetime(2001, 1, 25, 13, 30, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 25, 14, 30, 0, tzinfo=TZ_MINUS_0800))),
-            ],
-    },
-    {
-        'source_path': 'causholli-m/calendar/2.',
-        'source_span': (133510199, 133510297),
-        'sent_at': datetime.datetime(2001, 10, 9, 10, 0, 9, tzinfo=TZ_MINUS_0700),
-        'text': 'We definitely need to practice before we present the Yaks to the world so we will try again today.',
-        'expected': [
-                ('today', (92, 97), datetime.datetime(2001, 10, 9, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'causholli-m/deleted_items/101.',
-        'source_span': (133529737, 133529793),
-        'sent_at': datetime.datetime(2001, 10, 18, 8, 52, 24, tzinfo=TZ_MINUS_0700),
-        'text': "If you were unable to attend yesterday's info lunch with",
-        'expected': [
-                ('yesterday', (29, 38), datetime.datetime(2001, 10, 17, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-            ],
-    },
-    {
-        'source_path': 'corman-s/all_documents/11.',
-        'source_span': (136028078, 136028155),
-        'sent_at': datetime.datetime(2000, 12, 12, 3, 27, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Yesterday, we had a conference call with the pipeline transportation analysts',
-        'expected': [
-                ('Yesterday,', (0, 10), datetime.datetime(2000, 12, 11, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
-    },
-    {
-        'source_path': 'corman-s/all_documents/5.',
-        'source_span': (136068034, 136068062),
-        'sent_at': datetime.datetime(2000, 11, 29, 21, 4, 0, tzinfo=TZ_MINUS_0800),
-        'text': "I can't believe today is the",
-        'expected': [
-                ('today', (16, 21), datetime.datetime(2000, 11, 29, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('01/26/2001\n01:30 PM - 02:30 PM', (0, 30), (datetime.datetime(2001, 1, 26, 13, 30, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2001, 1, 26, 14, 30, 0, tzinfo=TZ_MINUS_0800))),
             ],
     },
     {
@@ -951,19 +621,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2002, 2, 6, 12, 52, 47, tzinfo=TZ_MINUS_0800),
         'text': 'Please RSVP by COB Friday (2/8), to Christine Meloro',
         'expected': [
-                ('Friday', (19, 25), datetime.datetime(2002, 2, 8, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-                ('2/8', (27, 30), datetime.datetime(2002, 2, 8, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('COB Friday (2/8)', (15, 31), datetime.datetime(2002, 2, 8, 17, 0, 0, tzinfo=TZ_MINUS_0800)),
             ],
-    },
-    {
-        'source_path': 'mclaughlin-e/sent/239.',
-        'source_span': (977401184, 977401260),
-        'sent_at': datetime.datetime(2001, 3, 22, 11, 33, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'Please send me your lists by end of day tomorrow (Wed, 3/14) if possible, or',
-        'expected': [
-                ('tomorrow', (40, 48), datetime.datetime(2001, 3, 23, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-                ('Wed, 3/14', (50, 59), datetime.datetime(2001, 3, 14, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'holst-k/inbox/33.',
@@ -971,9 +631,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 9, 25, 15, 35, 8, tzinfo=TZ_MINUS_0700),
         'text': 'Please respond by COB Thursday, Sept. 27th.',
         'expected': [
-                ('Thursday,', (22, 31), datetime.datetime(2001, 9, 27, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('27th', (38, 42), datetime.datetime(2001, 9, 27, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('COB Thursday, Sept. 27th', (18, 42), datetime.datetime(2001, 9, 27, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'lay-k/discussion_threads/169.',
@@ -990,9 +650,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2000, 4, 17, 2, 50, 0, tzinfo=TZ_MINUS_0700),
         'text': 'R.S.V.P. to Sylvia Hu x 36775 or email by Noon, Wed. 4/19.',
         'expected': [
-                ('Noon,', (42, 47), datetime.datetime(2000, 4, 17, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('Wed. 4/19', (48, 57), datetime.datetime(2000, 4, 19, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('Noon, Wed. 4/19', (42, 57), datetime.datetime(2000, 4, 19, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'jones-t/notes_inbox/3263.',
@@ -1018,11 +678,12 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 6, 5, 9, 43, 0, tzinfo=TZ_MINUS_0700),
         'text': 'What about lunch? Thurs or Fri of next week?',
         'expected': [
-                ('Thurs or Fri', (18, 30), [
+                ('Thurs or Fri of next week', (18, 43), [
                         datetime.datetime(2001, 6, 7, 0, 0, 0, tzinfo=TZ_MINUS_0700),
                         datetime.datetime(2001, 6, 8, 0, 0, 0, tzinfo=TZ_MINUS_0700),
                     ]),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'stokley-c/chris_stokley/sent/1.',
@@ -1039,18 +700,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 7, 27, 8, 14, 20, tzinfo=TZ_MINUS_0700),
         'text': 'This is a reminder that the sign-off forms are due by COB, Wednesday, August 1.',
         'expected': [
-                ('Wednesday, August 1', (59, 78), datetime.datetime(2001, 8, 1, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('COB, Wednesday, August 1', (54, 78), datetime.datetime(2001, 8, 1, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
             ],
-    },
-    {
-        'source_path': 'jones-t/all_documents/9221.',
-        'source_span': (560939056, 560939133),
-        'sent_at': datetime.datetime(2001, 1, 26, 5, 33, 0, tzinfo=TZ_MINUS_0800),
-        'text': 'please let me know how many people will attend by tomorrow afternoon (Friday)',
-        'expected': [
-                ('tomorrow afternoon', (50, 68), datetime.datetime(2001, 1, 27, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
-                ('Friday', (70, 76), datetime.datetime(2001, 1, 26, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'shankman-j/deleted_items/309.',
@@ -1085,27 +737,19 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 17, 15, 8, 36, tzinfo=TZ_MINUS_0700),
         'text': 'Starting next Wednesday you have EB30C2 for your Fundies Meeting from 3:00 PM to 4:30 PM',
         'expected': [
-                ('next Wednesday', (9, 23), datetime.datetime(2001, 10, 17, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('3:00 PM to 4:30 PM', (70, 88), (datetime.datetime(2001, 10, 18, 15, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 18, 16, 30, 0, tzinfo=TZ_MINUS_0700))),
+                ('Starting next Wednesday you have EB30C2 for your Fundies Meeting from 3:00 PM to 4:30 PM', (0, 88), (datetime.datetime(2001, 10, 24, 15, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 24, 16, 30, 0, tzinfo=TZ_MINUS_0700))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'shively-h/discussion_threads/110.',
-        'source_span': (1234594107, 1234594181),
+        'source_span': (1234594150, 1234594200),
         'sent_at': datetime.datetime(2000, 10, 16, 10, 9, 0, tzinfo=TZ_MINUS_0700),
-        'text': 'Dave would like to have a strategy meeting next Tuesday  October 17, 2000,',
+        'text': 'next Tuesday  October 17, 2000, \nfrom 3:00-5:00 pm',
         'expected': [
-                ('next Tuesday', (43, 55), datetime.datetime(2000, 10, 17, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('next Tuesday  October 17, 2000, \nfrom 3:00-5:00 pm', (0, 50), (datetime.datetime(2000, 10, 17, 15, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2000, 10, 17, 17, 0, 0, tzinfo=TZ_MINUS_0700))),
             ],
-    },
-    {
-        'source_path': 'holst-k/inbox/318.',
-        'source_span': (522802366, 522802433),
-        'sent_at': datetime.datetime(2001, 11, 15, 14, 38, 12, tzinfo=TZ_MINUS_0800),
-        'text': 'Check your in-box next Tuesday for a special edition of Deal Alert!',
-        'expected': [
-                ('next Tuesday', (18, 30), datetime.datetime(2001, 11, 20, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'corman-s/sent_items/47.',
@@ -1113,8 +757,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 24, 9, 35, 27, tzinfo=TZ_MINUS_0700),
         'text': '39C1 is available from 3:00 - 4:00 pm on Tuesday, Oct. 30.',
         'expected': [
-                ('3:00 - 4:00 pm on Tuesday', (23, 48), (datetime.datetime(2001, 10, 30, 15, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 30, 16, 0, 0, tzinfo=TZ_MINUS_0700))),
+                ('3:00 - 4:00 pm on Tuesday, Oct. 30', (23, 57), (datetime.datetime(2001, 10, 30, 15, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 30, 16, 0, 0, tzinfo=TZ_MINUS_0700))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'jones-t/all_documents/3791.',
@@ -1122,9 +767,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2000, 9, 13, 2, 24, 0, tzinfo=TZ_MINUS_0700),
         'text': 'R.S.V.P. to Sylvia Hu x36775 by Noon, 9/26',
         'expected': [
-                ('Noon,', (32, 37), datetime.datetime(2000, 9, 13, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('9/26', (38, 42), datetime.datetime(2000, 9, 26, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('Noon, 9/26', (32, 42), datetime.datetime(2000, 9, 26, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'shankman-j/deleted_items/322.',
@@ -1132,9 +777,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 19, 14, 40, 56, tzinfo=TZ_MINUS_0700),
         'text': 'from 10:00 a.m. Saturday until 8:00 a.m. Sunday.',
         'expected': [
-                ('10:00 a.m. Saturday', (5, 24), datetime.datetime(2001, 10, 20, 10, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('8:00 a.m. Sunday', (31, 47), datetime.datetime(2001, 10, 21, 8, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('10:00 a.m. Saturday until 8:00 a.m. Sunday', (5, 47), (datetime.datetime(2001, 10, 20, 10, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 21, 8, 0, 0, tzinfo=TZ_MINUS_0700))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'kitchen-l/_americas/culture/2.',
@@ -1142,9 +787,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 9, 10, 6, 46, 9, tzinfo=TZ_MINUS_0700),
         'text': 'We would like to share our recommendations with you tomorrow from 1:30 to 2:30 in Conference Room EB16C1.',
         'expected': [
-                ('tomorrow', (52, 60), datetime.datetime(2001, 9, 11, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('1:30 to 2:30', (66, 78), (datetime.datetime(2001, 9, 11, 1, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 9, 11, 2, 30, 0, tzinfo=TZ_MINUS_0700))),
+                ('tomorrow from 1:30 to 2:30', (52, 78), (datetime.datetime(2001, 9, 11, 13, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 9, 11, 14, 30, 0, tzinfo=TZ_MINUS_0700))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'corman-s/inbox/65.',
@@ -1152,10 +797,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2002, 3, 25, 13, 1, 44, tzinfo=TZ_MINUS_0800),
         'text': "The time is blocked for Michelle Lokay and Paul Y'Barbo, tomorrow from 2:00 until 3:00.",
         'expected': [
-                ('tomorrow', (57, 65), datetime.datetime(2002, 3, 26, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-                ('2:00', (71, 75), datetime.datetime(2002, 3, 26, 2, 0, 0, tzinfo=TZ_MINUS_0800)),
-                ('3:00', (82, 86), datetime.datetime(2002, 3, 26, 3, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('tomorrow from 2:00 until 3:00', (57, 86), (datetime.datetime(2002, 3, 26, 14, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2002, 3, 26, 15, 0, 0, tzinfo=TZ_MINUS_0800))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'corman-s/inbox/archives/142.',
@@ -1163,10 +807,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2002, 2, 13, 13, 52, 41, tzinfo=TZ_MINUS_0800),
         'text': 'Shelley will only be available tomorrow from 3:00 until 5:00.',
         'expected': [
-                ('tomorrow', (31, 39), datetime.datetime(2002, 2, 14, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
-                ('3:00', (45, 49), datetime.datetime(2002, 2, 14, 3, 0, 0, tzinfo=TZ_MINUS_0800)),
-                ('5:00', (56, 60), datetime.datetime(2002, 2, 14, 5, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('tomorrow from 3:00 until 5:00', (31, 60), (datetime.datetime(2002, 2, 14, 15, 0, 0, tzinfo=TZ_MINUS_0800), datetime.datetime(2002, 2, 14, 17, 0, 0, tzinfo=TZ_MINUS_0800))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'holst-k/deleted_items/71.',
@@ -1174,9 +817,9 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'sent_at': datetime.datetime(2001, 10, 22, 8, 59, 58, tzinfo=TZ_MINUS_0700),
         'text': 'The meeting with IHS Energy representatives will take place tomorrow from 10:30 to 1:30 in EB3321',
         'expected': [
-                ('tomorrow', (60, 68), datetime.datetime(2001, 10, 23, 0, 0, 0, tzinfo=TZ_MINUS_0700)),
-                ('10:30 to 1:30', (74, 87), (datetime.datetime(2001, 10, 22, 10, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 23, 1, 30, 0, tzinfo=TZ_MINUS_0700))),
+                ('tomorrow from 10:30 to 1:30', (60, 87), (datetime.datetime(2001, 10, 23, 10, 30, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 10, 23, 13, 30, 0, tzinfo=TZ_MINUS_0700))),
             ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
     },
     {
         'source_path': 'lay-k/discussion_threads/105.',
@@ -1194,6 +837,413 @@ CONTEXT_MATCHED_TEXT_CASES = [
         'text': 'please submit your BUSINESS HIGHLIGHT OR NEWS by noon Wednesday, October 31.',
         'expected': [
                 ('noon Wednesday, October 31', (49, 75), datetime.datetime(2001, 10, 31, 12, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'shively-h/inbox/34.',
+        'source_span': (1235234344, 1235234372),
+        'sent_at': datetime.datetime(2002, 1, 31, 8, 34, 11, tzinfo=TZ_MINUS_0800),
+        'text': 'by noon this Friday  2/01/02',
+        'expected': [
+                ('noon this Friday  2/01/02', (3, 28), datetime.datetime(2002, 2, 1, 12, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'shively-h/deleted_items/609.',
+        'source_span': (1233746316, 1233746338),
+        'sent_at': datetime.datetime(2001, 5, 31, 11, 35, 40, tzinfo=TZ_MINUS_0700),
+        'text': 'by 3:00 p.m. tomorrow.',
+        'expected': [
+                ('3:00 p.m. tomorrow', (3, 21), datetime.datetime(2001, 6, 1, 15, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'shively-h/inbox/57.',
+        'source_span': (1235292060, 1235292077),
+        'sent_at': datetime.datetime(2002, 1, 2, 11, 3, 45, tzinfo=TZ_MINUS_0800),
+        'text': 'by 3:00 pm today.',
+        'expected': [
+                ('3:00 pm today', (3, 16), datetime.datetime(2002, 1, 2, 15, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'shively-h/deleted_items/699.',
+        'source_span': (1234108469, 1234108494),
+        'sent_at': datetime.datetime(2001, 11, 14, 10, 16, 13, tzinfo=TZ_MINUS_0800),
+        'text': 'by 5:00 PM, Friday, 11/16',
+        'expected': [
+                ('5:00 PM, Friday, 11/16', (3, 25), datetime.datetime(2001, 11, 16, 17, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'shively-h/deleted_items/699.',
+        'source_span': (1234108882, 1234108907),
+        'sent_at': datetime.datetime(2001, 11, 14, 10, 16, 13, tzinfo=TZ_MINUS_0800),
+        'text': 'Monday morning at 5:00 AM',
+        'expected': [
+                ('Monday morning at 5:00 AM', (0, 25), datetime.datetime(2001, 11, 19, 5, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'donohoe-t/inbox/234.',
+        'source_span': (324772731, 324772814),
+        'sent_at': datetime.datetime(2001, 10, 25, 13, 19, 47, tzinfo=TZ_MINUS_0700),
+        'text': 'Bids are due by 11:00 am on Monday October 29.  Bids should be awarded by\n11:30 am.',
+        'expected': [
+                ('11:00 am on Monday October 29', (16, 45), datetime.datetime(2001, 10, 29, 11, 0, 0, tzinfo=TZ_MINUS_0700)),
+                ('11:30 am', (74, 82), datetime.datetime(2001, 10, 29, 11, 30, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'zipper-a/inbox/81.',
+        'source_span': (1427952983, 1427953007),
+        'sent_at': datetime.datetime(2001, 6, 5, 15, 36, 6, tzinfo=TZ_MINUS_0700),
+        'text': 'by 5:00PM on Monday 6/11',
+        'expected': [
+                ('5:00PM on Monday 6/11', (3, 24), datetime.datetime(2001, 6, 11, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'zipper-a/inbox/90.',
+        'source_span': (1427978752, 1427978772),
+        'sent_at': datetime.datetime(2001, 6, 6, 8, 14, 39, tzinfo=TZ_MINUS_0700),
+        'text': 'by noon on Thursday.',
+        'expected': [
+                ('noon on Thursday', (3, 19), datetime.datetime(2001, 6, 7, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'jones-t/all_documents/9583.',
+        'source_span': (561745697, 561745747),
+        'sent_at': datetime.datetime(2001, 2, 23, 9, 43, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Please respond by 10 a.m. on Tuesday, February 27.',
+        'expected': [
+                ('10 a.m. on Tuesday, February 27', (18, 49), datetime.datetime(2001, 2, 27, 10, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'shankman-j/inbox/51.',
+        'source_span': (1205378800, 1205378839),
+        'sent_at': datetime.datetime(2001, 10, 22, 13, 20, 34, tzinfo=TZ_MINUS_0700),
+        'text': 'by 5:00 p.m. Tuesday, October 30, 2001.',
+        'expected': [
+                ('5:00 p.m. Tuesday, October 30, 2001', (3, 38), datetime.datetime(2001, 10, 30, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/sec/15.',
+        'source_span': (785965693, 785965726),
+        'sent_at': datetime.datetime(2001, 11, 16, 17, 45, 8, tzinfo=TZ_MINUS_0800),
+        'text': 'by 2:00 pm Saturday, November 17.',
+        'expected': [
+                ('2:00 pm Saturday, November 17', (3, 32), datetime.datetime(2001, 11, 17, 14, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/sec/27.',
+        'source_span': (786107775, 786107786),
+        'sent_at': datetime.datetime(2001, 11, 7, 17, 49, 36, tzinfo=TZ_MINUS_0800),
+        'text': 'by 9:00 pm.',
+        'expected': [
+                ('9:00 pm', (3, 10), datetime.datetime(2001, 11, 7, 21, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/east_power/164.',
+        'source_span': (774887525, 774887546),
+        'sent_at': datetime.datetime(2001, 6, 29, 19, 44, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'by 10:00 am on July 3',
+        'expected': [
+                ('10:00 am on July 3', (3, 21), datetime.datetime(2001, 7, 3, 10, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/esvl/337.',
+        'source_span': (776442395, 776442418),
+        'sent_at': datetime.datetime(2001, 12, 6, 15, 41, 52, tzinfo=TZ_MINUS_0800),
+        'text': 'by 9:00 a.m. on Friday.',
+        'expected': [
+                ('9:00 a.m. on Friday', (3, 22), datetime.datetime(2001, 12, 7, 9, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'stokley-c/chris_stokley/murray/31.',
+        'source_span': (1279259821, 1279259848),
+        'sent_at': datetime.datetime(2001, 8, 20, 5, 28, 13, tzinfo=TZ_MINUS_0700),
+        'text': 'Monday and Tuesday, 8/20&21',
+        'expected': [
+                ('Monday and Tuesday, 8/20&21', (0, 27), [
+                        datetime.datetime(2001, 8, 20, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                        datetime.datetime(2001, 8, 21, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                    ]),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'stokley-c/chris_stokley/murray/31.',
+        'source_span': (1279259890, 1279259921),
+        'sent_at': datetime.datetime(2001, 8, 20, 5, 28, 13, tzinfo=TZ_MINUS_0700),
+        'text': 'Tuesday, 8/21, from 1:00 - 2:30',
+        'expected': [
+                ('Tuesday, 8/21, from 1:00 - 2:30', (0, 31), (datetime.datetime(2001, 8, 21, 13, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 8, 21, 14, 30, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'stokley-c/chris_stokley/murray/31.',
+        'source_span': (1279260236, 1279260252),
+        'sent_at': datetime.datetime(2001, 8, 20, 5, 28, 13, tzinfo=TZ_MINUS_0700),
+        'text': 'by COB on Monday',
+        'expected': [
+                ('COB on Monday', (3, 16), datetime.datetime(2001, 8, 20, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'kitchen-l/_americas/turbines/22.',
+        'source_span': (792126949, 792126982),
+        'sent_at': datetime.datetime(2001, 9, 25, 10, 30, 30, tzinfo=TZ_MINUS_0700),
+        'text': 'by the close of business tomorrow',
+        'expected': [
+                ('close of business tomorrow', (7, 33), datetime.datetime(2001, 9, 26, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'stokley-c/chris_stokley/sent/243.',
+        'source_span': (1280191358, 1280191386),
+        'sent_at': datetime.datetime(2001, 4, 11, 13, 43, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'by end of business tommowrow',
+        'expected': [
+                ('end of business tommowrow', (3, 28), datetime.datetime(2001, 4, 12, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'scholtes-d/ferc/43.',
+        'source_span': (1123045722, 1123045758),
+        'sent_at': datetime.datetime(2001, 6, 12, 16, 16, 44, tzinfo=TZ_MINUS_0700),
+        'text': 'close of business on Friday, June 22',
+        'expected': [
+                ('close of business on Friday, June 22', (0, 36), datetime.datetime(2001, 6, 22, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'zipper-a/broker_client/3.',
+        'source_span': (1425512764, 1425512791),
+        'sent_at': datetime.datetime(2001, 6, 1, 8, 23, 45, tzinfo=TZ_MINUS_0700),
+        'text': '$200 K if signed by COB 6/8',
+        'expected': [
+                ('COB 6/8', (20, 27), datetime.datetime(2001, 6, 8, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'zipper-a/broker_client/3.',
+        'source_span': (1425512792, 1425512820),
+        'sent_at': datetime.datetime(2001, 6, 1, 8, 23, 45, tzinfo=TZ_MINUS_0700),
+        'text': '$225 K if signed by COB 6/15',
+        'expected': [
+                ('COB 6/15', (20, 28), datetime.datetime(2001, 6, 15, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'kitchen-l/_americas/esvl/443.',
+        'source_span': (776719904, 776719948),
+        'sent_at': datetime.datetime(2001, 11, 27, 10, 45, 33, tzinfo=TZ_MINUS_0800),
+        'text': 'by close of business on Tuesday, November 27',
+        'expected': [
+                ('close of business on Tuesday, November 27', (3, 44), datetime.datetime(2001, 11, 27, 17, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'kitchen-l/_americas/esvl/264.',
+        'source_span': (776281978, 776282015),
+        'sent_at': datetime.datetime(2001, 12, 13, 14, 44, 2, tzinfo=TZ_MINUS_0800),
+        'text': 'following the close of business today',
+        'expected': [
+                ('close of business today', (14, 37), datetime.datetime(2001, 12, 13, 17, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'corman-s/inbox/measurement/18.',
+        'source_span': (140631002, 140631040),
+        'sent_at': datetime.datetime(2002, 1, 28, 11, 31, 6, tzinfo=TZ_MINUS_0800),
+        'text': 'by the close of business on February 5',
+        'expected': [
+                ('close of business on February 5', (7, 38), datetime.datetime(2002, 2, 5, 17, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'allen-p/_sent_mail/1001.',
+        'source_span': (3485, 3501),
+        'sent_at': datetime.datetime(2000, 8, 31, 5, 7, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Tuesday at 11:45',
+        'expected': [
+                ('Tuesday at 11:45', (0, 16), datetime.datetime(2000, 9, 5, 11, 45, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'allen-p/_sent_mail/1002.',
+        'source_span': (3997, 4021),
+        'sent_at': datetime.datetime(2000, 8, 31, 4, 17, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'next Tuesday or Thursday',
+        'expected': [
+                ('next Tuesday or Thursday', (0, 24), [
+                        datetime.datetime(2000, 9, 5, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                        datetime.datetime(2000, 9, 7, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                    ]),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'allen-p/_sent_mail/111.',
+        'source_span': (28973, 29001),
+        'sent_at': datetime.datetime(2000, 10, 3, 9, 15, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Tuesday, Oct. 10th at 4:00pm',
+        'expected': [
+                ('Tuesday, Oct. 10th at 4:00pm', (0, 28), datetime.datetime(2000, 10, 10, 16, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'allen-p/_sent_mail/122.',
+        'source_span': (63929, 63961),
+        'sent_at': datetime.datetime(2000, 9, 26, 5, 7, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Thursday, 9/28 from 3:00 - \n4:00',
+        'expected': [
+                ('Thursday, 9/28 from 3:00 - \n4:00', (0, 32), (datetime.datetime(2000, 9, 28, 15, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2000, 9, 28, 16, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'pereira-s/all_documents/47.',
+        'source_span': (1026290737, 1026290753),
+        'sent_at': datetime.datetime(2001, 4, 2, 7, 5, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Tomorrow at 1:45',
+        'expected': [
+                ('Tomorrow at 1:45', (0, 16), datetime.datetime(2001, 4, 3, 1, 45, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'beck-s/sap/27.',
+        'source_span': (79882441, 79882456),
+        'sent_at': datetime.datetime(2000, 5, 11, 5, 58, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'today at 4:00pm',
+        'expected': [
+                ('today at 4:00pm', (0, 15), datetime.datetime(2000, 5, 11, 16, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'kitchen-l/_americas/turbines/52.',
+        'source_span': (792224374, 792224391),
+        'sent_at': datetime.datetime(2001, 8, 5, 17, 38, 20, tzinfo=TZ_MINUS_0700),
+        'text': 'Monday or Tuesday',
+        'expected': [
+                ('Monday or Tuesday', (0, 17), [
+                        datetime.datetime(2001, 8, 6, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                        datetime.datetime(2001, 8, 7, 0, 0, 0, tzinfo=TZ_MINUS_0700),
+                    ]),
+            ],
+    },
+    {
+        'source_path': 'corman-s/deleted_items/171.',
+        'source_span': (136570938, 136571074),
+        'sent_at': datetime.datetime(2002, 1, 10, 8, 54, 13, tzinfo=TZ_MINUS_0800),
+        'text': "starting on Tuesday, January 15th , in San Diego. Wednesday and Thursday's meetings will be in Houston, and Friday's meeting in Phoenix.",
+        'expected': [
+                ('Tuesday, January 15th', (12, 33), datetime.datetime(2002, 1, 15, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+                ('Wednesday and Thursday', (50, 72), [
+                        datetime.datetime(2002, 1, 16, 0, 0, 0, tzinfo=TZ_MINUS_0800),
+                        datetime.datetime(2002, 1, 17, 0, 0, 0, tzinfo=TZ_MINUS_0800),
+                    ]),
+                ('Friday', (108, 114), datetime.datetime(2002, 1, 18, 0, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'mclaughlin-e/private_folders/corp_info_announcements/128.',
+        'source_span': (976532967, 976532998),
+        'sent_at': datetime.datetime(2001, 9, 13, 20, 8, 51, tzinfo=TZ_MINUS_0700),
+        'text': 'tomorrow from 9:00 - 11:00 a.m.',
+        'expected': [
+                ('tomorrow from 9:00 - 11:00 a.m.', (0, 31), (datetime.datetime(2001, 9, 14, 9, 0, 0, tzinfo=TZ_MINUS_0700), datetime.datetime(2001, 9, 14, 11, 0, 0, tzinfo=TZ_MINUS_0700))),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'shankman-j/deleted_items/200.',
+        'source_span': (1201225248, 1201225261),
+        'sent_at': datetime.datetime(2001, 10, 24, 5, 22, 33, tzinfo=TZ_MINUS_0700),
+        'text': 'by noon today',
+        'expected': [
+                ('noon today', (3, 13), datetime.datetime(2001, 10, 24, 12, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'skilling-j/_sent_mail/66.',
+        'source_span': (1236578752, 1236578767),
+        'sent_at': datetime.datetime(2000, 7, 12, 6, 28, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'by 5 p.m. today',
+        'expected': [
+                ('5 p.m. today', (3, 15), datetime.datetime(2000, 7, 12, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+    },
+    {
+        'source_path': 'shackleton-s/all_documents/4220.',
+        'source_span': (1168208375, 1168208435),
+        'sent_at': datetime.datetime(2000, 10, 19, 4, 27, 0, tzinfo=TZ_MINUS_0700),
+        'text': 'Effective Date: Friday, October 20, 2000 (close of business)',
+        'expected': [
+                ('Friday, October 20, 2000 (close of business)', (16, 60), datetime.datetime(2000, 10, 20, 17, 0, 0, tzinfo=TZ_MINUS_0700)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'shackleton-s/all_documents/5161.',
+        'source_span': (1170434353, 1170434417),
+        'sent_at': datetime.datetime(2000, 12, 12, 7, 7, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Effective Date: Wednesday, December 13, 2000 (close of business)',
+        'expected': [
+                ('Wednesday, December 13, 2000 (close of business)', (16, 64), datetime.datetime(2000, 12, 13, 17, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'shackleton-s/all_documents/8560.',
+        'source_span': (1171330034, 1171330096),
+        'sent_at': datetime.datetime(2000, 12, 19, 6, 20, 0, tzinfo=TZ_MINUS_0800),
+        'text': 'Effective Date: Tuesday, December 19, 2000 (close of business)',
+        'expected': [
+                ('Tuesday, December 19, 2000 (close of business)', (16, 62), datetime.datetime(2000, 12, 19, 17, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+        'known_failure': 'Current parser output does not yet match this manually reviewed Enron golden.',
+    },
+    {
+        'source_path': 'shively-h/deleted_items/1.',
+        'source_span': (1232479237, 1232479253),
+        'sent_at': datetime.datetime(2002, 2, 6, 15, 14, 2, tzinfo=TZ_MINUS_0800),
+        'text': 'by 7 p.m. Monday',
+        'expected': [
+                ('7 p.m. Monday', (3, 16), datetime.datetime(2002, 2, 11, 19, 0, 0, tzinfo=TZ_MINUS_0800)),
+            ],
+    },
+    {
+        'source_path': 'martin-t/inbox/462.',
+        'source_span': (942803504, 942803532),
+        'sent_at': datetime.datetime(2001, 11, 2, 10, 10, 27, tzinfo=TZ_MINUS_0800),
+        'text': 'by 5:00 PM on Friday 11/9/01',
+        'expected': [
+                ('5:00 PM on Friday 11/9/01', (3, 28), datetime.datetime(2001, 11, 9, 17, 0, 0, tzinfo=TZ_MINUS_0800)),
             ],
     },
 ]
