@@ -34,7 +34,6 @@ BASELINE_COLORS = {
     "datefinder.find_dates": "#acb5c1",
 }
 
-DOCUMENT_BASELINE_COLOR = "#c06b3e"
 DOCUMENT_ROWS = ("timefhuman", "datefinder.find_dates")
 DOCUMENT_DATASETS = (
     ("short", "short"),
@@ -125,8 +124,6 @@ def document_label(label: str):
 def parser_color(label: str):
     if label == "timefhuman":
         return TIMEFHUMAN_COLOR
-    if label == "datefinder.find_dates":
-        return DOCUMENT_BASELINE_COLOR
     return BASELINE_COLORS.get(label, "#8a94a3")
 
 
@@ -356,6 +353,7 @@ def build_case_svg(payload: dict):
         axis_bottom = y + panel_height - axis_bottom_margin
         axis_width = axis_right - axis_left
         min_ms = 0.1
+        min_visible_bar_width = 6
         max_ms = 10 ** max(1, math.ceil(math.log10(max(row["median_ms"] for row in rows))))
         log_min = math.log10(min_ms)
         log_max = math.log10(max_ms)
@@ -377,6 +375,8 @@ def build_case_svg(payload: dict):
         for index, row in enumerate(rows):
             value = max(min_ms, row["median_ms"])
             width_value = axis_width * ((math.log10(value) - log_min) / (log_max - log_min))
+            if row["median_ms"] < min_ms:
+                width_value = min_visible_bar_width
             row_y = axis_top + index * (bar_height + row_gap)
             elements.append(svg_text(x + panel_inset_x, row_y + bar_height * 0.72, CASE_LABELS[row["label"]], size=12, fill=MUTED))
             elements.append(svg_rect(axis_left, row_y, axis_width, bar_height, "none", rx=bar_radius, stroke=GRID))
