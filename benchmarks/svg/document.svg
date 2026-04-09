@@ -28,7 +28,7 @@
 <rect x="0.0" y="0.0" width="1180.0" height="424.0" rx="0.0" fill="var(--bg)" stroke="none" stroke-width="1" />
 <rect x="794.0" y="4.0" width="18.0" height="18.0" rx="4.0" fill="#1f7a5a" stroke="none" stroke-width="1" />
 <text x="822.0" y="18.0" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="700" text-anchor="start">timefhuman</text>
-<rect x="974.0" y="4.0" width="18.0" height="18.0" rx="4.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="974.0" y="4.0" width="18.0" height="18.0" rx="4.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="1002.0" y="18.0" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="700" text-anchor="start">datefinder</text>
 <rect x="0.0" y="40.0" width="586.0" height="344.0" rx="18.0" fill="var(--panel)" stroke="var(--panel-stroke)" stroke-width="1" />
 <text x="24.0" y="68.0" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="700" text-anchor="start">Accuracy</text>
@@ -48,22 +48,22 @@
 <text x="119.2" y="356.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">short</text>
 <rect x="86.2" y="118.0" width="28.0" height="212.0" rx="6.0" fill="#1f7a5a" stroke="none" stroke-width="1" />
 <text x="100.2" y="110.0" fill="#1f7a5a" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">100</text>
-<rect x="124.2" y="254.3" width="28.0" height="75.7" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="124.2" y="254.3" width="28.0" height="75.7" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="138.2" y="246.3" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">36</text>
 <text x="245.8" y="356.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">core</text>
 <rect x="212.8" y="118.0" width="28.0" height="212.0" rx="6.0" fill="#1f7a5a" stroke="none" stroke-width="1" />
 <text x="226.8" y="110.0" fill="#1f7a5a" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">100</text>
-<rect x="250.8" y="178.6" width="28.0" height="151.4" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="250.8" y="178.6" width="28.0" height="151.4" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="264.8" y="170.6" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">71</text>
 <text x="372.2" y="356.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">sea_76k</text>
 <rect x="339.2" y="118.0" width="28.0" height="212.0" rx="6.0" fill="#1f7a5a" stroke="none" stroke-width="1" />
 <text x="353.2" y="110.0" fill="#1f7a5a" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">100</text>
-<rect x="377.2" y="129.2" width="28.0" height="200.8" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="377.2" y="129.2" width="28.0" height="200.8" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="391.2" y="121.2" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">95</text>
 <text x="498.8" y="356.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">test_data_560k</text>
 <rect x="465.8" y="118.0" width="28.0" height="212.0" rx="6.0" fill="#1f7a5a" stroke="none" stroke-width="1" />
 <text x="479.8" y="110.0" fill="#1f7a5a" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">100</text>
-<rect x="503.8" y="246.6" width="28.0" height="83.4" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="503.8" y="246.6" width="28.0" height="83.4" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="517.8" y="238.6" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">39</text>
 <rect x="594.0" y="40.0" width="586.0" height="344.0" rx="18.0" fill="var(--panel)" stroke="var(--panel-stroke)" stroke-width="1" />
 <text x="618.0" y="68.0" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="700" text-anchor="start">Latency</text>
@@ -81,21 +81,21 @@
 <text x="713.2" y="356.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">short</text>
 <rect x="680.2" y="402.9" width="28.0" height="-72.9" rx="6.0" fill="#1f7a5a" stroke="none" stroke-width="1" />
 <text x="694.2" y="394.9" fill="#1f7a5a" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">0.1</text>
-<rect x="718.2" y="313.0" width="28.0" height="17.0" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="718.2" y="313.0" width="28.0" height="17.0" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="732.2" y="305.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">1.7</text>
 <text x="839.8" y="356.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">core</text>
 <rect x="806.8" y="300.7" width="28.0" height="29.3" rx="6.0" fill="#1f7a5a" stroke="none" stroke-width="1" />
 <text x="820.8" y="292.7" fill="#1f7a5a" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">2.6</text>
-<rect x="844.8" y="212.6" width="28.0" height="117.4" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="844.8" y="212.6" width="28.0" height="117.4" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="858.8" y="204.6" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">45.9</text>
 <text x="966.2" y="356.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">sea_76k</text>
 <rect x="933.2" y="223.6" width="28.0" height="106.4" rx="6.0" fill="#1f7a5a" stroke="none" stroke-width="1" />
 <text x="947.2" y="215.6" fill="#1f7a5a" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">32.1</text>
-<rect x="971.2" y="177.3" width="28.0" height="152.7" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="971.2" y="177.3" width="28.0" height="152.7" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="985.2" y="169.3" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">145</text>
 <text x="1092.8" y="356.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" text-anchor="middle">test_data_560k</text>
 <rect x="1059.8" y="163.0" width="28.0" height="167.0" rx="6.0" fill="#1f7a5a" stroke="none" stroke-width="1" />
 <text x="1073.8" y="155.0" fill="#1f7a5a" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">231</text>
-<rect x="1097.8" y="112.0" width="28.0" height="218.0" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="1097.8" y="112.0" width="28.0" height="218.0" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="1111.8" y="104.0" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">1215</text>
 </svg>

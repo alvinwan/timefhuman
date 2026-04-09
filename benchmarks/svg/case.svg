@@ -58,7 +58,7 @@
 <text x="185.9" y="247.8" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">13.2%</text>
 <text x="16.0" y="284.8" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">datefinder</text>
 <rect x="134.0" y="269.0" width="332.0" height="22.0" rx="6.0" fill="none" stroke="var(--grid)" stroke-width="1" />
-<rect x="134.0" y="269.0" width="36.6" height="22.0" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
+<rect x="134.0" y="269.0" width="36.6" height="22.0" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
 <text x="178.6" y="284.8" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">11.0%</text>
 <rect x="500.0" y="28.0" width="480.0" height="296.0" rx="14.0" fill="var(--panel)" stroke="var(--panel-stroke)" stroke-width="1" />
 <text x="516.0" y="54.0" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="600" text-anchor="start">Enron Email Dataset Latency</text>
@@ -94,6 +94,6 @@
 <text x="947.5" y="247.8" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">57.7 ms</text>
 <text x="516.0" y="284.8" fill="var(--muted)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" text-anchor="start">datefinder</text>
 <rect x="634.0" y="269.0" width="332.0" height="22.0" rx="6.0" fill="none" stroke="var(--grid)" stroke-width="1" />
-<rect x="634.0" y="269.0" width="0.0" height="22.0" rx="6.0" fill="#c06b3e" stroke="none" stroke-width="1" />
-<text x="642.0" y="284.8" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">&lt;0.1 ms</text>
+<rect x="634.0" y="269.0" width="6.0" height="22.0" rx="6.0" fill="#acb5c1" stroke="none" stroke-width="1" />
+<text x="648.0" y="284.8" fill="var(--text)" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" text-anchor="start">&lt;0.1 ms</text>
 </svg>
